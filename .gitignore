@@ -1,0 +1,4 @@
+# Whitelist approach: ignore everything by default, only track index.html
+*
+!.gitignore
+!index.html

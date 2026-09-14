@@ -1,0 +1,1865 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAVE FC 스쿼드보드</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap">
+<!-- 팀 데이터를 실시간으로 동기화하는 Supabase(Realtime) SDK. 한의원 사이트에서
+     이미 쓰고 있는 Supabase 프로젝트를 그대로 쓰되, savefc 스키마의 테이블 1개만
+     사용한다 (배포 가이드의 SQL로 완전히 분리·격리해둔다 — public 스키마 등
+     한의원 데이터는 이 코드가 아예 건드릴 수 없다). 이 사이트 자체는 정적 파일이고,
+     아래 SDK가 브라우저에서 직접 Supabase와 통신한다 (설정 화면에 프로젝트
+     URL과 anon key를 붙여넣어야 실제로 연결됨). -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --bg:#F4F6F1; --surface:#FFFFFF; --surface-2:#EEF2EC;
+  --ink:#16211C; --ink-soft:#4B5A52; --ink-faint:#8A968D;
+  --accent:#1F6F45; --accent-deep:#0F3A24; --accent-soft:#E1EFE6;
+  --line:#DBE1D6;
+  --in:#2E7D5B; --in-soft:#D6EBDF;
+  --out:#B23B2E; --out-soft:#F7DEDA;
+  --pend:#B8862E; --pend-soft:#F5E7C8;
+  --pitch1:#1e6b3f; --pitch2:#1a5f38;
+  --shadow:0 1px 2px rgba(15,58,36,.06),0 8px 20px rgba(15,58,36,.07);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1512; --surface:#161F1A; --surface-2:#1B251F;
+    --ink:#EAF0EA; --ink-soft:#A9B7AE; --ink-faint:#6E7C72;
+    --accent:#4CAE7C; --accent-deep:#0B2A1B; --accent-soft:#16301F;
+    --line:#26332B;
+    --in:#4CAE7C; --in-soft:#173023;
+    --out:#E08479; --out-soft:#3A1E1B;
+    --pend:#E0B15C; --pend-soft:#3A2E15;
+    --pitch1:#123c25; --pitch2:#0f3420;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1512; --surface:#161F1A; --surface-2:#1B251F;
+  --ink:#EAF0EA; --ink-soft:#A9B7AE; --ink-faint:#6E7C72;
+  --accent:#4CAE7C; --accent-deep:#0B2A1B; --accent-soft:#16301F;
+  --line:#26332B;
+  --in:#4CAE7C; --in-soft:#173023;
+  --out:#E08479; --out-soft:#3A1E1B;
+  --pend:#E0B15C; --pend-soft:#3A2E15;
+  --pitch1:#123c25; --pitch2:#0f3420;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans KR','Malgun Gothic',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+.num{font-family:'Oswald','IBM Plex Sans KR',sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:900px;margin:0 auto;padding-bottom:90px}
+header.top{background:linear-gradient(160deg,var(--accent-deep),var(--accent) 140%);color:#F4F6F1;padding:18px 16px 14px}
+.wordmark{font-family:'Black Han Sans','IBM Plex Sans KR',sans-serif;font-size:1.3rem;display:flex;align-items:center;gap:8px}
+.wordmark .dot{width:7px;height:7px;border-radius:50%;background:#F4F6F1;opacity:.85}
+.weeksel{margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.weeksel select{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:7px;padding:6px 8px;font-family:inherit;font-size:.85rem}
+.weeksel button{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:7px;padding:6px 10px;font-family:inherit;font-size:.8rem;cursor:pointer}
+.weeksel .lbl{font-family:'Oswald',sans-serif;font-size:.78rem;letter-spacing:.06em;color:#CFE4D7;text-transform:uppercase}
+
+nav.tabs{position:sticky;top:0;z-index:5;display:flex;background:var(--surface);border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{flex:1;min-width:74px;background:none;border:none;padding:10px 6px 8px;font-family:inherit;font-size:.78rem;color:var(--ink-faint);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+nav.tabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+main{padding:14px 14px 10px}
+section.tab{display:none}
+section.tab.on{display:block}
+
+h2{font-size:1rem;font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+h2 .bar{width:4px;height:14px;background:var(--accent);border-radius:2px}
+.lede{color:var(--ink-soft);font-size:.82rem;margin:0 0 12px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:var(--shadow);margin-bottom:12px}
+
+/* whoami */
+.whoami{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.whoami select{flex:1;min-width:140px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit}
+.whoami button{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-weight:600;cursor:pointer}
+
+/* vote list */
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;box-shadow:var(--shadow)}
+.stat .n{font-size:1.3rem;font-weight:700}
+.stat .l{font-size:.68rem;color:var(--ink-faint)}
+.stat.in .n{color:var(--in)} .stat.out .n{color:var(--out)} .stat.pend .n{color:var(--pend)}
+
+.rows{display:flex;flex-direction:column;gap:6px}
+.row{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.row.me{outline:2px solid var(--accent)}
+.row .no{width:22px;font-family:'Oswald',sans-serif;color:var(--ink-faint);font-size:.75rem;text-align:right}
+.row .nm{flex:1;font-weight:600;font-size:.88rem}
+.row .pos{font-size:.66rem;color:var(--ink-faint);background:var(--surface-2);border-radius:4px;padding:1px 5px;margin-left:4px}
+.seg{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.seg button{border:none;background:var(--surface-2);color:var(--ink-soft);font-family:inherit;font-size:.76rem;padding:6px 9px;cursor:pointer}
+.seg button.in.on{background:var(--in);color:#fff}
+.seg button.out.on{background:var(--out);color:#fff}
+
+/* formation */
+.shapebar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.shapebar button{padding:6px 11px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-size:.78rem;cursor:pointer}
+.shapebar button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pitch{position:relative;width:100%;aspect-ratio:68/100;border-radius:10px;overflow:hidden;background:repeating-linear-gradient(180deg,var(--pitch1) 0 11.11%,var(--pitch2) 11.11% 22.22%);border:2px solid rgba(255,255,255,.5);touch-action:none}
+.pitch svg{position:absolute;inset:0;width:100%;height:100%}
+.pitch.dropok{outline:3px solid #fff;outline-offset:-3px}
+.slot{position:absolute;transform:translate(-50%,-50%);width:15.5%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.94);border:2px solid var(--accent-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:grab;font-size:.62rem;line-height:1.1;color:var(--accent-deep);font-weight:700;text-align:center;padding:2px;box-shadow:0 2px 5px rgba(0,0,0,.25);touch-action:none;transition:outline .1s,transform .1s;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
+.slot .p{font-size:.66rem}
+.slot.dragging{opacity:.3}
+.slot.dropok{outline:3px solid #fff;transform:translate(-50%,-50%) scale(1.08)}
+.bslot{position:absolute;transform:translate(-50%,-50%);width:15.5%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.94);border:2px solid var(--accent-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.58rem;line-height:1.15;color:var(--accent-deep);font-weight:700;text-align:center;padding:2px;box-shadow:0 2px 5px rgba(0,0,0,.2);transition:outline .1s,transform .1s}
+.bslot.empty{background:rgba(255,255,255,.5);color:rgba(15,58,36,.5);font-weight:600}
+.bslot[data-id]{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
+.bslot.dragging{opacity:.3}
+.bslot.dropok{outline:3px solid #fff;transform:translate(-50%,-50%) scale(1.08)}
+.bslot .ovr{font-size:.5rem;font-weight:500;opacity:.75}
+.bench{margin-top:10px}
+.benchhead{font-size:.75rem;color:var(--ink-faint);margin:10px 0 4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-height:30px;border-radius:10px;transition:outline .1s}
+#benchChips.dropok{outline:2px dashed var(--out);outline-offset:4px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:5px 10px;font-size:.78rem;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
+.chip.out{opacity:.5;cursor:default;touch-action:auto}
+.chip.dragging{opacity:.3}
+.dragghost{position:fixed;top:0;left:0;transform:translate(-50%,-50%);z-index:90;pointer-events:none;background:var(--accent-deep);color:#fff;font-weight:700;font-size:.76rem;padding:6px 12px;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,.3);white-space:nowrap}
+.picker{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;z-index:50}
+.picker .sheet{background:var(--surface);width:100%;max-height:70vh;overflow:auto;border-radius:16px 16px 0 0;padding:14px}
+.picker h3{margin:0 0 8px;font-size:.9rem}
+.picker .opt{padding:10px;border-radius:8px;cursor:pointer;font-size:.85rem}
+.picker .opt:hover{background:var(--surface-2)}
+.picker .close{margin-top:8px;width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--ink-soft);font-family:inherit}
+
+/* venue/result */
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field label{font-size:.76rem;color:var(--ink-faint)}
+.field input,.field textarea,.field select{padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.85rem}
+.scorebar{display:flex;align-items:center;gap:8px}
+.scorebar input{width:60px;text-align:center;font-family:'Oswald',sans-serif;font-size:1.1rem}
+.wdl{font-family:'Oswald',sans-serif;font-weight:600;padding:3px 10px;border-radius:14px;font-size:.78rem}
+.wdl.W{background:var(--in-soft);color:var(--in)} .wdl.D{background:var(--pend-soft);color:var(--pend)} .wdl.L{background:var(--out-soft);color:var(--out)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--ink-faint);font-size:.7rem;text-transform:uppercase;letter-spacing:.03em}
+td.n{text-align:right;font-family:'Oswald',sans-serif}
+.addbtn{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-weight:600;cursor:pointer;font-size:.82rem}
+.ghost{padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--ink-soft);font-family:inherit;cursor:pointer;font-size:.82rem}
+.injrow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.83rem}
+.injrow:last-child{border-bottom:none}
+.badge{font-size:.68rem;padding:2px 8px;border-radius:10px;background:var(--out-soft);color:var(--out)}
+.badge.ok{background:var(--in-soft);color:var(--in)}
+footer.note{font-size:.72rem;color:var(--ink-faint);text-align:center;margin-top:18px}
+.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:var(--accent-deep);color:#fff;padding:8px 16px;border-radius:20px;font-size:.8rem;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
+.toast.show{opacity:1}
+
+/* id code tag */
+.code{font-family:'Oswald',sans-serif;font-size:.6rem;color:var(--ink-faint);background:var(--surface-2);border-radius:4px;padding:1px 5px;margin-left:4px;letter-spacing:.02em}
+
+/* band-style poll */
+.bandbtns{display:flex;gap:8px}
+.bandbtn{flex:1;padding:14px 8px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-weight:700;font-size:.9rem;cursor:pointer}
+.bandbtn.in.on{background:var(--in-soft);border-color:var(--in);color:var(--in)}
+.bandbtn.out.on{background:var(--out-soft);border-color:var(--out);color:var(--out)}
+.pollopt{margin-bottom:14px}
+.pollopt:last-child{margin-bottom:0}
+.pollopt-head{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;font-weight:600;margin-bottom:5px}
+.pollopt-head .num{font-weight:400;color:var(--ink-faint);font-size:.78rem}
+.pollbar{height:8px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.pollbar-fill{height:100%;border-radius:5px}
+.pollbar-fill.in{background:var(--in)}
+.pollbar-fill.out{background:var(--out)}
+.pollnames{margin-top:4px}
+.pollnames summary{font-size:.74rem;color:var(--ink-faint);cursor:pointer;list-style:none}
+.pollnames summary::-webkit-details-marker{display:none}
+.pollnames summary:before{content:'▸ '}
+.pollnames[open] summary:before{content:'▾ '}
+details.collapse summary{font-size:.82rem;color:var(--ink-soft);cursor:pointer;padding:4px 0;font-weight:600;list-style:none}
+details.collapse summary::-webkit-details-marker{display:none}
+details.collapse summary:before{content:'▸ '}
+details.collapse[open] summary:before{content:'▾ '}
+
+/* player cards (고알레 스타일) */
+.cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;box-shadow:var(--shadow)}
+.pcard-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.pcard .ovr{font-size:1.35rem;font-weight:700;color:var(--accent-deep)}
+.tier{font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:9px;background:var(--surface-2);color:var(--ink-soft)}
+.tier.ace{background:#3A2E15;color:#E0B15C}
+:root:not([data-theme="dark"]) .tier.ace{background:var(--pend-soft);color:var(--pend)}
+.tier.starter{background:var(--in-soft);color:var(--in)}
+.tier.grow{background:var(--accent-soft);color:var(--accent)}
+.tier.rookie{background:var(--surface-2);color:var(--ink-faint)}
+.pname{font-weight:600;font-size:.86rem}
+.pcode{font-size:.68rem;color:var(--ink-faint);margin:2px 0 6px}
+.pmeta{font-size:.68rem;color:var(--ink-soft);display:flex;align-items:center;gap:6px;margin-top:2px}
+.mombadge{font-size:.6rem;font-weight:700;background:var(--pend-soft);color:var(--pend);padding:1px 6px;border-radius:8px}
+
+/* star rating */
+.stars{display:flex;gap:2px}
+.star{font-size:1.2rem;line-height:1;color:var(--line);cursor:pointer;user-select:none}
+.star.on{color:var(--pend)}
+.star.off{opacity:.4}
+
+/* dues */
+.duesbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.duesbar .navbtn{background:none;border:1px solid var(--line);border-radius:7px;padding:4px 10px;font-family:inherit;cursor:pointer;color:var(--ink-soft)}
+.duesbar .lbl{font-weight:700;font-size:.88rem}
+.duechip{cursor:pointer}
+.duechip.paid{background:var(--in-soft);border-color:var(--in);color:var(--in)}
+
+/* 쿼터 선택 / 공격·수비 모드 */
+.pillbar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.pillbar button{padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-size:.78rem;cursor:pointer}
+.pillbar button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.modebar{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--line);margin-bottom:10px}
+.modebar button{flex:1;border:none;background:var(--surface-2);color:var(--ink-soft);font-family:inherit;font-weight:700;font-size:.82rem;padding:10px;cursor:pointer}
+.modebar button.on{color:#fff}
+.modebar button.atk.on{background:var(--out)}
+.modebar button.def.on{background:var(--accent-deep)}
+
+.chartrow{display:flex;flex-direction:column;gap:3px;margin-bottom:10px}
+.chartrow:last-child{margin-bottom:0}
+.chartrow-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:.8rem}
+.chartrow-head span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chartrow-head b{font-weight:700;white-space:nowrap}
+.chartbar-track{height:9px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.chartbar-fill{height:100%;border-radius:5px;background:var(--accent)}
+.chartbar-fill.warn{background:var(--pend)}
+.chartbar-fill.bad{background:var(--out)}
+.venuecard-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.venuecard-head b{font-size:.92rem}
+.venuecard-head span{font-size:.74rem;color:var(--ink-faint)}
+.venuemeta{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:.78rem;color:var(--ink-soft)}
+.venuemeta label{display:flex;align-items:center;gap:4px}
+.venuemeta input,.venuemeta select{padding:4px 6px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.78rem}
+.venuemeta input{width:82px}
+.venuepref-row{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.venuepref-row .pref-label{font-size:.78rem;color:var(--ink-soft)}
+.injwarn{font-size:.78rem;color:var(--out);margin-top:2px}
+.traitsInput{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:5px 7px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.72rem}
+.hurtbtn{margin-top:6px;width:100%;padding:5px;font-size:.72rem}
+.postag{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--accent-soft);color:var(--accent);margin-left:6px;white-space:nowrap}
+.postag.best{background:var(--pend-soft);color:var(--pend)}
+
+/* 선착순 정원 / 마감 / 임원진 모드 */
+.capbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.capbar .capnum{font-weight:700}
+.lockmsg{margin-top:8px;font-size:.78rem;color:var(--out);line-height:1.4}
+.adminbtn{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-soft);font-family:inherit;font-size:.74rem;cursor:pointer;white-space:nowrap}
+.adminbtn.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.seg button.disabled,.bandbtn.disabled{opacity:.4;pointer-events:none}
+.picker[hidden]{display:none}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="top">
+  <div class="wordmark">SAVE&nbsp;FC 스쿼드보드<span class="dot"></span></div>
+  <div class="weeksel">
+    <span class="lbl">이번 주</span>
+    <select id="weekSel"></select>
+    <button id="newWeekBtn" type="button">다음 주 추가</button>
+    <button id="settingsBtn" type="button" title="동기화 설정" style="padding:6px 9px">⚙</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="vote" class="on">참여투표</button>
+  <button data-tab="form">포메이션</button>
+  <button data-tab="match">구장·결과</button>
+  <button data-tab="cards">선수카드</button>
+  <button data-tab="analysis">분석</button>
+  <button data-tab="stats">현황</button>
+</nav>
+
+<main>
+
+<section class="tab on" id="tab-vote">
+  <div class="card whoami">
+    <select id="whoSel"></select>
+    <button id="whoSetBtn" type="button">나로 설정</button>
+  </div>
+  <p class="lede" style="margin:-4px 0 12px">내 이름을 골라두면 아이디가 이 기기에 저장돼요. 아이디는 이름 옆 <span class="code">SFC00</span> 표시예요.</p>
+
+  <h2><span class="bar"></span>쿼터별 참석 투표 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(고알레 방식)</span></h2>
+  <p class="lede">고알레처럼 쿼터마다 따로 투표해요. 1쿼터만 뛰고 가는 사람, 늦게 합류하는 사람 다 반영할 수 있어요. 밴드 투표처럼 눌러서 참석/불참을 표시하고, 명단 보기를 누르면 누가 눌렀는지 볼 수 있어요. 참석은 선착순 16명까지만 받고, 경기 24시간 전에 마감돼요 (임원진은 마감 후에도 수정 가능).</p>
+  <div class="card" id="voteCapCard"></div>
+  <div class="pillbar" id="voteQPills"></div>
+  <div class="card" id="voteBandMe"></div>
+  <div class="card" id="voteBandBars"></div>
+
+  <details class="collapse">
+    <summary>전체 명단 · 대리투표 (총무용)</summary>
+    <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요. (선택된 쿼터 기준)</p>
+    <div class="rows" id="voteRows"></div>
+  </details>
+</section>
+
+<section class="tab" id="tab-form">
+  <h2><span class="bar"></span>포메이션 · 전술판</h2>
+  <p class="lede">쿼터별로, 공격할 때·수비할 때 포메이션을 따로 짤 수 있어요. 벤치 선수를 피치 위 원하는 자리로 자유롭게 드래그해서 놓을 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 피치의 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로, 선수카드에서 그 포지션을 선호한다고 등록해둔 선수부터 우선순위로 뜨는 배치 창이 열려요 (FM 스타일). 이미 배치된 선수도 드래그로 위치를 옮기거나 벤치 쪽으로 끌면 뺄 수 있어요.</p>
+  <div class="pillbar" id="formQPills"></div>
+  <div class="modebar" id="modeBar">
+    <button type="button" class="atk" data-act="mode" data-mode="atk">⚔️ 공격 시</button>
+    <button type="button" class="def" data-act="mode" data-mode="def">🛡️ 수비 시</button>
+  </div>
+  <div class="shapebar" id="shapeBar"></div>
+  <button type="button" class="ghost" id="resetFormBtn" style="width:100%;margin-bottom:10px">↺ 초기화 (선택한 포메이션 기본 자리로)</button>
+  <div class="pitch" id="pitch"></div>
+  <div class="bench">
+    <div class="benchhead" id="benchHead">벤치 (이 쿼터 참석, 미배치)</div>
+    <div class="chips" id="benchChips"></div>
+    <div class="benchhead">이 쿼터 불참 / 미투표</div>
+    <div class="chips" id="outChips"></div>
+  </div>
+
+  <h2 style="margin-top:20px"><span class="bar"></span>🏆 최상의 포메이션</h2>
+  <p class="lede">지금 선택된 포메이션(<b id="bestXIShapeLabel"></b>) 기준으로, 선수카드의 능력치(OVR)와 선호 포지션을 반영해서 조건별 최상의 라인업을 자동으로 짜봤어요. 마음에 안 들면 아래에서 선수를 직접 드래그해서 자리를 옮기거나 맞바꿀 수 있어요 (실제 배치와는 별개로, 이 조정 내용은 보는 사람 화면에만 남고 저장되지는 않아요).</p>
+  <div class="pillbar" id="bestXIScopePills"></div>
+  <button type="button" class="ghost" id="resetBestXIBtn" style="width:100%;margin-bottom:10px">↺ 추천 배치로 초기화</button>
+  <div class="pitch" id="bestXIPitch"></div>
+  <div class="lede" id="bestXIStat" style="margin-top:8px"></div>
+</section>
+
+<section class="tab" id="tab-match">
+  <h2><span class="bar"></span>구장 · 경기 결과</h2>
+  <div class="card">
+    <div class="field"><label>구장</label><input id="venueInput" placeholder="예: 효창운동장"></div>
+    <div class="field"><label>경기 시작 시각</label><input id="matchTimeInput" type="time"></div>
+    <div class="field"><label>스코어 (우리 : 상대)</label>
+      <div class="scorebar">
+        <input id="usScore" type="number" min="0">
+        <span>:</span>
+        <input id="themScore" type="number" min="0">
+        <span class="wdl" id="wdlBadge">-</span>
+      </div>
+    </div>
+    <div class="field"><label>메모</label><textarea id="matchNote" rows="2" placeholder="특이사항"></textarea></div>
+  </div>
+
+  <h2><span class="bar"></span>득점 기록</h2>
+  <p class="lede">골 넣을 때마다 수동으로 기록해두면 득점왕 순위에 반영돼요.</p>
+  <div class="card">
+    <div class="field"><label>득점자</label><select id="goalMember"></select></div>
+    <div class="field"><label>쿼터 (선택)</label>
+      <select id="goalQuarter">
+        <option value="">무관</option>
+        <option value="1">1쿼터</option><option value="2">2쿼터</option>
+        <option value="3">3쿼터</option><option value="4">4쿼터</option>
+      </select>
+    </div>
+    <div class="field"><label>메모 (선택)</label><input id="goalNote" placeholder="예: PK, 프리킥, 헤더"></div>
+    <button class="addbtn" id="goalAddBtn" type="button">득점 추가</button>
+    <div id="goalList" style="margin-top:10px"></div>
+  </div>
+
+  <h2><span class="bar"></span>매치 평점 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(고알레 스타일 · 선수별 투표)</span></h2>
+  <p class="lede" id="ratingHint">참석자 각자가 서로에게 별점을 매겨요. 평균이 선수카드 능력치와 MOM에 반영돼요.</p>
+  <div class="card">
+    <div class="rows" id="ratingRows"></div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:.82rem">
+      이번 주 MOM: <b id="momThisWeek">-</b>
+    </div>
+  </div>
+
+  <h2><span class="bar"></span>부상 기록</h2>
+  <div class="card">
+    <div class="field"><label>선수</label><select id="injMember"></select></div>
+    <div class="field"><label>내용</label><input id="injNote" placeholder="예: 발목 삠, 2주 휴식"></div>
+    <button class="addbtn" id="injAddBtn" type="button">부상 추가</button>
+    <div id="injList" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<section class="tab" id="tab-cards">
+  <h2><span class="bar"></span>선수카드 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(고알레 스타일)</span></h2>
+  <p class="lede">매치 평점이 쌓일수록 능력치(OVR)와 등급이 자동으로 올라가요. "선호 포지션" 칸에 가능한 자리를 우선순위대로 적어두면(예: ST, CAM, LW), 포메이션 탭에서 그 자리를 배치할 때 우선순위 순으로 후보에 떠요. 쓸 수 있는 자리 코드: GK, LB·CB·RB, LWB·RWB, CDM·CM·LM·RM, CAM·LAM·RAM, LW·ST·RW</p>
+  <div class="cards-grid" id="playerCards"></div>
+</section>
+
+<section class="tab" id="tab-analysis">
+  <h2><span class="bar"></span>구장별 분석</h2>
+  <p class="lede">승률 · 참석률 · 부상 건수에 가격, 선호 시간대, 선호도까지 한 카드에서 볼 수 있어요. 선호도는 각자 별점으로 투표해요 — 집에서 거리, 편의성 등 각자 사정을 반영해서 눌러주세요.</p>
+  <div id="venueAnalysisCards"></div>
+
+  <h2><span class="bar"></span>기간별(월별) 분석</h2>
+  <div class="card" id="monthAnalysisChart"></div>
+
+  <h2><span class="bar"></span>부상 현황</h2>
+  <div class="card">
+    <p class="lede" id="injuryRateStat" style="margin:0 0 10px"></p>
+    <div class="benchhead" style="margin-top:0">현재 부상자</div>
+    <div id="currentInjuredList"></div>
+  </div>
+  <div class="card">
+    <div class="benchhead" style="margin-top:0">선수별 부상률</div>
+    <div id="playerInjuryChart"></div>
+  </div>
+
+  <h2><span class="bar"></span>득점 리더보드</h2>
+  <div class="card" id="scorerChart"></div>
+</section>
+
+<section class="tab" id="tab-stats">
+  <h2><span class="bar"></span>이번 달 회비 현황</h2>
+  <div class="card">
+    <div class="duesbar">
+      <button class="navbtn" id="duesPrevBtn" type="button">‹</button>
+      <span class="lbl" id="duesMonthLabel"></span>
+      <button class="navbtn" id="duesNextBtn" type="button">›</button>
+    </div>
+    <p class="lede" style="margin-bottom:8px">이름을 누르면 납부 체크가 토글돼요.</p>
+    <div class="chips" id="duesChips"></div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:.82rem" id="duesSummary"></div>
+  </div>
+
+  <h2><span class="bar"></span>구장별 전적</h2>
+  <div class="card"><table id="venueTable"></table></div>
+
+  <h2><span class="bar"></span>부상 현황 (전체)</h2>
+  <div class="card" id="allInjuries"></div>
+
+  <h2><span class="bar"></span>참여 현황 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(회비 참고용 — 실제 정산은 엑셀 기준)</span></h2>
+  <div class="card"><table id="attnTable"></table></div>
+</section>
+
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="picker" id="settingsModal" hidden>
+  <div class="sheet">
+    <h3>⚙ 동기화 설정</h3>
+    <p class="lede" style="margin-top:0">이 사이트는 Supabase 실시간 기능으로 팀 전체가 같은 데이터를 실시간으로 봐요(새로고침 필요 없음). 아래에 Supabase 프로젝트의 URL과 anon public key를 넣어주세요 (배포 가이드 참고 — savefc 스키마 전용이라 한의원 데이터에는 접근하지 않아요).</p>
+    <div style="margin:10px 0">
+      <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:4px">Project URL</label>
+      <input id="settingsUrl" class="traitsInput" placeholder="https://xxxxx.supabase.co">
+    </div>
+    <div style="margin:10px 0">
+      <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:4px">anon public key</label>
+      <textarea id="settingsKey" class="traitsInput" style="height:70px;font-family:monospace;font-size:.68rem" placeholder="eyJhbGciOi..."></textarea>
+    </div>
+    <div id="settingsStatus" class="lede" style="margin:6px 0"></div>
+    <button type="button" id="settingsSaveBtn" style="width:100%;margin-bottom:8px">저장하고 연결하기</button>
+    <button class="close" type="button">닫기</button>
+  </div>
+</div>
+<script>
+const ROSTER = [
+ {id:'lgh',name:'이경현',pos:'GK',no:1},
+ {id:'kyc',name:'김윤철',pos:'FP',no:2},
+ {id:'yjm',name:'양정모',pos:'FP',no:3},
+ {id:'kjh1',name:'김재현',pos:'FP',no:4},
+ {id:'kgw',name:'김기욱',pos:'FP',no:5},
+ {id:'ysb',name:'윤상빈',pos:'FP',no:6},
+ {id:'pjy',name:'박준열',pos:'FP',no:7},
+ {id:'obj',name:'오병진',pos:'FP',no:8},
+ {id:'yjy',name:'윤준영',pos:'FP',no:9},
+ {id:'kjh2',name:'김준형',pos:'FP',no:10},
+ {id:'cwy',name:'최원영',pos:'FP',no:11},
+ {id:'jhw',name:'정현우',pos:'FP',no:13},
+ {id:'kjh3',name:'김지후',pos:'FP',no:14},
+ {id:'pgh',name:'박건희',pos:'FP',no:15},
+ {id:'kjk',name:'구자경',pos:'FP',no:17,hurt:true},
+ {id:'kch',name:'김창희',pos:'FP',no:18},
+ {id:'ksh',name:'구승회',pos:'FP',no:19},
+ {id:'yyj',name:'윤영진',pos:'FP',no:20},
+ {id:'cyb',name:'최윤범',pos:'FP',no:21},
+ {id:'hds',name:'허도선',pos:'FP',no:31},
+ {id:'csj',name:'최성진',pos:'FP',no:32},
+ {id:'jsj',name:'정승주',pos:'FP',no:42},
+ {id:'ihj',name:'임환주',pos:'FP',no:47},
+ {id:'kui',name:'김의리',pos:'FP',no:62},
+ {id:'ies',name:'임은성',pos:'FP',no:71},
+ {id:'jjh',name:'장정훈',pos:'FP',no:77},
+ {id:'ktw',name:'강태원',pos:'FP',no:80},
+ {id:'lyj',name:'이윤재',pos:'GK',no:96},
+ {id:'ygb',name:'윤관호',pos:'FP',no:null},
+ {id:'ksh2',name:'김시호',pos:'FP',no:null},
+ {id:'lsc',name:'이성찬',pos:'FP',no:null},
+ {id:'kgb',name:'고규범',pos:'FP',no:null},
+];
+// 각자 아이디 — 로그인 없이도 서로를 구분할 수 있는 고정 표기용 코드 (SFC01~)
+ROSTER.forEach((m,i)=>{ m.code = 'SFC' + String(i+1).padStart(2,'0'); });
+
+// 각 포메이션은 "기본 배치 템플릿"일 뿐이다. 실제로는 자유롭게 어디로든 드래그해서
+// 옮길 수 있고(예: 오른쪽에 공격수 3명 몰아두기), 이 좌표는 프리셋 적용·초기화할 때
+// 출발점으로만 쓰인다.
+const SHAPES = {
+ '4-3-3':[['GK',50,94],['LB',15,76],['CB',35,80],['CB',65,80],['RB',85,76],
+          ['CM',28,54],['CM',50,58],['CM',72,54],
+          ['LW',18,26],['ST',50,18],['RW',82,26]],
+ '4-4-2':[['GK',50,94],['LB',15,76],['CB',35,80],['CB',65,80],['RB',85,76],
+          ['LM',15,50],['CM',38,54],['CM',62,54],['RM',85,50],
+          ['ST',38,20],['ST',62,20]],
+ '3-5-2':[['GK',50,94],['CB',30,80],['CB',50,84],['CB',70,80],
+          ['LM',12,52],['CM',32,56],['CM',50,60],['CM',68,56],['RM',88,52],
+          ['ST',38,20],['ST',62,20]],
+ '4-2-3-1':[['GK',50,94],['LB',15,76],['CB',35,80],['CB',65,80],['RB',85,76],
+          ['CDM',38,62],['CDM',62,62],
+          ['LAM',18,38],['CAM',50,36],['RAM',82,38],['ST',50,16]],
+ '4-1-4-1':[['GK',50,94],['LB',15,76],['CB',35,80],['CB',65,80],['RB',85,76],
+          ['CDM',50,64],
+          ['LM',15,46],['CM',38,48],['CM',62,48],['RM',85,46],['ST',50,18]],
+ '3-4-3':[['GK',50,94],['CB',30,80],['CB',50,84],['CB',70,80],
+          ['LM',13,52],['CM',38,54],['CM',62,54],['RM',87,52],
+          ['LW',20,22],['ST',50,16],['RW',80,22]],
+ '5-3-2':[['GK',50,94],['LWB',10,72],['CB',30,80],['CB',50,84],['CB',70,80],['RWB',90,72],
+          ['CM',30,54],['CM',50,58],['CM',70,54],
+          ['ST',38,20],['ST',62,20]],
+};
+
+function uid(){return Math.random().toString(36).slice(2,9)}
+function nextSunday(from){
+  const d=new Date(from); const add=(7-d.getDay())%7 || 7; d.setDate(d.getDate()+add);
+  return d.toISOString().slice(0,10);
+}
+function fmtLabel(iso){
+  const d=new Date(iso+'T00:00:00');
+  return (d.getMonth()+1)+'/'+d.getDate()+'(일)';
+}
+/* ---------- 쿼터 (고알레 방식: 쿼터마다 따로 투표 + 공격/수비 포메이션) ---------- */
+function newQuarter(n){
+  return {n, votes:{}, shapeAtk:'4-3-3', posAtk:{}, shapeDef:'4-4-2', posDef:{}};
+}
+function newWeek(dateIso){
+  return {id:uid(), date:dateIso, label:fmtLabel(dateIso), venue:'', matchTime:'10:00', attendOrder:[],
+    quarters:[1,2,3,4].map(newQuarter),
+    goals:[], result:{us:null,them:null,note:''}, injuries:[], ratings:{}};
+}
+// 예전에는 "몇 번 자리"(인덱스)에 누가 있는지만 저장해서, 정해진 포메이션 틀 안에서만
+// 배치할 수 있었다. 이제는 선수마다 좌표(x%,y%)를 직접 저장해서 피치 어디든 자유롭게
+// 옮길 수 있다 — 그래서 인덱스 기반 lineup을 좌표 기반 posAtk/posDef로 옮겨준다.
+function idxLineupToPositions(lineupIdx, shapeName){
+  const slots = SHAPES[shapeName] || SHAPES['4-3-3'];
+  const pos = {};
+  Object.entries(lineupIdx||{}).forEach(([idx,pid])=>{
+    const s = slots[parseInt(idx,10)];
+    if(s && pid) pos[pid] = {x:s[1], y:s[2]};
+  });
+  return pos;
+}
+function migrateQuarterPositions(q){
+  if(!q.posAtk){ q.posAtk = idxLineupToPositions(q.lineupAtk, q.shapeAtk); delete q.lineupAtk; }
+  if(!q.posDef){ q.posDef = idxLineupToPositions(q.lineupDef, q.shapeDef); delete q.lineupDef; }
+}
+// 이전 버전(주 단위 votes/shape/lineup 1개)으로 저장된 주차를 쿼터 구조로 옮겨준다.
+// 기존 데이터는 1쿼터로 옮기고 2~4쿼터는 새로 만든다 — 실제로 모아둔 투표/배치가 사라지지 않도록.
+function migrateWeek(w){
+  if(!w.quarters){
+    const q1 = newQuarter(1);
+    q1.votes = w.votes || {};
+    q1.shapeAtk = w.shape || '4-3-3';
+    q1.posAtk = idxLineupToPositions(w.lineup, q1.shapeAtk);
+    w.quarters = [q1, newQuarter(2), newQuarter(3), newQuarter(4)];
+    delete w.votes; delete w.shape; delete w.lineup;
+  }
+  w.quarters.forEach(migrateQuarterPositions);
+  if(!w.goals) w.goals = [];
+  if(!w.ratings) w.ratings = {};
+  if(!w.injuries) w.injuries = [];
+  if(!w.matchTime) w.matchTime = '10:00';
+  if(!w.attendOrder) w.attendOrder = Array.from(weekAttendeeIds(w));
+  return w;
+}
+function weekAttendeeIds(w){
+  const s = new Set();
+  w.quarters.forEach(q=>{ Object.entries(q.votes).forEach(([id,v])=>{ if(v==='in') s.add(id); }); });
+  return s;
+}
+// 경기 24시간 전 = 투표 마감. w.matchTime(HH:MM, 기본 10:00)과 w.date를 합쳐서
+// 계산하고, 그 시각을 지나면 임원진 모드가 아닌 이상 참여투표를 더 바꿀 수 없다.
+function weekDeadlineMs(w){
+  const t = w.matchTime || '10:00';
+  const d = new Date(`${w.date}T${t}:00`);
+  return d.getTime() - 24*3600*1000;
+}
+function votingLocked(w){
+  return Date.now() > weekDeadlineMs(w);
+}
+
+let STATE = window.__SAVEFC_STATE__ || (function(){
+  // Merged in from the live page's own saved state (someone already voted
+  // 참석 as 이경현 on the 9/6 week, set 1쿼터 공격 포메이션을 4-2-3-1로 바꾸고,
+  // 이경현을 자유배치로 (48.5,82.7) 자리에 놓아둠, "다음 주 추가"로 9/13·9/20
+  // 두 주를 더 만들어서 9/20이 현재 선택된 주가 되어 있음, 이경현 9월 회비 납부
+  // 처리됨) so that republishing this update doesn't wipe out real interactions.
+  const w1 = newWeek('2026-09-06');
+  w1.id = '1fzdntk';
+  w1.quarters[0].votes = {lgh:'in'};
+  w1.quarters[0].shapeAtk = '4-2-3-1';
+  w1.quarters[0].posAtk = {lgh:{x:48.540856074445074,y:82.73110491596942}};
+  const w2 = newWeek('2026-09-13');
+  w2.id = 'i0cqmkm';
+  const w3 = newWeek('2026-09-20');
+  w3.id = '49twnke';
+  return {roster: ROSTER, weeks:[w1,w2,w3], currentWeek:'49twnke', dues:{'2026-09':{lgh:true, kyc:false}}};
+})();
+if(!STATE.currentWeek) STATE.currentWeek = STATE.weeks[STATE.weeks.length-1].id;
+if(!STATE.dues) STATE.dues = {};
+if(!STATE.venueInfo) STATE.venueInfo = {};
+STATE.weeks.forEach(migrateWeek);
+
+let curQuarterIdx = 0;   // 현재 보고 있는 쿼터 (0~3) — 참여투표/포메이션 탭이 공유
+let curMode = 'atk';     // 'atk'(공격 시) | 'def'(수비 시) — 포메이션 탭 전용
+
+// 임원진 모드: PIN을 아는 임원진만 켤 수 있고, 켜져 있으면 마감/선착순 제한을 무시하고
+// 투표를 대신 고쳐줄 수 있다. 기기별로 localStorage에 저장(실제 로그인 시스템은 아님).
+const ADMIN_PIN = '2580';
+let adminMode = (function(){ try{ return localStorage.getItem('savefc_admin')==='1'; }catch(e){ return false; } })();
+
+function curWeek(){ return STATE.weeks.find(w=>w.id===STATE.currentWeek) || STATE.weeks[0]; }
+function curQuarter(){ return curWeek().quarters[curQuarterIdx]; }
+function curShapeKey(){ return curMode==='atk' ? 'shapeAtk' : 'shapeDef'; }
+function curPosKey(){ return curMode==='atk' ? 'posAtk' : 'posDef'; }
+function curShape(){ return curQuarter()[curShapeKey()]; }
+function curPositions(){ return curQuarter()[curPosKey()]; }
+// 현재 쿼터·모드에 선택된 포메이션 템플릿 좌표대로 참석자를 자동 배치한다
+// ("초기화" 버튼, GK는 GK 자리로 최대한 먼저 배정).
+function applyShapeTemplate(){
+  const q = curQuarter();
+  const slots = SHAPES[curShape()];
+  const attendees = STATE.roster.filter(m=>q.votes[m.id]==='in');
+  const gk = attendees.find(m=>m.pos==='GK');
+  const rest = attendees.filter(m=>!gk || m.id!==gk.id);
+  const newPos = {};
+  let ri = 0;
+  slots.forEach(s=>{
+    const [role,x,y] = s;
+    if(role==='GK' && gk){ newPos[gk.id] = {x,y}; return; }
+    if(rest[ri]){ newPos[rest[ri].id] = {x,y}; ri++; }
+  });
+  q[curPosKey()] = newPos;
+  save();
+}
+
+/* ---------- FM 스타일 포지션 적성: 선수마다 "이 포지션들 가능해요"를 우선순위 순으로
+   기록해두고, 자리를 고를 때 그 순서대로 후보를 정렬해서 보여준다. ---------- */
+function memberPosRoles(m){
+  return (m.posRoles||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+}
+function posPriority(m, role){
+  if(!role) return Infinity;
+  const idx = memberPosRoles(m).indexOf(role.toUpperCase());
+  return idx===-1 ? Infinity : idx;
+}
+// 피치의 빈 자리를 탭했을 때, 그 좌표가 현재 포메이션 템플릿의 어떤 자리(역할)에 가장
+// 가까운지 찾아서 그 역할 기준으로 후보를 우선순위 정렬한다.
+function nearestRole(x,y){
+  const slots = SHAPES[curShape()];
+  let best = slots[0][0], bestD = Infinity;
+  slots.forEach(s=>{ const d = Math.hypot(s[1]-x, s[2]-y); if(d<bestD){ bestD=d; best=s[0]; } });
+  return best;
+}
+
+/* ---------- 최상의 포메이션 추천: 조건(올타임/현재 스쿼드/이번 경기 투표자)별로
+   OVR·선호 포지션을 기준으로 최적 라인업을 자동으로 짜서 참고용으로 보여준다.
+   실제 배치(curPositions)와는 별개의, 저장되지 않는 계산 결과다. ---------- */
+let bestXIScope = 'alltime'; // 'alltime' | 'squad' | 'thisweek' — 뷰어 로컬 상태 (공유 저장 안 함)
+let bestXIPos = null; // {memberId:{x,y}} — 추천 배치를 사용자가 드래그로 직접 조정한 값. null이면 자동 추천 그대로. 뷰어 로컬, 공유 저장 안 함.
+function ovrOf(m){ const r=ratingFor(m.id); return r.ovr!=null? r.ovr : 60; }
+function bestXIPool(){
+  if(bestXIScope==='squad') return STATE.roster.filter(m=>!m.hurt);
+  if(bestXIScope==='thisweek') { const ids=weekAttendeeIds(curWeek()); return STATE.roster.filter(m=>ids.has(m.id)); }
+  return STATE.roster.slice();
+}
+function computeBestXI(pool, shapeName){
+  const slots = SHAPES[shapeName];
+  const used = new Set();
+  const assign = {};
+  // GK 자리부터: 실제 GK 포지션 선수 중 OVR이 높은 사람을 우선, 없으면 최선의 남은 사람으로 채운다.
+  slots.forEach((s,i)=>{
+    if(s[0]!=='GK') return;
+    const gkCands = pool.filter(m=>m.pos==='GK' && !used.has(m.id)).sort((a,b)=>ovrOf(b)-ovrOf(a));
+    const fallback = pool.filter(m=>!used.has(m.id)).sort((a,b)=>ovrOf(b)-ovrOf(a));
+    const pick = gkCands[0] || fallback[0];
+    if(pick){ assign[i]=pick.id; used.add(pick.id); }
+  });
+  // 나머지 자리: 그 포지션을 선호 포지션으로 등록해둔 사람을 우선순위대로, 그 다음은 OVR 높은 순.
+  slots.forEach((s,i)=>{
+    if(s[0]==='GK' || assign[i]!==undefined) return;
+    const role = s[0];
+    const cands = pool.filter(m=>!used.has(m.id)).slice().sort((a,b)=>{
+      const pa=posPriority(a,role), pb=posPriority(b,role);
+      if(pa!==pb) return pa-pb;
+      return ovrOf(b)-ovrOf(a);
+    });
+    const pick = cands[0];
+    if(pick){ assign[i]=pick.id; used.add(pick.id); }
+  });
+  return assign;
+}
+function renderBestXI(){
+  const pillEl = document.getElementById('bestXIScopePills');
+  if(!pillEl) return;
+  const scopes = [['alltime','올타임'], ['squad','현재 스쿼드'], ['thisweek','이번 경기 투표자']];
+  pillEl.innerHTML = scopes.map(([k,label])=>
+    `<button type="button" class="${bestXIScope===k?'on':''}" data-act="bestxiscope" data-scope="${k}">${label}</button>`).join('');
+
+  const shape = curShape();
+  document.getElementById('bestXIShapeLabel').textContent = shape;
+  const pool = bestXIPool();
+  const assign = computeBestXI(pool, shape);
+  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const slots = SHAPES[shape];
+  let html = pitchMarkings();
+  let total=0, cnt=0;
+  slots.forEach((s,i)=>{
+    const [role,x,y]=s;
+    const pid = assign[i];
+    const person = pid && byId[pid];
+    if(person){
+      total += ovrOf(person); cnt++;
+      const p = (bestXIPos && bestXIPos[pid]) || {x, y};
+      html += `<div class="bslot" data-id="${pid}" style="left:${p.x}%;top:${p.y}%">
+        <div>${person.name}</div><div class="ovr">${ovrOf(person)}</div>
+      </div>`;
+    } else {
+      html += `<div class="bslot empty" style="left:${x}%;top:${y}%">
+        <div>${role}</div><div class="ovr">공석</div>
+      </div>`;
+    }
+  });
+  document.getElementById('bestXIPitch').innerHTML = html;
+  const avg = cnt? (total/cnt).toFixed(1) : '–';
+  document.getElementById('bestXIStat').textContent =
+    `후보 ${pool.length}명 중 ${cnt}/${slots.length}자리 배치 · 평균 OVR ${avg}${bestXIPos? ' · 직접 조정됨':''}`;
+}
+function applyBestXIDrag(id, x, y){
+  if(!bestXIPos){
+    // 자동 추천 배치를 그대로 얼려서(freeze) 이 시점부터 드래그로 직접 조정 가능한 상태로 전환한다.
+    const shape = curShape();
+    const pool = bestXIPool();
+    const assign = computeBestXI(pool, shape);
+    const slots = SHAPES[shape];
+    bestXIPos = {};
+    slots.forEach((s,i)=>{ const pid = assign[i]; if(pid) bestXIPos[pid] = {x:s[1], y:s[2]}; });
+  }
+  // 다른 선수가 있는 자리 위에 놓으면 두 선수의 자리를 맞바꾼다.
+  const swapId = Object.keys(bestXIPos).find(pid=> pid!==id && Math.hypot(bestXIPos[pid].x-x, bestXIPos[pid].y-y) < 6);
+  if(swapId){
+    const tmp = bestXIPos[id];
+    bestXIPos[id] = bestXIPos[swapId];
+    bestXIPos[swapId] = tmp;
+  } else {
+    bestXIPos[id] = {x, y};
+  }
+  render();
+}
+
+/* ---------- 고알레 스타일 능력치 : 선수별로 참석자 각자가 투표(1~5★), 평균을 냄 ---------- */
+function weekTargetAvg(w, targetId){
+  const votes = w.ratings && w.ratings[targetId];
+  if(!votes) return null;
+  const vals = Object.values(votes);
+  if(!vals.length) return null;
+  return {avg: vals.reduce((a,b)=>a+b,0)/vals.length, n: vals.length};
+}
+function weekMom(w){
+  const ids = weekAttendeeIds(w);
+  const attendees = STATE.roster.filter(m=>ids.has(m.id));
+  const scored = attendees.map(m=>({m, r:weekTargetAvg(w,m.id)})).filter(x=>x.r);
+  if(!scored.length) return null;
+  const max = Math.max(...scored.map(x=>x.r.avg));
+  return {max, members: scored.filter(x=>x.r.avg===max).map(x=>x.m)};
+}
+function ratingFor(id){
+  let sum=0,n=0,mom=0;
+  STATE.weeks.forEach(w=>{
+    const r = weekTargetAvg(w,id);
+    if(r){ sum+=r.avg; n++; }
+  });
+  STATE.weeks.forEach(w=>{
+    const m = weekMom(w);
+    if(m && m.members.length===1 && m.members[0].id===id) mom++;
+  });
+  const avg = n? sum/n : null;
+  const ovr = avg!=null ? Math.max(40,Math.min(99, Math.round(65 + (avg-3)*8))) : null;
+  return {avg, ovr, n, mom};
+}
+function tierFor(ovr){
+  if(ovr==null) return {label:'평가 전', cls:'rookie'};
+  if(ovr>=85) return {label:'에이스', cls:'ace'};
+  if(ovr>=72) return {label:'주전급', cls:'starter'};
+  if(ovr>=60) return {label:'성장중', cls:'grow'};
+  return {label:'루키', cls:'rookie'};
+}
+
+/* ---------- 선수 특징 / 부상률 ---------- */
+function playerInjuryStats(id){
+  let cnt=0, weeksAttended=0, lastNote=null, lastWeekLabel=null;
+  STATE.weeks.forEach(w=>{
+    if(weekAttendeeIds(w).has(id)) weeksAttended++;
+    const injs = w.injuries.filter(inj=>inj.memberId===id);
+    if(injs.length){ cnt += injs.length; lastNote = injs[injs.length-1].note; lastWeekLabel = w.label; }
+  });
+  const rate = weeksAttended? (cnt/weeksAttended*100) : 0;
+  return {cnt, weeksAttended, rate, lastNote, lastWeekLabel};
+}
+
+/* ---------- 구장 정보 (가격 · 선호 시간대 · 선호도 투표) ---------- */
+const TIME_PREFS = ['무관','오전 (06~12시)','오후 (12~18시)','저녁 (18~22시)','심야 (22시~)'];
+function getVenueInfo(name){
+  STATE.venueInfo = STATE.venueInfo || {};
+  if(!STATE.venueInfo[name]) STATE.venueInfo[name] = {price:null, timePref:'무관', prefRatings:{}};
+  return STATE.venueInfo[name];
+}
+function venuePrefAvg(name){
+  const info = STATE.venueInfo && STATE.venueInfo[name];
+  if(!info) return null;
+  const vals = Object.values(info.prefRatings||{});
+  if(!vals.length) return null;
+  return {avg: vals.reduce((a,b)=>a+b,0)/vals.length, n: vals.length};
+}
+
+/* ---------- 작은 시각화용 막대 그래프 (외부 라이브러리 없이 CSS로) ---------- */
+function escAttr(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+function barRow(label, valueText, pct, cls){
+  const p = Math.max(0, Math.min(100, pct||0));
+  return `<div class="chartrow"><div class="chartrow-head"><span>${label}</span><b>${valueText}</b></div>
+    <div class="chartbar-track"><div class="chartbar-fill ${cls||''}" style="width:${p}%"></div></div></div>`;
+}
+
+/* ---------- 회비 (월별 납부 체크) ---------- */
+function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function monthLabel(key){ const [y,m]=key.split('-'); return y+'년 '+parseInt(m,10)+'월'; }
+function shiftMonth(key,delta){ const [y,m]=key.split('-').map(Number); const d=new Date(y,m-1+delta,1); return monthKey(d); }
+let duesViewMonth = monthKey(new Date());
+function duesStatusText(id){
+  const key = monthKey(new Date());
+  const paid = STATE.dues[key] && STATE.dues[key][id];
+  return paid? '이번 달 회비 ✓' : '이번 달 회비 미납';
+}
+
+/* ---------- 백엔드 동기화 (Supabase) ----------
+   한의원 웹사이트에서 이미 쓰고 있는 Supabase 프로젝트를 "같이" 쓰되, 완전히
+   분리된 스키마(savefc)와 테이블 하나(board_state)만 사용한다. STATE 전체를
+   JSON 하나로 그 테이블의 한 행(id='main')에 저장하고, Supabase Realtime의
+   postgres_changes 구독으로 그 행이 바뀔 때마다 즉시(실시간으로) 모든 화면에
+   반영한다 — 새로고침이나 주기적 확인이 필요 없다. 동시에 두 사람이 거의 같은
+   순간에 저장하면 나중 저장이 이긴다(단순 덮어쓰기) — 캐주얼한 동호회 앱
+   용도로는 감수할 만한 수준으로 판단했다.
+
+   ⚠️ 격리: 이 파일은 savefc 스키마의 board_state 테이블 하나만 건드리고,
+   한의원이 쓰는 public 스키마나 다른 어떤 테이블에도 접근하지 않는다 —
+   배포 가이드의 SQL 스크립트가 이 분리를 데이터베이스 권한(GRANT)과 RLS
+   정책으로 강제한다 (savefc 스키마만 API로 노출, 다른 스키마는 애초에 이
+   anon key로 조회조차 안 됨). ---------- */
+const DEFAULT_SUPABASE_URL = 'https://yxsotowpzcyxixzqqrao.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_my28yalDFW4QmoB4Z8HlPA_rQ94MUJv';
+
+const SUPABASE_CONFIG_KEY = 'savefc_supabase_config';
+let sbConfig = (function(){
+  try{
+    const saved = localStorage.getItem(SUPABASE_CONFIG_KEY);
+    if(saved) return JSON.parse(saved);
+  }catch(e){}
+  return (DEFAULT_SUPABASE_URL && DEFAULT_SUPABASE_ANON_KEY) ? {url:DEFAULT_SUPABASE_URL, key:DEFAULT_SUPABASE_ANON_KEY} : null;
+})();
+let sbClient = null;
+let sbChannel = null;
+let sbConnected = false;
+
+function openSettings(){
+  document.getElementById('settingsUrl').value = sbConfig?.url || '';
+  document.getElementById('settingsKey').value = sbConfig?.key || '';
+  document.getElementById('settingsStatus').textContent = sbConnected
+    ? '현재 실시간으로 연결되어 있어요.'
+    : (sbConfig ? '설정은 저장되어 있는데 연결이 안 됐어요 — 다시 저장해보세요.' : '아직 연결 안 됨 — 배포 가이드의 Supabase 정보를 입력해주세요.');
+  document.getElementById('settingsModal').hidden = false;
+}
+function closeSettings(){ document.getElementById('settingsModal').hidden = true; }
+
+function applyIncomingState(row){
+  if(!row || !row.roster || !row.roster.length) return false;
+  STATE = row;
+  if(!STATE.dues) STATE.dues = {};
+  if(!STATE.venueInfo) STATE.venueInfo = {};
+  STATE.weeks.forEach(migrateWeek);
+  if(!STATE.currentWeek) STATE.currentWeek = STATE.weeks[STATE.weeks.length-1].id;
+  render();
+  return true;
+}
+
+function connectSupabase(){
+  return new Promise((resolve)=>{
+    if(!sbConfig || !sbConfig.url || !sbConfig.key){ resolve(false); return; }
+    if(!window.supabase){ resolve(false); return; }
+    let settled = false;
+    (async ()=>{
+      try{
+        sbClient = window.supabase.createClient(sbConfig.url, sbConfig.key);
+        const { data, error } = await sbClient.schema('savefc').from('board_state').select('data').eq('id','main').maybeSingle();
+        if(error){
+          sbConnected = false;
+          toast('실시간 연결 실패 — Supabase 설정이나 RLS를 확인해주세요');
+          if(!settled){ settled = true; resolve(false); }
+          return;
+        }
+        if(!applyIncomingState(data && data.data)){
+          // 이 팀이 처음 연결하는 거라 테이블이 비어있음 — 지금 화면에 있는
+          // (시드/기본) 데이터를 최초 한 번 그대로 올려서 시작한다.
+          await sbClient.schema('savefc').from('board_state').upsert({id:'main', data:STATE, updated_at:new Date().toISOString()});
+        }
+        sbConnected = true;
+        if(!settled){ settled = true; resolve(true); }
+
+        if(sbChannel){ sbClient.removeChannel(sbChannel); }
+        sbChannel = sbClient
+          .channel('savefc_board_state')
+          .on('postgres_changes', {event:'UPDATE', schema:'savefc', table:'board_state', filter:'id=eq.main'}, (payload)=>{
+            applyIncomingState(payload.new && payload.new.data);
+          })
+          .subscribe();
+      }catch(e){
+        if(!settled){ settled = true; resolve(false); }
+      }
+    })();
+  });
+}
+
+let saving = false;
+function save(){
+  render();
+  if(!sbClient){ toast('⚙ 설정에서 동기화를 먼저 연결해주세요'); return; }
+  // 실시간 DB라 성공하면 즉시 모든 화면에 반영됨 — 별도 폴링/새로고침 불필요.
+  sbClient.schema('savefc').from('board_state').update({data:STATE, updated_at:new Date().toISOString()}).eq('id','main').then(({error})=>{
+    if(error) toast('저장 실패 — 인터넷 연결이나 Supabase 설정을 확인해주세요');
+  });
+}
+
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(window.__t); window.__t=setTimeout(()=>t.classList.remove('show'),1600);
+}
+
+function myId(){ try{return localStorage.getItem('savefc_who')||''}catch(e){return ''} }
+function setMyId(id){ try{localStorage.setItem('savefc_who',id)}catch(e){} }
+
+/* ---------- rendering ---------- */
+function render(){
+  renderWeekSel();
+  renderWho();
+  renderQuarterPills('voteQPills');
+  renderQuarterPills('formQPills');
+  renderVote();
+  renderModeBar();
+  renderShapeBar();
+  renderPitch();
+  renderBestXI();
+  renderMatch();
+  renderGoals();
+  renderRatings();
+  renderInjuries();
+  renderPlayerCards();
+  renderDues();
+  renderStats();
+  renderAnalysis();
+}
+
+function renderQuarterPills(containerId){
+  const w = curWeek();
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = w.quarters.map((q,i)=>
+    `<button type="button" class="${i===curQuarterIdx?'on':''}" data-act="qpick" data-idx="${i}">${q.n}쿼터</button>`).join('');
+}
+
+function renderModeBar(){
+  document.querySelectorAll('#modeBar button').forEach(b=>b.classList.toggle('on', b.dataset.mode===curMode));
+}
+
+function renderWeekSel(){
+  const sel=document.getElementById('weekSel');
+  sel.innerHTML = STATE.weeks.map(w=>`<option value="${w.id}" ${w.id===STATE.currentWeek?'selected':''}>${w.label}</option>`).join('');
+}
+
+function renderWho(){
+  const sel=document.getElementById('whoSel');
+  sel.innerHTML = '<option value="">-- 이름 선택 --</option>' + STATE.roster.map(m=>`<option value="${m.id}" ${myId()===m.id?'selected':''}>${m.name} (${m.code})</option>`).join('');
+  const injSel=document.getElementById('injMember');
+  injSel.innerHTML = STATE.roster.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  const goalSel=document.getElementById('goalMember');
+  if(goalSel) goalSel.innerHTML = STATE.roster.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+}
+
+function renderVote(){
+  const w = curWeek();
+  const q = curQuarter();
+  let cin=0,cout=0,cpend=0;
+  const inList=[], outList=[], pendList=[];
+  STATE.roster.forEach(m=>{
+    const v=q.votes[m.id];
+    if(v==='in'){cin++;inList.push(m);} else if(v==='out'){cout++;outList.push(m);} else {cpend++;pendList.push(m);}
+  });
+  const total = STATE.roster.length;
+  const pctIn = total? Math.round(cin/total*100):0;
+  const pctOut = total? Math.round(cout/total*100):0;
+
+  const attendOrder = w.attendOrder || [];
+  const capCount = attendOrder.length;
+  const capFull = capCount >= 16;
+  const locked = votingLocked(w);
+  const lockedNonAdmin = locked && !adminMode;
+
+  document.getElementById('voteCapCard').innerHTML = `
+    <div class="capbar">
+      <span>선착순 <b>16명</b> 중 <span class="capnum">${capCount}</span>명 참여</span>
+      <button type="button" class="adminbtn ${adminMode?'on':''}" data-act="adminmode">${adminMode? '🔓 임원진 모드 켜짐' : '🔒 임원진 모드'}</button>
+    </div>
+    ${locked? `<div class="lockmsg">${adminMode? '경기 24시간 전이 지났지만 임원진 모드라서 계속 수정할 수 있어요.' : '경기 24시간 전이 지나서 참석 투표가 마감됐어요. 변경이 필요하면 임원진에게 연락해주세요.'}</div>`
+      : (capFull? `<div class="lockmsg">선착순 16명이 이미 다 찼어요. 누군가 불참으로 바꾸면 자리가 나요.</div>` : '')}`;
+
+  const me = STATE.roster.find(m=>m.id===myId());
+  const myVote = me ? q.votes[me.id] : undefined;
+  const myAlreadyIn = me ? attendOrder.includes(me.id) : false;
+  const myInDisabled = !adminMode && (lockedNonAdmin || (capFull && !myAlreadyIn));
+  const myOutDisabled = lockedNonAdmin;
+  document.getElementById('voteBandMe').innerHTML = me ? `
+    <div class="lede" style="margin:0 0 8px">${me.name}(${me.code})님, ${q.n}쿼터 참석하시나요?</div>
+    <div class="bandbtns">
+      <button type="button" class="bandbtn in ${myVote==='in'?'on':''} ${myInDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="in">✋ 참석</button>
+      <button type="button" class="bandbtn out ${myVote==='out'?'on':''} ${myOutDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="out">🙅 불참</button>
+    </div>` : `<div class="lede" style="margin:0">위에서 내 이름을 먼저 선택해주세요.</div>`;
+
+  const chipHtml = list => list.length? list.map(m=>`<span class="chip">${m.name}<span class="code">${m.code}</span></span>`).join('') : '<span class="lede" style="margin:0">없음</span>';
+  document.getElementById('voteBandBars').innerHTML = `
+    <div class="pollopt">
+      <div class="pollopt-head"><span>참석</span><span class="num">${cin}명 · ${pctIn}%</span></div>
+      <div class="pollbar"><div class="pollbar-fill in" style="width:${pctIn}%"></div></div>
+      <details class="pollnames"><summary>명단 보기</summary><div class="chips" style="margin-top:8px">${chipHtml(inList)}</div></details>
+    </div>
+    <div class="pollopt">
+      <div class="pollopt-head"><span>불참</span><span class="num">${cout}명 · ${pctOut}%</span></div>
+      <div class="pollbar"><div class="pollbar-fill out" style="width:${pctOut}%"></div></div>
+      <details class="pollnames"><summary>명단 보기</summary><div class="chips" style="margin-top:8px">${chipHtml(outList)}</div></details>
+    </div>
+    <div class="pollopt">
+      <div class="pollopt-head"><span>미투표</span><span class="num">${cpend}명</span></div>
+      <details class="pollnames"><summary>명단 보기</summary><div class="chips" style="margin-top:8px">${chipHtml(pendList)}</div></details>
+    </div>`;
+
+  const rows = STATE.roster.map(m=>{
+    const v = q.votes[m.id];
+    const already = attendOrder.includes(m.id);
+    const inDisabled = !adminMode && (lockedNonAdmin || (capFull && !already));
+    const outDisabled = !adminMode && lockedNonAdmin;
+    return `<div class="row ${m.id===myId()?'me':''}">
+      <div class="no">${m.no||''}</div>
+      <div class="nm">${m.name}${m.hurt?' <span class="badge">부상</span>':''}<span class="pos">${m.pos}</span><span class="code">${m.code}</span></div>
+      <div class="seg">
+        <button type="button" class="in ${v==='in'?'on':''} ${inDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="in">참석</button>
+        <button type="button" class="out ${v==='out'?'on':''} ${outDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="out">불참</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('voteRows').innerHTML = rows;
+}
+
+// 임원진 모드 on/off. PIN을 아는 사람만 켤 수 있고, 켜져 있으면 마감/선착순
+// 제한을 무시하고 투표를 대신 고쳐줄 수 있다 (실제 로그인 시스템은 아니고,
+// 기존 "총무용 대리투표"처럼 신뢰 기반으로 동작하는 가벼운 잠금장치).
+function toggleAdminMode(){
+  if(adminMode){
+    adminMode = false;
+    try{ localStorage.setItem('savefc_admin','0'); }catch(e){}
+    toast('임원진 모드 해제');
+    render();
+    return;
+  }
+  const wrap=document.createElement('div');
+  wrap.className='picker';
+  wrap.innerHTML = `<div class="sheet"><h3>임원진 모드</h3>
+    <p class="lede" style="margin-top:2px">PIN을 입력하면 마감 이후에도 투표를 수정하거나 선착순 16명을 넘겨서 추가할 수 있어요.</p>
+    <input type="password" inputmode="numeric" id="adminPinInput" placeholder="PIN" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;margin:10px 0">
+    <button class="addbtn" type="button" id="adminPinOk" style="width:100%">확인</button>
+    <button class="close" type="button" style="width:100%;margin-top:8px;background:none;border:1px solid var(--line);border-radius:8px;padding:10px;color:var(--ink-soft);font-family:inherit;cursor:pointer">닫기</button></div>`;
+  document.body.appendChild(wrap);
+  const input = wrap.querySelector('#adminPinInput');
+  input.focus();
+  const submit = ()=>{
+    if(input.value === ADMIN_PIN){
+      adminMode = true;
+      try{ localStorage.setItem('savefc_admin','1'); }catch(e){}
+      toast('임원진 모드 켜짐');
+      wrap.remove();
+      render();
+    } else {
+      toast('PIN이 올바르지 않아요');
+    }
+  };
+  wrap.querySelector('#adminPinOk').addEventListener('click', submit);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+  wrap.addEventListener('click',(e)=>{
+    if(e.target===wrap || e.target.classList.contains('close')) wrap.remove();
+  });
+}
+
+function renderRatings(){
+  const w=curWeek();
+  w.ratings = w.ratings || {};
+  const attIds = weekAttendeeIds(w);
+  const attendees = STATE.roster.filter(m=>attIds.has(m.id));
+  const me = myId();
+  if(!attendees.length){
+    document.getElementById('ratingRows').innerHTML = '<div class="lede" style="margin:0">참석자가 없어요. 참여투표를 먼저 진행해주세요.</div>';
+    document.getElementById('ratingHint').textContent = '';
+    document.getElementById('momThisWeek').textContent = '-';
+    return;
+  }
+  document.getElementById('ratingHint').textContent = me
+    ? '참석자 각자가 서로에게 별점을 매겨요. 내 별점만 눌러서 바꿀 수 있어요.'
+    : '투표하려면 위 참여투표 탭에서 먼저 내 이름을 설정해주세요.';
+  document.getElementById('ratingRows').innerHTML = attendees.map(m=>{
+    const votes = w.ratings[m.id] || {};
+    const r = weekTargetAvg(w, m.id);
+    const myVote = me ? (votes[me]||0) : 0;
+    const stars = [1,2,3,4,5].map(v=>
+      `<span class="star ${v<=myVote?'on':''} ${me?'':'off'}" data-act="star" data-id="${m.id}" data-v="${v}">★</span>`).join('');
+    return `<div class="row" style="align-items:flex-start;flex-wrap:wrap;gap:4px 8px">
+      <div class="nm" style="flex:1;min-width:120px">${m.name}<span class="code">${m.code}</span>
+        <div class="lede" style="margin:2px 0 0">${r? '팀 평균 '+r.avg.toFixed(1)+'★ ('+r.n+'명 평가)' : '아직 평가 없음'}</div>
+      </div>
+      <div class="stars">${stars}</div>
+    </div>`;
+  }).join('');
+
+  const mom = weekMom(w);
+  document.getElementById('momThisWeek').textContent = mom
+    ? mom.members.map(m=>m.name).join(', ') + ` (${mom.max.toFixed(1)}★)`
+    : '-';
+}
+
+function renderPlayerCards(){
+  document.getElementById('playerCards').innerHTML = STATE.roster.map(m=>{
+    const r=ratingFor(m.id);
+    const tier=tierFor(r.ovr);
+    const inj=playerInjuryStats(m.id);
+    return `<div class="pcard">
+      <div class="pcard-top">
+        <div class="ovr num">${r.ovr!=null? r.ovr : '–'}</div>
+        <div class="tier ${tier.cls}">${tier.label}</div>
+      </div>
+      <div class="pname">${m.name}${m.hurt?' <span class="badge">부상</span>':''}</div>
+      <div class="pcode">${m.code} · ${m.pos}${m.no?' · #'+m.no:''}</div>
+      <input class="traitsInput" type="text" data-act="traits" data-id="${m.id}" value="${escAttr(m.traits||'')}" placeholder="특징 (예: 빠른 발, 크로스 정확)">
+      <input class="traitsInput" type="text" data-act="posroles" data-id="${m.id}" value="${escAttr(m.posRoles||'')}" placeholder="선호 포지션 우선순위 (예: ST, CAM, LW)">
+      <div class="pmeta"><span>평점 ${r.n}회${r.avg!=null?' (평균 '+r.avg.toFixed(1)+'★)':''}</span></div>
+      <div class="pmeta">${r.mom? `<span class="mombadge">MOM ${r.mom}회</span>`:''}<span>${duesStatusText(m.id)}</span></div>
+      <div class="pmeta">부상률 ${inj.rate.toFixed(0)}% (${inj.cnt}건 / 참석 ${inj.weeksAttended}회)</div>
+      <button type="button" class="ghost hurtbtn" data-act="hurttoggle" data-id="${m.id}">${m.hurt? '회복 처리':'부상으로 표시'}</button>
+    </div>`;
+  }).join('');
+}
+
+function renderDues(){
+  STATE.dues[duesViewMonth] = STATE.dues[duesViewMonth] || {};
+  const paidMap = STATE.dues[duesViewMonth];
+  document.getElementById('duesMonthLabel').textContent = monthLabel(duesViewMonth);
+  let paidCount=0;
+  document.getElementById('duesChips').innerHTML = STATE.roster.map(m=>{
+    const paid = !!paidMap[m.id];
+    if(paid) paidCount++;
+    return `<span class="chip duechip ${paid?'paid':''}" data-act="duestoggle" data-id="${m.id}">${m.name} ${paid?'✓':''}</span>`;
+  }).join('');
+  document.getElementById('duesSummary').textContent = `${paidCount} / ${STATE.roster.length}명 납부`;
+}
+
+function renderShapeBar(){
+  const cur = curShape();
+  document.getElementById('shapeBar').innerHTML = Object.keys(SHAPES).map(s=>
+    `<button type="button" class="${s===cur?'on':''}" data-act="shape" data-shape="${s}">${s}</button>`).join('');
+}
+
+function pitchMarkings(){
+  return `<svg viewBox="0 0 100 100" preserveAspectRatio="none">
+    <rect x="2" y="2" width="96" height="96" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="0.6"/>
+    <line x1="2" y1="50" x2="98" y2="50" stroke="rgba(255,255,255,.55)" stroke-width="0.6"/>
+    <circle cx="50" cy="50" r="9" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="0.6"/>
+    <rect x="26" y="2" width="48" height="14" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="0.6"/>
+    <rect x="26" y="84" width="48" height="14" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="0.6"/>
+  </svg>`;
+}
+
+function renderPitch(){
+  const q = curQuarter();
+  const shape = curShape();
+  const pos = curPositions();
+  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  let html = pitchMarkings();
+  // 배치된 선수 — 좌표(x%,y%)를 직접 들고 있어서 피치 어디로든 자유롭게 드래그할 수 있다.
+  // (예전엔 포메이션 템플릿 자리에 점선 원을 항상 띄워뒀는데, 선수를 드래그해서 옮기면
+  // 원래 있던 자리에 그 원이 남아있는 것처럼 보여서 헷갈린다는 피드백을 받고 뺐다.
+  // 대신 피치의 빈 곳을 아무데나 탭하면 그 위치가 어떤 자리에 가까운지 인식해서 바로
+  // 후보 선수 목록을 띄워준다 — nearestRole() 참고.)
+  Object.entries(pos).forEach(([pid,p])=>{
+    const person = byId[pid];
+    if(!person) return;
+    html += `<div class="slot" style="left:${p.x}%;top:${p.y}%" data-id="${pid}">
+      <div class="p">${person.name}</div>
+    </div>`;
+  });
+  document.getElementById('pitch').innerHTML = html;
+
+  const placed = new Set(Object.keys(pos));
+  const bench = STATE.roster.filter(m=>q.votes[m.id]==='in' && !placed.has(m.id));
+  const outp = STATE.roster.filter(m=>q.votes[m.id]!=='in');
+  document.getElementById('benchHead').textContent = `벤치 (${q.n}쿼터 참석, ${curMode==='atk'?'공격':'수비'} 미배치)`;
+  document.getElementById('benchChips').innerHTML = bench.length? bench.map(m=>`<span class="chip" data-act="slotpick" data-id="${m.id}">${m.name}</span>`).join('') : '<span style="color:var(--ink-faint);font-size:.8rem">없음</span>';
+  document.getElementById('outChips').innerHTML = outp.length? outp.map(m=>`<span class="chip out">${m.name}</span>`).join('') : '<span style="color:var(--ink-faint);font-size:.8rem">없음</span>';
+}
+
+function renderMatch(){
+  const w=curWeek();
+  document.getElementById('venueInput').value = w.venue||'';
+  document.getElementById('matchTimeInput').value = w.matchTime||'10:00';
+  document.getElementById('usScore').value = w.result.us ?? '';
+  document.getElementById('themScore').value = w.result.them ?? '';
+  document.getElementById('matchNote').value = w.result.note||'';
+  const badge=document.getElementById('wdlBadge');
+  if(w.result.us==null || w.result.them==null){ badge.textContent='-'; badge.className='wdl'; }
+  else{
+    const d=w.result.us-w.result.them;
+    const t = d>0?'W':d<0?'L':'D';
+    badge.textContent=t; badge.className='wdl '+t;
+  }
+}
+
+function renderInjuries(){
+  const w=curWeek();
+  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  document.getElementById('injList').innerHTML = w.injuries.length? w.injuries.map((inj,i)=>
+    `<div class="injrow"><span>${byId[inj.memberId]? byId[inj.memberId].name:'?'} — ${inj.note}</span>
+     <button class="ghost" type="button" data-act="delinj" data-i="${i}" style="padding:3px 8px;font-size:.72rem">삭제</button></div>`).join('')
+    : '<div style="color:var(--ink-faint);font-size:.82rem">이번 주 기록 없음</div>';
+}
+
+function renderGoals(){
+  const w=curWeek();
+  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  document.getElementById('goalList').innerHTML = w.goals.length? w.goals.map((g,i)=>
+    `<div class="injrow"><span>⚽ ${byId[g.memberId]? byId[g.memberId].name:'?'}${g.quarterN?' · '+g.quarterN+'쿼터':''}${g.note?' — '+g.note:''}</span>
+     <button class="ghost" type="button" data-act="delgoal" data-i="${i}" style="padding:3px 8px;font-size:.72rem">삭제</button></div>`).join('')
+    : '<div style="color:var(--ink-faint);font-size:.82rem">이번 주 기록 없음</div>';
+}
+
+function weekAttendancePct(w){
+  return STATE.roster.length? weekAttendeeIds(w).size / STATE.roster.length * 100 : 0;
+}
+
+function renderAnalysis(){
+  renderVenueAnalysis();
+  renderMonthAnalysis();
+  renderInjuryAnalysis();
+  renderScorerChart();
+}
+
+function renderVenueAnalysis(){
+  // 구장별: 전적/승률/평균 참석률/부상 건수 + 가격/선호 시간대/선호도
+  const venues={};
+  STATE.weeks.forEach(w=>{
+    if(!w.venue) return;
+    const v = venues[w.venue] = venues[w.venue] || {w:0,d:0,l:0,attnSum:0,attnN:0,inj:0};
+    if(w.result.us!=null && w.result.them!=null){
+      const d=w.result.us-w.result.them;
+      if(d>0) v.w++; else if(d<0) v.l++; else v.d++;
+    }
+    v.attnSum += weekAttendancePct(w); v.attnN++;
+    v.inj += w.injuries.length;
+  });
+  // 아직 경기 기록은 없어도 가격/선호도만 미리 입력해둔 구장도 카드로 보여준다
+  Object.keys(STATE.venueInfo||{}).forEach(name=>{ if(!venues[name]) venues[name] = {w:0,d:0,l:0,attnSum:0,attnN:0,inj:0}; });
+
+  const names = Object.keys(venues);
+  const el = document.getElementById('venueAnalysisCards');
+  if(!names.length){
+    el.innerHTML = '<div class="card" style="color:var(--ink-faint);font-size:.85rem">아직 구장 기록이 없어요. 구장·결과 탭에서 구장 이름을 입력하면 여기 카드가 생겨요.</div>';
+    return;
+  }
+  const me = myId();
+  el.innerHTML = names.map(name=>{
+    const v = venues[name];
+    const tot=v.w+v.d+v.l;
+    const winPct = tot? Math.round(v.w/tot*100):0;
+    const attnAvg = v.attnN? Math.round(v.attnSum/v.attnN):0;
+    const info = getVenueInfo(name);
+    const pref = venuePrefAvg(name);
+    const myPref = me? (info.prefRatings[me]||0) : 0;
+    return `<div class="card">
+      <div class="venuecard-head"><b>${name}</b><span>${tot? tot+'경기':'경기 기록 없음'}</span></div>
+      ${tot? barRow(`전적 ${v.w}승${v.d}무${v.l}패`, winPct+'%', winPct, winPct>=50?'':'warn') : ''}
+      ${v.attnN? barRow('평균 참석률', attnAvg+'%', attnAvg) : ''}
+      ${v.inj? `<div class="injwarn">⚠ 부상 ${v.inj}건</div>` : ''}
+      <div class="venuemeta">
+        <label>가격 <input type="number" min="0" step="1000" inputmode="numeric" data-act="venueprice" data-venue="${escAttr(name)}" value="${info.price??''}" placeholder="원"></label>
+        <label>선호 시간대
+          <select data-act="venuetime" data-venue="${escAttr(name)}">
+            ${TIME_PREFS.map(t=>`<option value="${escAttr(t)}" ${info.timePref===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </label>
+      </div>
+      <div class="venuepref-row">
+        <span class="pref-label">선호도 ${pref? `평균 ${pref.avg.toFixed(1)}★ (${pref.n}명 투표)` : '아직 투표 없음'}</span>
+        <div class="stars">
+          ${[1,2,3,4,5].map(v=>`<span class="star ${v<=myPref?'on':'off'}" data-act="venuepref" data-venue="${escAttr(name)}" data-v="${v}">★</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMonthAnalysis(){
+  const months={};
+  STATE.weeks.forEach(w=>{
+    const key = monthKey(new Date(w.date+'T00:00:00'));
+    const m = months[key] = months[key] || {w:0,d:0,l:0,attnSum:0,attnN:0,inj:0};
+    if(w.result.us!=null && w.result.them!=null){
+      const d=w.result.us-w.result.them;
+      if(d>0) m.w++; else if(d<0) m.l++; else m.d++;
+    }
+    m.attnSum += weekAttendancePct(w); m.attnN++;
+    m.inj += w.injuries.length;
+  });
+  const keys = Object.keys(months).sort();
+  const el = document.getElementById('monthAnalysisChart');
+  if(!keys.length){ el.innerHTML = '<p style="color:var(--ink-faint);font-size:.85rem;margin:0">기록 없음</p>'; return; }
+  el.innerHTML = keys.map(key=>{
+    const m=months[key]; const tot=m.w+m.d+m.l; const winPct = tot? Math.round(m.w/tot*100):0;
+    const attnAvg = m.attnN? Math.round(m.attnSum/m.attnN):0;
+    return `<div style="margin-bottom:14px">
+      <div style="font-weight:700;font-size:.85rem;margin-bottom:4px">${monthLabel(key)} <span style="font-weight:400;color:var(--ink-faint);font-size:.74rem">${tot? tot+'경기':''}</span></div>
+      ${tot? barRow(`전적 ${m.w}승${m.d}무${m.l}패`, winPct+'%', winPct, winPct>=50?'':'warn') : barRow('전적','경기 없음',0)}
+      ${barRow('평균 참석률', attnAvg+'%', attnAvg)}
+      ${m.inj? `<div class="injwarn">⚠ 부상 ${m.inj}건</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderInjuryAnalysis(){
+  let totalInj=0, totalAttendance=0;
+  STATE.weeks.forEach(w=>{ totalInj += w.injuries.length; totalAttendance += weekAttendeeIds(w).size; });
+  const rate = totalAttendance? (totalInj/totalAttendance*100).toFixed(1) : '0.0';
+  document.getElementById('injuryRateStat').innerHTML =
+    `총 부상 <b>${totalInj}건</b> · 참석 연인원 100명당 <b>${rate}건</b>`;
+
+  const injured = STATE.roster.filter(m=>m.hurt);
+  document.getElementById('currentInjuredList').innerHTML = injured.length? injured.map(m=>{
+    const s = playerInjuryStats(m.id);
+    return `<div class="injrow"><span>${m.name} (${m.code})${s.lastNote? ' — '+s.lastNote+(s.lastWeekLabel?' · '+s.lastWeekLabel:''):''}</span></div>`;
+  }).join('') : '<div style="color:var(--ink-faint);font-size:.82rem">현재 부상자 없음</div>';
+
+  const withInj = STATE.roster.map(m=>({m, s:playerInjuryStats(m.id)})).filter(x=>x.s.cnt>0).sort((a,b)=>b.s.rate-a.s.rate);
+  document.getElementById('playerInjuryChart').innerHTML = withInj.length? withInj.map(({m,s})=>
+    barRow(m.name, `${s.cnt}건 · ${s.rate.toFixed(0)}%`, s.rate, s.rate>=30?'bad':(s.rate>=15?'warn':''))
+  ).join('') : '<div style="color:var(--ink-faint);font-size:.82rem">부상 기록 없음</div>';
+}
+
+function renderScorerChart(){
+  const goalCnt={};
+  STATE.weeks.forEach(w=> w.goals.forEach(g=> goalCnt[g.memberId]=(goalCnt[g.memberId]||0)+1));
+  const byId2 = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const rows = Object.entries(goalCnt).sort((a,b)=>b[1]-a[1]);
+  const max = rows.length? rows[0][1] : 0;
+  document.getElementById('scorerChart').innerHTML = rows.length? rows.map(([id,c])=>
+    barRow(byId2[id]?byId2[id].name:'?', c+'골', max? c/max*100:0)
+  ).join('') : '<div style="color:var(--ink-faint);font-size:.82rem">기록 없음</div>';
+}
+
+function renderStats(){
+  const venues={};
+  STATE.weeks.forEach(w=>{
+    if(!w.venue || w.result.us==null || w.result.them==null) return;
+    venues[w.venue] = venues[w.venue] || {w:0,d:0,l:0};
+    const d=w.result.us-w.result.them;
+    if(d>0) venues[w.venue].w++; else if(d<0) venues[w.venue].l++; else venues[w.venue].d++;
+  });
+  const vRows = Object.entries(venues).map(([v,r])=>{
+    const tot=r.w+r.d+r.l; const pct= tot? Math.round(r.w/tot*100):0;
+    return `<tr><td>${v}</td><td class="n">${r.w}승</td><td class="n">${r.d}무</td><td class="n">${r.l}패</td><td class="n">${pct}%</td></tr>`;
+  }).join('');
+  document.getElementById('venueTable').innerHTML = `<tr><th>구장</th><th>승</th><th>무</th><th>패</th><th>승률</th></tr>` + (vRows||'<tr><td colspan="5" style="color:var(--ink-faint)">아직 기록된 경기 없음</td></tr>');
+
+  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const allInj=[];
+  STATE.weeks.forEach(w=> w.injuries.forEach(inj=> allInj.push({...inj, week:w.label})));
+  document.getElementById('allInjuries').innerHTML = allInj.length? allInj.slice().reverse().map(inj=>
+    `<div class="injrow"><span>${byId[inj.memberId]?byId[inj.memberId].name:'?'} · ${inj.week} — ${inj.note}</span></div>`).join('')
+    : '<div style="color:var(--ink-faint);font-size:.82rem">기록 없음</div>';
+
+  const cnt={};
+  STATE.roster.forEach(m=>cnt[m.id]=0);
+  STATE.weeks.forEach(w=>{ weekAttendeeIds(w).forEach(id=>{ cnt[id]=(cnt[id]||0)+1; }); });
+  const totalWeeks = STATE.weeks.length;
+  const aRows = STATE.roster.slice().sort((a,b)=>cnt[b.id]-cnt[a.id]).map(m=>{
+    const c=cnt[m.id]||0; const pct= totalWeeks? Math.round(c/totalWeeks*100):0;
+    return `<tr><td>${m.name}</td><td class="n">${c}/${totalWeeks}</td><td class="n">${pct}%</td></tr>`;
+  }).join('');
+  document.getElementById('attnTable').innerHTML = `<tr><th>이름</th><th>참석</th><th>참석률</th></tr>` + aRows;
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', (e)=>{
+  // 방금 실제 드래그(탭이 아니라 진짜 이동)로 배치를 끝낸 직후에 뒤따라오는 네이티브
+  // click 이벤트는 건너뛴다 — 그대로 두면 놓은 지점이 피치 배경으로 다시 인식돼서
+  // 배치 직후에 선수 선택 창이 또 뜨는 문제가 생긴다.
+  if(suppressNextClick){ suppressNextClick = false; return; }
+
+  const tabBtn = e.target.closest('nav.tabs button');
+  if(tabBtn){
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on', b===tabBtn));
+    document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on', s.id==='tab-'+tabBtn.dataset.tab));
+    return;
+  }
+
+  // 피치의 빈 배경(선수 자리가 아닌 곳)을 탭하면, 그 좌표와 가장 가까운 포지션을 찾아서
+  // 그 자리를 선호하는 선수부터 우선순위로 보여주는 배치 창을 연다.
+  const pitchEl0 = e.target.closest('#pitch');
+  if(pitchEl0 && !e.target.closest('.slot')){
+    const r = pitchEl0.getBoundingClientRect();
+    const x = Math.max(3, Math.min(97, (e.clientX-r.left)/r.width*100));
+    const y = Math.max(3, Math.min(97, (e.clientY-r.top)/r.height*100));
+    openGuidePicker(x, y, nearestRole(x,y));
+    return;
+  }
+
+  const act = e.target.closest('[data-act]');
+  if(!act) return;
+  const kind = act.dataset.act;
+  const w = curWeek();
+
+  if(kind==='vote'){
+    const id=act.dataset.id, v=act.dataset.v;
+    const q = curQuarter();
+    if(!w.attendOrder) w.attendOrder = [];
+    if(votingLocked(w) && !adminMode){
+      toast('경기 24시간 전 마감이라 투표를 수정할 수 없어요 — 임원진에게 문의해주세요');
+      return;
+    }
+    const wasInWeek = weekAttendeeIds(w).has(id);
+    const nextVal = (q.votes[id]===v) ? undefined : v;
+    if(nextVal==='in' && !wasInWeek && !w.attendOrder.includes(id) && w.attendOrder.length>=16 && !adminMode){
+      toast('선착순 16명이 마감됐어요 — 총무/임원진에게 문의해주세요');
+      return;
+    }
+    q.votes[id] = nextVal;
+    if(q.votes[id]===undefined) delete q.votes[id];
+    if(q.votes[id]!=='in'){
+      delete q.posAtk[id];
+      delete q.posDef[id];
+    }
+    const nowInWeek = weekAttendeeIds(w).has(id);
+    if(nowInWeek && !w.attendOrder.includes(id)) w.attendOrder.push(id);
+    if(!nowInWeek) w.attendOrder = w.attendOrder.filter(x=>x!==id);
+    save();
+  }
+  else if(kind==='adminmode'){
+    toggleAdminMode();
+  }
+  else if(kind==='qpick'){
+    curQuarterIdx = parseInt(act.dataset.idx,10);
+    bestXIPos = null; // 쿼터가 바뀌면 기준 포메이션도 바뀌므로 직접 조정값 초기화
+    render();
+  }
+  else if(kind==='mode'){
+    curMode = act.dataset.mode;
+    bestXIPos = null; // 공격/수비가 바뀌면 기준 포메이션 자체가 바뀌므로 직접 조정값은 초기화
+    render();
+  }
+  else if(kind==='shape'){
+    // 포메이션을 바꿔도 이미 자유롭게 배치한 위치는 그대로 둔다 — "초기화" 버튼을
+    // 눌러야 새 포메이션의 기본 자리로 다시 깔린다.
+    curQuarter()[curShapeKey()] = act.dataset.shape;
+    bestXIPos = null; // 자리 배열이 통째로 바뀌므로 최상의 포메이션 직접 조정값도 초기화
+    save();
+  }
+  else if(kind==='bestxiscope'){
+    bestXIScope = act.dataset.scope;
+    bestXIPos = null; // 후보군이 바뀌므로 직접 조정값 초기화, 새 추천으로 다시 시작
+    render();
+  }
+  else if(kind==='delinj'){
+    w.injuries.splice(parseInt(act.dataset.i,10),1);
+    save();
+  }
+  else if(kind==='delgoal'){
+    w.goals.splice(parseInt(act.dataset.i,10),1);
+    save();
+  }
+  else if(kind==='star'){
+    const id=act.dataset.id, v=parseInt(act.dataset.v,10);
+    const me=myId();
+    if(!me){ toast('먼저 참여투표 탭에서 내 이름을 설정해주세요'); return; }
+    w.ratings = w.ratings || {};
+    w.ratings[id] = w.ratings[id] || {};
+    w.ratings[id][me] = v;
+    save();
+  }
+  else if(kind==='duestoggle'){
+    const id=act.dataset.id;
+    STATE.dues[duesViewMonth] = STATE.dues[duesViewMonth] || {};
+    STATE.dues[duesViewMonth][id] = !STATE.dues[duesViewMonth][id];
+    save();
+  }
+  else if(kind==='hurttoggle'){
+    const id=act.dataset.id;
+    const m=STATE.roster.find(r=>r.id===id);
+    if(m){ m.hurt = !m.hurt; save(); }
+  }
+  else if(kind==='venuepref'){
+    const name=act.dataset.venue, v=parseInt(act.dataset.v,10);
+    const me=myId();
+    if(!me){ toast('먼저 참여투표 탭에서 내 이름을 설정해주세요'); return; }
+    getVenueInfo(name).prefRatings[me] = v;
+    save();
+  }
+});
+
+// 카드/구장 목록처럼 매번 다시 그려지는 input·select는 change 이벤트를 위임 처리한다
+// (고정 id에 리스너를 다는 commitField 패턴은 재생성되는 엘리먼트엔 쓸 수 없어서).
+document.addEventListener('change', (e)=>{
+  const traitsEl = e.target.closest('[data-act="traits"]');
+  if(traitsEl){
+    const m = STATE.roster.find(r=>r.id===traitsEl.dataset.id);
+    if(m){ m.traits = traitsEl.value; save(); }
+    return;
+  }
+  const posRolesEl = e.target.closest('[data-act="posroles"]');
+  if(posRolesEl){
+    const m = STATE.roster.find(r=>r.id===posRolesEl.dataset.id);
+    if(m){ m.posRoles = posRolesEl.value; save(); }
+    return;
+  }
+  const priceEl = e.target.closest('[data-act="venueprice"]');
+  if(priceEl){
+    const v = priceEl.value;
+    getVenueInfo(priceEl.dataset.venue).price = v===''? null : parseInt(v,10);
+    save();
+    return;
+  }
+  const timeEl = e.target.closest('[data-act="venuetime"]');
+  if(timeEl){
+    getVenueInfo(timeEl.dataset.venue).timePref = timeEl.value;
+    save();
+    return;
+  }
+});
+
+// 점선 기준점(포메이션 템플릿 좌표)을 탭했을 때 — 미배치 참석자 중 골라서 그 좌표에 배치.
+// 피치의 빈 곳을 탭했을 때 — 그 좌표에 가까운 포지션(role) 기준으로, 그 자리를
+// 선호한다고 등록해둔 선수가 우선순위 순으로 위에 뜬다 (FM 스타일).
+function openGuidePicker(x,y,role){
+  const q=curQuarter();
+  const pos=curPositions();
+  const placedIds = new Set(Object.keys(pos));
+  const cands = STATE.roster.filter(m=> q.votes[m.id]==='in' && !placedIds.has(m.id))
+    .slice().sort((a,b)=> posPriority(a,role)-posPriority(b,role));
+  const wrap=document.createElement('div');
+  wrap.className='picker';
+  wrap.innerHTML = `<div class="sheet"><h3>${role? role+' 자리에 배치할 선수':'이 자리에 배치할 선수'}</h3>
+    ${cands.map(m=>{
+      const pr = posPriority(m, role);
+      const tag = pr===0? `<span class="postag best">${role} 1순위</span>` : pr!==Infinity? `<span class="postag">${role} ${pr+1}순위</span>` : '';
+      return `<div class="opt" data-pick="${m.id}">${m.name} <span style="color:var(--ink-faint);font-size:.75rem">${m.pos}</span>${tag}</div>`;
+    }).join('') || '<div style="color:var(--ink-faint);padding:8px">참석 투표한 미배치 인원이 없어요</div>'}
+    <button class="close" type="button">닫기</button></div>`;
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click',(e)=>{
+    if(e.target===wrap || e.target.classList.contains('close')){ wrap.remove(); return; }
+    const opt=e.target.closest('[data-pick]');
+    if(opt){
+      curPositions()[opt.dataset.pick] = {x,y};
+      wrap.remove();
+      save();
+    }
+  });
+}
+
+// 벤치 선수를 탭(드래그 아님)했을 때 — 포메이션 기준 자리 중 비어있는 곳을, 이 선수가
+// 등록해둔 선호 포지션 우선순위대로 정렬해서 보여준다. (자유롭게 아무 데나 놓고 싶으면
+// 피치 위로 직접 드래그하면 된다.)
+function openBenchPicker(memberId){
+  const q=curQuarter();
+  const pos=curPositions();
+  const byId=Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const person=byId[memberId];
+  const slots=SHAPES[curShape()];
+  const placedPts = Object.values(pos);
+  const openSlots = slots.filter(s=> !placedPts.some(p=> Math.hypot(p.x-s[1], p.y-s[2]) < 6))
+    .slice().sort((a,b)=> posPriority(person,a[0])-posPriority(person,b[0]));
+  const wrap=document.createElement('div');
+  wrap.className='picker';
+  wrap.innerHTML = `<div class="sheet"><h3>${person?person.name:''} 배치할 자리 (${q.n}쿼터 · ${curMode==='atk'?'공격':'수비'})</h3>
+    ${openSlots.map(s=>{
+      const pr = posPriority(person, s[0]);
+      const tag = pr===0? `<span class="postag best">1순위</span>` : pr!==Infinity? `<span class="postag">${pr+1}순위</span>` : '';
+      return `<div class="opt" data-x="${s[1]}" data-y="${s[2]}">${s[0]} 자리${tag}</div>`;
+    }).join('') || '<div style="color:var(--ink-faint);padding:8px">기준 자리가 다 찼어요. 피치를 직접 드래그해서 원하는 위치에 놓아보세요.</div>'}
+    <button class="close" type="button">닫기</button></div>`;
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click',(e)=>{
+    if(e.target===wrap || e.target.classList.contains('close')){ wrap.remove(); return; }
+    const opt=e.target.closest('[data-x]');
+    if(opt){
+      curPositions()[memberId] = {x:parseFloat(opt.dataset.x), y:parseFloat(opt.dataset.y)};
+      wrap.remove();
+      save();
+    }
+  });
+}
+
+// 이미 피치에 배치된 선수를 탭(드래그 아님)했을 때 — 벤치로 빼는 간단한 액션 시트.
+function openSlotActions(memberId){
+  const byId=Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const person=byId[memberId];
+  const wrap=document.createElement('div');
+  wrap.className='picker';
+  wrap.innerHTML = `<div class="sheet"><h3>${person?person.name:''}</h3>
+    <div class="opt" data-bench="1">벤치로 이동</div>
+    <button class="close" type="button">닫기</button></div>`;
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click',(e)=>{
+    if(e.target===wrap || e.target.classList.contains('close')){ wrap.remove(); return; }
+    if(e.target.closest('[data-bench]')){
+      delete curPositions()[memberId];
+      wrap.remove();
+      save();
+    }
+  });
+}
+
+/* ---------- FM 스타일 드래그 배치 ----------
+   Pointer Events(마우스/터치 공용)로 직접 구현. 짧게 탭하면(움직임 거의 없으면) 기존 피커를
+   열고, 일정 거리 이상 끌면 실제 드래그로 처리한다. */
+let dragState = null;
+const DRAG_THRESHOLD = 7;
+let suppressNextClick = false; // 진짜 드래그 직후에 뒤따르는 click 이벤트 1번을 무시하기 위한 플래그
+function markSuppressClick(){
+  suppressNextClick = true;
+  // 드래그의 시작·끝 요소가 다르면 브라우저가 click 이벤트를 아예 안 쏘는 경우가 있어서
+  // (예: 벤치 칩 → 피치로 드롭), 그 경우 플래그가 계속 true로 남아 이후의 진짜 클릭까지
+  // 삼켜버릴 수 있음. click이 먼저 오면 그 핸들러가 바로 false로 되돌리고, 안 오면
+  // 이 타임아웃이 다음 틱에 안전하게 되돌려줌.
+  setTimeout(()=>{ suppressNextClick = false; }, 0);
+}
+
+function ghostFor(name){
+  const g=document.createElement('div');
+  g.className='dragghost';
+  g.textContent=name;
+  document.body.appendChild(g);
+  return g;
+}
+function moveGhost(g,x,y){ g.style.left=x+'px'; g.style.top=y+'px'; }
+
+document.addEventListener('pointerdown', (e)=>{
+  if(e.button!==undefined && e.button!==0) return; // 좌클릭/터치만
+  const slotEl = e.target.closest('.slot');
+  const chipEl = e.target.closest('.chip[data-act="slotpick"]');
+  const bxEl = e.target.closest('.bslot[data-id]');
+  if(!slotEl && !chipEl && !bxEl) return;
+  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+
+  if(slotEl){
+    const id = slotEl.dataset.id;
+    const person = byId[id];
+    dragState = {kind:'slot', id, el:slotEl, moved:false,
+      startX:e.clientX, startY:e.clientY, ghost:ghostFor(person?person.name:'')};
+  } else if(chipEl){
+    const id = chipEl.dataset.id;
+    const person = byId[id];
+    dragState = {kind:'bench', id, el:chipEl, moved:false,
+      startX:e.clientX, startY:e.clientY, ghost:ghostFor(person?person.name:'')};
+  } else {
+    const id = bxEl.dataset.id;
+    const person = byId[id];
+    dragState = {kind:'bestxi', id, el:bxEl, moved:false,
+      startX:e.clientX, startY:e.clientY, ghost:ghostFor(person?person.name:'')};
+  }
+  moveGhost(dragState.ghost, e.clientX, e.clientY);
+  dragState.el.classList.add('dragging');
+  // setPointerCapture intentionally omitted: on some engines, capturing a
+  // pointer on an element whose class changes mid-drag (e.g. .dragging) can
+  // itself trigger a spurious pointercancel. Document-level listeners already
+  // receive pointermove/pointerup regardless of what's under the cursor, so
+  // capture isn't needed here.
+});
+
+document.addEventListener('pointermove', (e)=>{
+  if(!dragState) return;
+  const dx=e.clientX-dragState.startX, dy=e.clientY-dragState.startY;
+  if(Math.hypot(dx,dy) > DRAG_THRESHOLD) dragState.moved = true;
+  moveGhost(dragState.ghost, e.clientX, e.clientY);
+  document.querySelectorAll('.dropok').forEach(x=>x.classList.remove('dropok'));
+  dragState.ghost.style.display='none';
+  const under = document.elementFromPoint(e.clientX, e.clientY);
+  dragState.ghost.style.display='';
+  const pitchEl = document.getElementById('pitch');
+  const pitchUnder = under && (under===pitchEl || pitchEl.contains(under));
+  const benchUnder = under && under.closest('#benchChips');
+  const bestXIEl = document.getElementById('bestXIPitch');
+  const bestXIUnder = under && (under===bestXIEl || bestXIEl.contains(under));
+  if(dragState.kind==='bestxi'){
+    if(bestXIUnder) bestXIEl.classList.add('dropok');
+  } else if(pitchUnder) pitchEl.classList.add('dropok');
+  else if(benchUnder && dragState.kind==='slot') benchUnder.classList.add('dropok');
+});
+
+document.addEventListener('pointerup', (e)=>{
+  if(!dragState) return;
+  const ds = dragState; dragState = null;
+  document.querySelectorAll('.dropok').forEach(x=>x.classList.remove('dropok'));
+  ds.el.classList.remove('dragging');
+  ds.ghost.remove();
+
+  if(!ds.moved){
+    if(ds.kind==='slot') openSlotActions(ds.id);
+    else if(ds.kind==='bench') openBenchPicker(ds.id);
+    // kind==='bestxi': 그냥 탭한 경우는 아무 동작 없음 — 드래그로만 조정한다.
+    return;
+  }
+  ds.ghost.style.display='none';
+  const under = document.elementFromPoint(e.clientX, e.clientY);
+  const pitchEl = document.getElementById('pitch');
+  const pitchUnder = under && (under===pitchEl || pitchEl.contains(under));
+  const benchUnder = under && under.closest('#benchChips');
+
+  if(ds.kind==='bestxi'){
+    const bestXIEl = document.getElementById('bestXIPitch');
+    const bestXIUnder = under && (under===bestXIEl || bestXIEl.contains(under));
+    if(bestXIUnder){
+      const r = bestXIEl.getBoundingClientRect();
+      let x = (e.clientX - r.left) / r.width * 100;
+      let y = (e.clientY - r.top) / r.height * 100;
+      x = Math.max(3, Math.min(97, x));
+      y = Math.max(3, Math.min(97, y));
+      applyBestXIDrag(ds.id, x, y);
+      markSuppressClick();
+    }
+    return;
+  }
+
+  const pos = curPositions();
+  if(pitchUnder){
+    // 놓은 자리 그대로 배치 — 피치 안 어디든 자유롭게.
+    const r = pitchEl.getBoundingClientRect();
+    let x = (e.clientX - r.left) / r.width * 100;
+    let y = (e.clientY - r.top) / r.height * 100;
+    x = Math.max(3, Math.min(97, x));
+    y = Math.max(3, Math.min(97, y));
+    pos[ds.id] = {x, y};
+    save();
+    markSuppressClick(); // 방금 놓은 지점에서 곧바로 뒤따르는 click이 배경 탭으로 오인되지 않게
+  } else if(benchUnder && ds.kind==='slot'){
+    delete pos[ds.id];
+    save();
+    markSuppressClick();
+  }
+  // 피치도 벤치도 아닌 곳에 놓으면(오조작 등) 아무 변화 없이 취소된다.
+});
+
+document.addEventListener('pointercancel', ()=>{
+  if(!dragState) return;
+  dragState.el.classList.remove('dragging');
+  dragState.ghost.remove();
+  document.querySelectorAll('.dropok').forEach(x=>x.classList.remove('dropok'));
+  dragState = null;
+});
+
+document.getElementById('weekSel').addEventListener('change',(e)=>{
+  STATE.currentWeek = e.target.value;
+  bestXIPos = null; // 주가 바뀌면 "이번 경기 투표자" 후보군 등 기준이 통째로 바뀌므로 초기화
+  save();
+});
+document.getElementById('newWeekBtn').addEventListener('click',()=>{
+  const last = STATE.weeks[STATE.weeks.length-1];
+  const nd = nextSunday(last.date);
+  const w = newWeek(nd);
+  STATE.weeks.push(w);
+  STATE.currentWeek = w.id;
+  save();
+});
+
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+document.getElementById('settingsModal').addEventListener('click',(e)=>{
+  if(e.target.id==='settingsModal' || e.target.classList.contains('close')) closeSettings();
+});
+document.getElementById('settingsSaveBtn').addEventListener('click', async ()=>{
+  const url = document.getElementById('settingsUrl').value.trim();
+  const key = document.getElementById('settingsKey').value.trim();
+  if(!url || !key){ document.getElementById('settingsStatus').textContent = 'URL과 anon key를 모두 입력해주세요.'; return; }
+  sbConfig = {url, key};
+  try{ localStorage.setItem(SUPABASE_CONFIG_KEY, JSON.stringify(sbConfig)); }catch(e){}
+  document.getElementById('settingsStatus').textContent = '연결하는 중...';
+  const ok = await connectSupabase();
+  if(ok){
+    document.getElementById('settingsStatus').textContent = '연결됐어요! 이제부터 실시간으로 동기화돼요.';
+    setTimeout(closeSettings, 900);
+  } else {
+    document.getElementById('settingsStatus').textContent = '연결 실패 — URL/key나 인터넷 연결을 확인해주세요.';
+  }
+});
+document.getElementById('whoSetBtn').addEventListener('click',()=>{
+  const id=document.getElementById('whoSel').value;
+  if(id){ setMyId(id); render(); toast('내 이름으로 설정했어요'); }
+});
+
+function commitField(id, fn){
+  // Guard against a redundant native 'change' firing a second time when focus
+  // moves away right as another element (e.g. a star rating) is tapped —
+  // without this, that second no-op change re-renders mid-click and can
+  // swallow the tap. Only save() if the field actually changed something.
+  document.getElementById(id).addEventListener('change',()=>{
+    const before = JSON.stringify(curWeek());
+    fn();
+    if(JSON.stringify(curWeek())!==before) save();
+  });
+}
+commitField('venueInput', ()=>{ curWeek().venue = document.getElementById('venueInput').value; });
+commitField('matchTimeInput', ()=>{ curWeek().matchTime = document.getElementById('matchTimeInput').value || '10:00'; });
+commitField('usScore', ()=>{ const v=document.getElementById('usScore').value; curWeek().result.us = v===''?null:parseInt(v,10); });
+commitField('themScore', ()=>{ const v=document.getElementById('themScore').value; curWeek().result.them = v===''?null:parseInt(v,10); });
+commitField('matchNote', ()=>{ curWeek().result.note = document.getElementById('matchNote').value; });
+
+document.getElementById('duesPrevBtn').addEventListener('click',()=>{ duesViewMonth=shiftMonth(duesViewMonth,-1); renderDues(); });
+document.getElementById('duesNextBtn').addEventListener('click',()=>{ duesViewMonth=shiftMonth(duesViewMonth,1); renderDues(); });
+
+document.getElementById('injAddBtn').addEventListener('click',()=>{
+  const id=document.getElementById('injMember').value;
+  const note=document.getElementById('injNote').value.trim();
+  if(!id||!note) return;
+  curWeek().injuries.push({memberId:id, note});
+  document.getElementById('injNote').value='';
+  save();
+});
+
+document.getElementById('goalAddBtn').addEventListener('click',()=>{
+  const id=document.getElementById('goalMember').value;
+  const qn=document.getElementById('goalQuarter').value;
+  const note=document.getElementById('goalNote').value.trim();
+  if(!id) return;
+  curWeek().goals.push({memberId:id, quarterN: qn? parseInt(qn,10): null, note});
+  document.getElementById('goalNote').value='';
+  save();
+});
+
+document.getElementById('resetFormBtn').addEventListener('click',()=>{
+  applyShapeTemplate();
+  toast('선택한 포메이션 기본 자리로 초기화했어요');
+});
+document.getElementById('resetBestXIBtn').addEventListener('click',()=>{
+  bestXIPos = null;
+  render();
+  toast('최상의 포메이션을 추천 배치로 초기화했어요');
+});
+
+render(); // 즉시 첫 화면부터 보여준다 (기본값/시드 데이터로 먼저 그린 뒤, 연결되면 실시간 값으로 갱신)
+
+if(!sbConfig){
+  // 아직 동기화 설정이 안 되어 있으면 바로 설정 화면을 띄운다.
+  openSettings();
+} else {
+  connectSupabase();
+}
+</script>
+</body>
+</html>
