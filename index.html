@@ -248,6 +248,11 @@ details.collapse[open] summary:before{content:'▾ '}
 .adminbtn.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 .seg button.disabled,.bandbtn.disabled{opacity:.4;pointer-events:none}
 .picker[hidden]{display:none}
+
+/* 소구역 그룹 — 여러 하위 주제가 섞인 탭(구장·결과/분석/현황)에서 시각적으로 분리 */
+.panel{padding-top:16px;margin-top:6px;border-top:1px solid var(--line)}
+.panel:first-child{padding-top:0;margin-top:0;border-top:none}
+.deadlineinfo{margin-top:6px;font-size:.76rem;color:var(--ink-faint)}
 </style>
 </head>
 <body>
@@ -264,12 +269,12 @@ details.collapse[open] summary:before{content:'▾ '}
 </header>
 
 <nav class="tabs">
-  <button data-tab="vote" class="on">참여투표</button>
-  <button data-tab="form">포메이션</button>
-  <button data-tab="match">구장·결과</button>
-  <button data-tab="cards">선수카드</button>
-  <button data-tab="analysis">분석</button>
-  <button data-tab="stats">현황</button>
+  <button data-tab="vote" class="on">🗳️ 참여투표</button>
+  <button data-tab="form">⚽ 포메이션</button>
+  <button data-tab="match">🏟️ 구장·결과</button>
+  <button data-tab="cards">🃏 선수카드</button>
+  <button data-tab="analysis">📊 분석</button>
+  <button data-tab="stats">📋 현황</button>
 </nav>
 
 <main>
@@ -282,7 +287,9 @@ details.collapse[open] summary:before{content:'▾ '}
   <p class="lede" style="margin:-4px 0 12px">내 이름을 골라두면 아이디가 이 기기에 저장돼요. 아이디는 이름 옆 <span class="code">SFC00</span> 표시예요.</p>
 
   <h2><span class="bar"></span>쿼터별 참석 투표 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(고알레 방식)</span></h2>
-  <p class="lede">고알레처럼 쿼터마다 따로 투표해요. 1쿼터만 뛰고 가는 사람, 늦게 합류하는 사람 다 반영할 수 있어요. 밴드 투표처럼 눌러서 참석/불참을 표시하고, 명단 보기를 누르면 누가 눌렀는지 볼 수 있어요. 참석은 선착순 16명까지만 받고, 경기 24시간 전에 마감돼요 (임원진은 마감 후에도 수정 가능).</p>
+  <details class="collapse"><summary>사용법 보기</summary>
+    <p class="lede" style="margin-top:6px">고알레처럼 쿼터마다 따로 투표해요. 1쿼터만 뛰고 가는 사람, 늦게 합류하는 사람 다 반영할 수 있어요. 밴드 투표처럼 눌러서 참석/불참을 표시하고, 명단 보기를 누르면 누가 눌렀는지 볼 수 있어요. 참석은 선착순 16명까지만 받고, 경기 24시간 전에 마감돼요 (임원진은 마감 후에도 수정 가능).</p>
+  </details>
   <div class="card" id="voteCapCard"></div>
   <div class="pillbar" id="voteQPills"></div>
   <div class="card" id="voteBandMe"></div>
@@ -297,7 +304,9 @@ details.collapse[open] summary:before{content:'▾ '}
 
 <section class="tab" id="tab-form">
   <h2><span class="bar"></span>포메이션 · 전술판</h2>
-  <p class="lede">쿼터별로, 공격할 때·수비할 때 포메이션을 따로 짤 수 있어요. 벤치 선수를 피치 위 원하는 자리로 자유롭게 드래그해서 놓을 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 피치의 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로, 선수카드에서 그 포지션을 선호한다고 등록해둔 선수부터 우선순위로 뜨는 배치 창이 열려요 (FM 스타일). 이미 배치된 선수도 드래그로 위치를 옮기거나 벤치 쪽으로 끌면 뺄 수 있어요.</p>
+  <details class="collapse"><summary>사용법 보기</summary>
+    <p class="lede" style="margin-top:6px">쿼터별로, 공격할 때·수비할 때 포메이션을 따로 짤 수 있어요. 벤치 선수를 피치 위 원하는 자리로 자유롭게 드래그해서 놓을 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 피치의 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로, 선수카드에서 그 포지션을 선호한다고 등록해둔 선수부터 우선순위로 뜨는 배치 창이 열려요 (FM 스타일). 이미 배치된 선수도 드래그로 위치를 옮기거나 벤치 쪽으로 끌면 뺄 수 있어요.</p>
+  </details>
   <div class="pillbar" id="formQPills"></div>
   <div class="modebar" id="modeBar">
     <button type="button" class="atk" data-act="mode" data-mode="atk">⚔️ 공격 시</button>
@@ -314,7 +323,9 @@ details.collapse[open] summary:before{content:'▾ '}
   </div>
 
   <h2 style="margin-top:20px"><span class="bar"></span>🏆 최상의 포메이션</h2>
-  <p class="lede">지금 선택된 포메이션(<b id="bestXIShapeLabel"></b>) 기준으로, 선수카드의 능력치(OVR)와 선호 포지션을 반영해서 조건별 최상의 라인업을 자동으로 짜봤어요. 마음에 안 들면 아래에서 선수를 직접 드래그해서 자리를 옮기거나 맞바꿀 수 있어요 (실제 배치와는 별개로, 이 조정 내용은 보는 사람 화면에만 남고 저장되지는 않아요).</p>
+  <details class="collapse"><summary>사용법 보기</summary>
+    <p class="lede" style="margin-top:6px">지금 선택된 포메이션(<b id="bestXIShapeLabel"></b>) 기준으로, 선수카드의 능력치(OVR)와 선호 포지션을 반영해서 조건별 최상의 라인업을 자동으로 짜봤어요. 마음에 안 들면 아래에서 선수를 직접 드래그해서 자리를 옮기거나 맞바꿀 수 있어요 (실제 배치와는 별개로, 이 조정 내용은 보는 사람 화면에만 남고 저장되지는 않아요).</p>
+  </details>
   <div class="pillbar" id="bestXIScopePills"></div>
   <button type="button" class="ghost" id="resetBestXIBtn" style="width:100%;margin-bottom:10px">↺ 추천 배치로 초기화</button>
   <div class="pitch" id="bestXIPitch"></div>
@@ -322,105 +333,135 @@ details.collapse[open] summary:before{content:'▾ '}
 </section>
 
 <section class="tab" id="tab-match">
-  <h2><span class="bar"></span>구장 · 경기 결과</h2>
-  <div class="card">
-    <div class="field"><label>구장</label><input id="venueInput" placeholder="예: 효창운동장"></div>
-    <div class="field"><label>경기 시작 시각</label><input id="matchTimeInput" type="time"></div>
-    <div class="field"><label>스코어 (우리 : 상대)</label>
-      <div class="scorebar">
-        <input id="usScore" type="number" min="0">
-        <span>:</span>
-        <input id="themScore" type="number" min="0">
-        <span class="wdl" id="wdlBadge">-</span>
+  <div class="panel">
+    <h2><span class="bar"></span>구장 · 경기 결과</h2>
+    <div class="card">
+      <div class="field"><label>구장</label><input id="venueInput" placeholder="예: 효창운동장"></div>
+      <div class="field"><label>경기 시작 시각</label><input id="matchTimeInput" type="time"></div>
+      <div class="field"><label>스코어 (우리 : 상대)</label>
+        <div class="scorebar">
+          <input id="usScore" type="number" min="0">
+          <span>:</span>
+          <input id="themScore" type="number" min="0">
+          <span class="wdl" id="wdlBadge">-</span>
+        </div>
+      </div>
+      <div class="field"><label>메모</label><textarea id="matchNote" rows="2" placeholder="특이사항"></textarea></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>득점 기록</h2>
+    <p class="lede">골 넣을 때마다 수동으로 기록해두면 득점왕 순위에 반영돼요.</p>
+    <div class="card">
+      <div class="field"><label>득점자</label><select id="goalMember"></select></div>
+      <div class="field"><label>쿼터 (선택)</label>
+        <select id="goalQuarter">
+          <option value="">무관</option>
+          <option value="1">1쿼터</option><option value="2">2쿼터</option>
+          <option value="3">3쿼터</option><option value="4">4쿼터</option>
+        </select>
+      </div>
+      <div class="field"><label>메모 (선택)</label><input id="goalNote" placeholder="예: PK, 프리킥, 헤더"></div>
+      <button class="addbtn" id="goalAddBtn" type="button">득점 추가</button>
+      <div id="goalList" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>매치 평점 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(고알레 스타일 · 선수별 투표)</span></h2>
+    <p class="lede" id="ratingHint">참석자 각자가 서로에게 별점을 매겨요. 평균이 선수카드 능력치와 MOM에 반영돼요.</p>
+    <div class="card">
+      <div class="rows" id="ratingRows"></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:.82rem">
+        이번 주 MOM: <b id="momThisWeek">-</b>
       </div>
     </div>
-    <div class="field"><label>메모</label><textarea id="matchNote" rows="2" placeholder="특이사항"></textarea></div>
   </div>
 
-  <h2><span class="bar"></span>득점 기록</h2>
-  <p class="lede">골 넣을 때마다 수동으로 기록해두면 득점왕 순위에 반영돼요.</p>
-  <div class="card">
-    <div class="field"><label>득점자</label><select id="goalMember"></select></div>
-    <div class="field"><label>쿼터 (선택)</label>
-      <select id="goalQuarter">
-        <option value="">무관</option>
-        <option value="1">1쿼터</option><option value="2">2쿼터</option>
-        <option value="3">3쿼터</option><option value="4">4쿼터</option>
-      </select>
-    </div>
-    <div class="field"><label>메모 (선택)</label><input id="goalNote" placeholder="예: PK, 프리킥, 헤더"></div>
-    <button class="addbtn" id="goalAddBtn" type="button">득점 추가</button>
-    <div id="goalList" style="margin-top:10px"></div>
-  </div>
-
-  <h2><span class="bar"></span>매치 평점 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(고알레 스타일 · 선수별 투표)</span></h2>
-  <p class="lede" id="ratingHint">참석자 각자가 서로에게 별점을 매겨요. 평균이 선수카드 능력치와 MOM에 반영돼요.</p>
-  <div class="card">
-    <div class="rows" id="ratingRows"></div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:.82rem">
-      이번 주 MOM: <b id="momThisWeek">-</b>
-    </div>
-  </div>
-
-  <h2><span class="bar"></span>부상 기록</h2>
-  <div class="card">
-    <div class="field"><label>선수</label><select id="injMember"></select></div>
-    <div class="field"><label>내용</label><input id="injNote" placeholder="예: 발목 삠, 2주 휴식"></div>
-    <button class="addbtn" id="injAddBtn" type="button">부상 추가</button>
-    <div id="injList" style="margin-top:10px"></div>
+  <div class="panel">
+    <details class="collapse">
+      <summary>🩹 부상 기록</summary>
+      <div class="card" style="margin-top:8px">
+        <div class="field"><label>선수</label><select id="injMember"></select></div>
+        <div class="field"><label>내용</label><input id="injNote" placeholder="예: 발목 삠, 2주 휴식"></div>
+        <button class="addbtn" id="injAddBtn" type="button">부상 추가</button>
+        <div id="injList" style="margin-top:10px"></div>
+      </div>
+    </details>
   </div>
 </section>
 
 <section class="tab" id="tab-cards">
   <h2><span class="bar"></span>선수카드 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(고알레 스타일)</span></h2>
-  <p class="lede">매치 평점이 쌓일수록 능력치(OVR)와 등급이 자동으로 올라가요. "선호 포지션" 칸에 가능한 자리를 우선순위대로 적어두면(예: ST, CAM, LW), 포메이션 탭에서 그 자리를 배치할 때 우선순위 순으로 후보에 떠요. 쓸 수 있는 자리 코드: GK, LB·CB·RB, LWB·RWB, CDM·CM·LM·RM, CAM·LAM·RAM, LW·ST·RW</p>
+  <details class="collapse"><summary>사용법 보기</summary>
+    <p class="lede" style="margin-top:6px">매치 평점이 쌓일수록 능력치(OVR)와 등급이 자동으로 올라가요. "선호 포지션" 칸에 가능한 자리를 우선순위대로 적어두면(예: ST, CAM, LW), 포메이션 탭에서 그 자리를 배치할 때 우선순위 순으로 후보에 떠요. 쓸 수 있는 자리 코드: GK, LB·CB·RB, LWB·RWB, CDM·CM·LM·RM, CAM·LAM·RAM, LW·ST·RW</p>
+  </details>
   <div class="cards-grid" id="playerCards"></div>
 </section>
 
 <section class="tab" id="tab-analysis">
-  <h2><span class="bar"></span>구장별 분석</h2>
-  <p class="lede">승률 · 참석률 · 부상 건수에 가격, 선호 시간대, 선호도까지 한 카드에서 볼 수 있어요. 선호도는 각자 별점으로 투표해요 — 집에서 거리, 편의성 등 각자 사정을 반영해서 눌러주세요.</p>
-  <div id="venueAnalysisCards"></div>
-
-  <h2><span class="bar"></span>기간별(월별) 분석</h2>
-  <div class="card" id="monthAnalysisChart"></div>
-
-  <h2><span class="bar"></span>부상 현황</h2>
-  <div class="card">
-    <p class="lede" id="injuryRateStat" style="margin:0 0 10px"></p>
-    <div class="benchhead" style="margin-top:0">현재 부상자</div>
-    <div id="currentInjuredList"></div>
-  </div>
-  <div class="card">
-    <div class="benchhead" style="margin-top:0">선수별 부상률</div>
-    <div id="playerInjuryChart"></div>
+  <div class="panel">
+    <h2><span class="bar"></span>구장별 분석</h2>
+    <p class="lede">승률 · 참석률 · 부상 건수에 가격, 선호 시간대, 선호도까지 한 카드에서 볼 수 있어요. 선호도는 각자 별점으로 투표해요 — 집에서 거리, 편의성 등 각자 사정을 반영해서 눌러주세요.</p>
+    <div id="venueAnalysisCards"></div>
   </div>
 
-  <h2><span class="bar"></span>득점 리더보드</h2>
-  <div class="card" id="scorerChart"></div>
+  <div class="panel">
+    <h2><span class="bar"></span>기간별(월별) 분석</h2>
+    <div class="card" id="monthAnalysisChart"></div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>부상 현황</h2>
+    <div class="card">
+      <p class="lede" id="injuryRateStat" style="margin:0 0 10px"></p>
+      <div class="benchhead" style="margin-top:0">현재 부상자</div>
+      <div id="currentInjuredList"></div>
+    </div>
+    <div class="card">
+      <div class="benchhead" style="margin-top:0">선수별 부상률</div>
+      <div id="playerInjuryChart"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>득점 리더보드</h2>
+    <div class="card" id="scorerChart"></div>
+  </div>
 </section>
 
 <section class="tab" id="tab-stats">
-  <h2><span class="bar"></span>이번 달 회비 현황</h2>
-  <div class="card">
-    <div class="duesbar">
-      <button class="navbtn" id="duesPrevBtn" type="button">‹</button>
-      <span class="lbl" id="duesMonthLabel"></span>
-      <button class="navbtn" id="duesNextBtn" type="button">›</button>
+  <div class="panel">
+    <h2><span class="bar"></span>이번 달 회비 현황</h2>
+    <div class="card">
+      <div class="duesbar">
+        <button class="navbtn" id="duesPrevBtn" type="button">‹</button>
+        <span class="lbl" id="duesMonthLabel"></span>
+        <button class="navbtn" id="duesNextBtn" type="button">›</button>
+      </div>
+      <p class="lede" style="margin-bottom:8px">이름을 누르면 납부 체크가 토글돼요.</p>
+      <div class="chips" id="duesChips"></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:.82rem" id="duesSummary"></div>
     </div>
-    <p class="lede" style="margin-bottom:8px">이름을 누르면 납부 체크가 토글돼요.</p>
-    <div class="chips" id="duesChips"></div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:.82rem" id="duesSummary"></div>
   </div>
 
-  <h2><span class="bar"></span>구장별 전적</h2>
-  <div class="card"><table id="venueTable"></table></div>
+  <div class="panel">
+    <h2><span class="bar"></span>구장별 전적</h2>
+    <div class="card"><table id="venueTable"></table></div>
+  </div>
 
-  <h2><span class="bar"></span>부상 현황 (전체)</h2>
-  <div class="card" id="allInjuries"></div>
+  <div class="panel">
+    <details class="collapse">
+      <summary>🩹 부상 현황 (전체)</summary>
+      <div class="card" id="allInjuries" style="margin-top:8px"></div>
+    </details>
+  </div>
 
-  <h2><span class="bar"></span>참여 현황 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(회비 참고용 — 실제 정산은 엑셀 기준)</span></h2>
-  <div class="card"><table id="attnTable"></table></div>
+  <div class="panel">
+    <h2><span class="bar"></span>참여 현황 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(회비 참고용 — 실제 정산은 엑셀 기준)</span></h2>
+    <div class="card"><table id="attnTable"></table></div>
+  </div>
 </section>
 
 </main>
@@ -576,6 +617,19 @@ function weekDeadlineMs(w){
 }
 function votingLocked(w){
   return Date.now() > weekDeadlineMs(w);
+}
+const WEEKDAY_KO = ['일','월','화','수','목','금','토'];
+function fmtDeadlineInfo(w){
+  const dl = weekDeadlineMs(w);
+  const d = new Date(dl);
+  const dstr = `${d.getMonth()+1}/${d.getDate()}(${WEEKDAY_KO[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const diff = dl - Date.now();
+  if(diff <= 0) return `마감: ${dstr} · 마감됨`;
+  const days = Math.floor(diff/86400000);
+  const hours = Math.floor((diff%86400000)/3600000);
+  const mins = Math.floor((diff%3600000)/60000);
+  const left = days>0 ? `${days}일 ${hours}시간 남음` : hours>0 ? `${hours}시간 ${mins}분 남음` : `${mins}분 남음`;
+  return `마감: ${dstr} · ${left}`;
 }
 
 let STATE = window.__SAVEFC_STATE__ || (function(){
@@ -1007,6 +1061,7 @@ function renderVote(){
       <span>선착순 <b>16명</b> 중 <span class="capnum">${capCount}</span>명 참여</span>
       <button type="button" class="adminbtn ${adminMode?'on':''}" data-act="adminmode">${adminMode? '🔓 임원진 모드 켜짐' : '🔒 임원진 모드'}</button>
     </div>
+    <div class="deadlineinfo">${fmtDeadlineInfo(w)}</div>
     ${locked? `<div class="lockmsg">${adminMode? '경기 24시간 전이 지났지만 임원진 모드라서 계속 수정할 수 있어요.' : '경기 24시간 전이 지나서 참석 투표가 마감됐어요. 변경이 필요하면 임원진에게 연락해주세요.'}</div>`
       : (capFull? `<div class="lockmsg">선착순 16명이 이미 다 찼어요. 누군가 불참으로 바꾸면 자리가 나요.</div>` : '')}`;
 
