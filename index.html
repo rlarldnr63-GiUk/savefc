@@ -302,9 +302,15 @@ details.collapse[open] summary:before{content:'▾ '}
     <p class="lede" style="margin-top:6px">고알레처럼 쿼터마다 따로 투표해요. 1쿼터만 뛰고 가는 사람, 늦게 합류하는 사람 다 반영할 수 있어요. 밴드 투표처럼 눌러서 참석/불참을 표시하고, 명단 보기를 누르면 누가 눌렀는지 볼 수 있어요. 참석은 선착순 16명까지만 받고, 경기 24시간 전에 마감돼요 (임원진은 마감 후에도 수정 가능).</p>
   </details>
   <div class="card" id="voteCapCard"></div>
-  <div class="pillbar" id="voteQPills"></div>
-  <div class="card" id="voteBandMe"></div>
-  <div class="card" id="voteBandBars"></div>
+  <div class="card" id="voteBandAll"></div>
+
+  <details class="collapse">
+    <summary>쿼터별로 다르게 투표하기 (늦참·조퇴 등)</summary>
+    <div class="pillbar" id="voteQPills" style="margin-top:8px"></div>
+    <div class="card" id="voteBandMe"></div>
+  </details>
+
+  <div class="card" id="voteBandBars" style="margin-top:12px"></div>
   <div id="voteNotesCard"></div>
 
   <details class="collapse">
@@ -1154,23 +1160,30 @@ function renderVote(){
   const myInDisabled = !adminMode && (lockedNonAdmin || (capFull && !myAlreadyIn));
   const myOutDisabled = lockedNonAdmin;
   const myMaybeDisabled = lockedNonAdmin;
-  document.getElementById('voteBandMe').innerHTML = me ? `
-    <div class="lede" style="margin:0 0 8px">${me.name}(${me.code})님, ${q.n}쿼터 참석하시나요?</div>
+
+  // "전체"가 기본 행동 — 대부분은 4쿼터 다 똑같이 뛰니까 이게 맨 위, 쿼터별로 다르게 하는 건
+  // 늦참/조퇴 같은 예외 상황이라 접어서 아래에 둔다.
+  const myVotesAll = me ? w.quarters.map(qq=>qq.votes[me.id]) : [];
+  const allSameVote = me && myVotesAll.every(v=>v===myVotesAll[0]) ? myVotesAll[0] : undefined;
+  document.getElementById('voteBandAll').innerHTML = me ? `
+    <div class="lede" style="margin:0 0 8px">${me.name}(${me.code})님, 이번 주 전체 참석하시나요?</div>
     <div class="bandbtns">
-      <button type="button" class="bandbtn in ${myVote==='in'?'on':''} ${myInDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="in">✋ 참석</button>
-      <button type="button" class="bandbtn maybe ${myVote==='maybe'?'on':''} ${myMaybeDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="maybe">🤔 미정</button>
-      <button type="button" class="bandbtn out ${myVote==='out'?'on':''} ${myOutDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="out">🙅 불참</button>
-    </div>
-    <div class="bandall">
-      <span class="lbl">이번 주 4쿼터 전체를 한 번에</span>
-      <button type="button" class="ghost" ${myInDisabled?'disabled':''} data-act="voteall" data-v="in">전체 참석</button>
-      <button type="button" class="ghost" ${myMaybeDisabled?'disabled':''} data-act="voteall" data-v="maybe">전체 미정</button>
-      <button type="button" class="ghost" ${myOutDisabled?'disabled':''} data-act="voteall" data-v="out">전체 불참</button>
+      <button type="button" class="bandbtn in ${allSameVote==='in'?'on':''} ${myInDisabled?'disabled':''}" data-act="voteall" data-v="in">✋ 전체 참석</button>
+      <button type="button" class="bandbtn maybe ${allSameVote==='maybe'?'on':''} ${myMaybeDisabled?'disabled':''}" data-act="voteall" data-v="maybe">🤔 전체 미정</button>
+      <button type="button" class="bandbtn out ${allSameVote==='out'?'on':''} ${myOutDisabled?'disabled':''}" data-act="voteall" data-v="out">🙅 전체 불참</button>
     </div>
     <div class="field" style="margin-top:10px">
       <label>특이사항 메모 (선택 — 예: "3쿼터부터 늦참해요")</label>
       <input type="text" class="traitsInput" style="margin:4px 0 0" data-act="votenote" data-id="${me.id}" value="${escAttr(w.notes[me.id]||'')}" placeholder="예: 3쿼터부터 늦참해요">
     </div>` : `<div class="lede" style="margin:0">위에서 내 이름을 먼저 선택해주세요.</div>`;
+
+  document.getElementById('voteBandMe').innerHTML = me ? `
+    <div class="lede" style="margin:0 0 8px">${q.n}쿼터만 다르게 하려면:</div>
+    <div class="bandbtns">
+      <button type="button" class="bandbtn in ${myVote==='in'?'on':''} ${myInDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="in">✋ 참석</button>
+      <button type="button" class="bandbtn maybe ${myVote==='maybe'?'on':''} ${myMaybeDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="maybe">🤔 미정</button>
+      <button type="button" class="bandbtn out ${myVote==='out'?'on':''} ${myOutDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="out">🙅 불참</button>
+    </div>` : '';
 
   const chipHtml = list => list.length? list.map(m=>`<span class="chip">${m.name}<span class="code">${m.code}</span></span>`).join('') : '<span class="lede" style="margin:0">없음</span>';
   document.getElementById('voteBandBars').innerHTML = `
