@@ -677,8 +677,16 @@ let ballZone = 'mid';    // 'left' | 'mid' | 'right'
 
 // 임원진 모드: PIN을 아는 임원진만 켤 수 있고, 켜져 있으면 마감/선착순 제한을 무시하고
 // 투표를 대신 고쳐줄 수 있다. 기기별로 localStorage에 저장(실제 로그인 시스템은 아님).
-const ADMIN_PIN = '2580';
+const ADMIN_PIN = '2022';
 let adminMode = (function(){ try{ return localStorage.getItem('savefc_admin')==='1'; }catch(e){ return false; } })();
+// 임원진 모드가 아니면 팀 공통 데이터(투표, 포메이션, 회비, 선수카드, 경기기록 등)를
+// 하나도 바꿀 수 없다 — 예외 없이 전부 잠금. 순수 화면 이동(탭/쿼터/공격·수비 전환,
+// 공 위치 가이드, 최상의 포메이션 미리보기 등 저장되지 않는 것들)만 누구나 가능하다.
+function requireAdmin(){
+  if(adminMode) return true;
+  toast('🔒 임원진 모드에서만 변경할 수 있어요');
+  return false;
+}
 
 function curWeek(){ return STATE.weeks.find(w=>w.id===STATE.currentWeek) || STATE.weeks[0]; }
 function curQuarter(){ return curWeek().quarters[curQuarterIdx]; }
@@ -1501,6 +1509,8 @@ function renderStats(){
 }
 
 /* ---------- events ---------- */
+const ADMIN_GATED_ACTS = new Set(['vote','shape','delinj','delgoal','star','duestoggle','hurttoggle','venuepref']);
+
 document.addEventListener('click', (e)=>{
   // 방금 실제 드래그(탭이 아니라 진짜 이동)로 배치를 끝낸 직후에 뒤따라오는 네이티브
   // click 이벤트는 건너뛴다 — 그대로 두면 놓은 지점이 피치 배경으로 다시 인식돼서
@@ -1518,6 +1528,7 @@ document.addEventListener('click', (e)=>{
   // 그 자리를 선호하는 선수부터 우선순위로 보여주는 배치 창을 연다.
   const pitchEl0 = e.target.closest('#pitch');
   if(pitchEl0 && !e.target.closest('.slot')){
+    if(!requireAdmin()) return;
     const r = pitchEl0.getBoundingClientRect();
     const x = Math.max(3, Math.min(97, (e.clientX-r.left)/r.width*100));
     const y = Math.max(3, Math.min(97, (e.clientY-r.top)/r.height*100));
@@ -1528,6 +1539,7 @@ document.addEventListener('click', (e)=>{
   const act = e.target.closest('[data-act]');
   if(!act) return;
   const kind = act.dataset.act;
+  if(ADMIN_GATED_ACTS.has(kind) && !requireAdmin()) return;
   const w = curWeek();
 
   if(kind==='vote'){
@@ -1625,6 +1637,12 @@ document.addEventListener('click', (e)=>{
 // 카드/구장 목록처럼 매번 다시 그려지는 input·select는 change 이벤트를 위임 처리한다
 // (고정 id에 리스너를 다는 commitField 패턴은 재생성되는 엘리먼트엔 쓸 수 없어서).
 document.addEventListener('change', (e)=>{
+  const gatedEl = e.target.closest('[data-act="traits"],[data-act="posroles"],[data-act="venueprice"],[data-act="venuetime"]');
+  if(gatedEl && !adminMode){
+    toast('🔒 임원진 모드에서만 변경할 수 있어요');
+    render(); // 방금 타이핑한 내용을 저장된 값으로 되돌려서 보여준다
+    return;
+  }
   const traitsEl = e.target.closest('[data-act="traits"]');
   if(traitsEl){
     const m = STATE.roster.find(r=>r.id===traitsEl.dataset.id);
@@ -1765,6 +1783,7 @@ document.addEventListener('pointerdown', (e)=>{
   const chipEl = e.target.closest('.chip[data-act="slotpick"]');
   const bxEl = e.target.closest('.bslot[data-id]');
   if(!slotEl && !chipEl && !bxEl) return;
+  if((slotEl || chipEl) && !requireAdmin()) return; // bestXI 미리보기(bxEl)는 저장 안 되니 예외
   const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
 
   if(slotEl){
@@ -1874,11 +1893,17 @@ document.addEventListener('pointercancel', ()=>{
 });
 
 document.getElementById('weekSel').addEventListener('change',(e)=>{
+  if(!adminMode){
+    toast('🔒 임원진 모드에서만 변경할 수 있어요');
+    e.target.value = STATE.currentWeek; // 방금 고른 값을 원래 주로 되돌린다
+    return;
+  }
   STATE.currentWeek = e.target.value;
   bestXIPos = null; // 주가 바뀌면 "이번 경기 투표자" 후보군 등 기준이 통째로 바뀌므로 초기화
   save();
 });
 document.getElementById('newWeekBtn').addEventListener('click',()=>{
+  if(!requireAdmin()) return;
   const last = STATE.weeks[STATE.weeks.length-1];
   const nd = nextSunday(last.date);
   const w = newWeek(nd);
@@ -1917,6 +1942,11 @@ function commitField(id, fn){
   // without this, that second no-op change re-renders mid-click and can
   // swallow the tap. Only save() if the field actually changed something.
   document.getElementById(id).addEventListener('change',()=>{
+    if(!adminMode){
+      toast('🔒 임원진 모드에서만 변경할 수 있어요');
+      render(); // 방금 입력한 내용을 저장된 값으로 되돌려서 보여준다
+      return;
+    }
     const before = JSON.stringify(curWeek());
     fn();
     if(JSON.stringify(curWeek())!==before) save();
@@ -1932,6 +1962,7 @@ document.getElementById('duesPrevBtn').addEventListener('click',()=>{ duesViewMo
 document.getElementById('duesNextBtn').addEventListener('click',()=>{ duesViewMonth=shiftMonth(duesViewMonth,1); renderDues(); });
 
 document.getElementById('injAddBtn').addEventListener('click',()=>{
+  if(!requireAdmin()) return;
   const id=document.getElementById('injMember').value;
   const note=document.getElementById('injNote').value.trim();
   if(!id||!note) return;
@@ -1941,6 +1972,7 @@ document.getElementById('injAddBtn').addEventListener('click',()=>{
 });
 
 document.getElementById('goalAddBtn').addEventListener('click',()=>{
+  if(!requireAdmin()) return;
   const id=document.getElementById('goalMember').value;
   const qn=document.getElementById('goalQuarter').value;
   const note=document.getElementById('goalNote').value.trim();
@@ -1951,6 +1983,7 @@ document.getElementById('goalAddBtn').addEventListener('click',()=>{
 });
 
 document.getElementById('resetFormBtn').addEventListener('click',()=>{
+  if(!requireAdmin()) return;
   applyShapeTemplate();
   toast('선택한 포메이션 기본 자리로 초기화했어요');
 });
