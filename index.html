@@ -109,6 +109,7 @@ h2 .bar{width:4px;height:14px;background:var(--accent);border-radius:2px}
 .pitch.dropok{outline:3px solid #fff;outline-offset:-3px}
 .slot{position:absolute;transform:translate(-50%,-50%);width:15.5%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.94);border:2px solid var(--accent-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:grab;font-size:.62rem;line-height:1.1;color:var(--accent-deep);font-weight:700;text-align:center;padding:2px;box-shadow:0 2px 5px rgba(0,0,0,.25);touch-action:none;transition:outline .1s,transform .1s;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
 .slot .p{font-size:.66rem}
+.slot.me{background:#FFD84D;border-color:var(--accent-deep);box-shadow:0 0 0 3px var(--accent),0 2px 6px rgba(0,0,0,.3);z-index:2}
 .slot.dragging{opacity:.3}
 .slot.dropok{outline:3px solid #fff;transform:translate(-50%,-50%) scale(1.08)}
 .bslot{position:absolute;transform:translate(-50%,-50%);width:15.5%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.94);border:2px solid var(--accent-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.58rem;line-height:1.15;color:var(--accent-deep);font-weight:700;text-align:center;padding:2px;box-shadow:0 2px 5px rgba(0,0,0,.2);transition:outline .1s,transform .1s}
@@ -327,6 +328,7 @@ details.collapse[open] summary:before{content:'▾ '}
   <details class="collapse"><summary>사용법 보기</summary>
     <p class="lede" style="margin-top:6px">쿼터별로, 공격할 때·수비할 때 포메이션을 따로 짤 수 있어요. 벤치 선수를 피치 위 원하는 자리로 자유롭게 드래그해서 놓을 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 피치의 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로, 선수카드에서 그 포지션을 선호한다고 등록해둔 선수부터 우선순위로 뜨는 배치 창이 열려요 (FM 스타일). 이미 배치된 선수도 드래그로 위치를 옮기거나 벤치 쪽으로 끌면 뺄 수 있어요.</p>
   </details>
+  <div class="card" id="myQuartersCard" style="display:none"></div>
   <div class="pillbar" id="formQPills"></div>
   <div class="modebar" id="modeBar">
     <button type="button" class="atk" data-act="mode" data-mode="atk">⚔️ 공격 시</button>
@@ -763,8 +765,8 @@ function posPriority(m, role){
 }
 // 피치의 빈 자리를 탭했을 때, 그 좌표가 현재 포메이션 템플릿의 어떤 자리(역할)에 가장
 // 가까운지 찾아서 그 역할 기준으로 후보를 우선순위 정렬한다.
-function nearestRole(x,y){
-  const slots = SHAPES[curShape()];
+function nearestRole(x,y,shapeName){
+  const slots = SHAPES[shapeName || curShape()];
   let best = slots[0][0], bestD = Infinity;
   slots.forEach(s=>{ const d = Math.hypot(s[1]-x, s[2]-y); if(d<bestD){ bestD=d; best=s[0]; } });
   return best;
@@ -1066,6 +1068,7 @@ function render(){
   renderModeBar();
   renderBallZoneBar();
   renderShapeBar();
+  renderMyQuarters();
   renderPitch();
   renderBestXI();
   renderMatch();
@@ -1453,6 +1456,32 @@ function shiftArrowsSvg(pos, byId, zone){
   </svg>`;
 }
 
+// "나"를 설정해두면, 이번 주 4쿼터 각각 참석 여부와(참석이면) 공격/수비 배치 자리를
+// 좌표 기반 nearestRole()로 한눈에 요약해서 보여준다 — 실제 좌표를 그대로 쓰니 배치가
+// 아무리 세밀해도(정확한 x,y) 항상 정확한 포지션 라벨이 나온다.
+function renderMyQuarters(){
+  const el = document.getElementById('myQuartersCard');
+  const my = myId();
+  const me = my ? STATE.roster.find(m=>m.id===my) : null;
+  if(!me){ el.style.display = 'none'; return; }
+  const w = curWeek();
+  const lines = w.quarters.map(q=>{
+    const v = q.votes[my];
+    if(v==='out') return `${q.n}쿼터: 불참`;
+    if(v==='maybe') return `${q.n}쿼터: 미정`;
+    if(v!=='in') return `${q.n}쿼터: 미투표`;
+    const atkPos = q.posAtk[my], defPos = q.posDef[my];
+    const atkRole = atkPos? nearestRole(atkPos.x, atkPos.y, q.shapeAtk) : null;
+    const defRole = defPos? nearestRole(defPos.x, defPos.y, q.shapeDef) : null;
+    if(!atkRole && !defRole) return `${q.n}쿼터: 참석 (미배치)`;
+    if(atkRole && defRole) return `${q.n}쿼터: 공격 ${atkRole} · 수비 ${defRole}`;
+    return `${q.n}쿼터: ${atkRole? '공격 '+atkRole : '수비 '+defRole}`;
+  });
+  el.style.display = '';
+  el.innerHTML = `<div class="benchhead" style="margin-top:0">📍 ${me.name}님, 이번 주 내 출전</div>
+    <div class="lede" style="margin:4px 0 0">${lines.join(' · ')}</div>`;
+}
+
 function pitchMarkings(){
   return `<svg viewBox="0 0 100 100" preserveAspectRatio="none">
     <rect x="2" y="2" width="96" height="96" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="0.6"/>
@@ -1475,10 +1504,11 @@ function renderPitch(){
   // 원래 있던 자리에 그 원이 남아있는 것처럼 보여서 헷갈린다는 피드백을 받고 뺐다.
   // 대신 피치의 빈 곳을 아무데나 탭하면 그 위치가 어떤 자리에 가까운지 인식해서 바로
   // 후보 선수 목록을 띄워준다 — nearestRole() 참고.)
+  const my = myId();
   Object.entries(pos).forEach(([pid,p])=>{
     const person = byId[pid];
     if(!person) return;
-    html += `<div class="slot" style="left:${p.x}%;top:${p.y}%" data-id="${pid}">
+    html += `<div class="slot ${pid===my?'me':''}" style="left:${p.x}%;top:${p.y}%" data-id="${pid}">
       <div class="p">${person.name}</div>
     </div>`;
   });
