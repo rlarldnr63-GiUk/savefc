@@ -689,7 +689,7 @@ let adminMode = (function(){ try{ return localStorage.getItem('savefc_admin')===
 // 공 위치 가이드, 최상의 포메이션 미리보기 등 저장되지 않는 것들)만 누구나 가능하다.
 function requireAdmin(){
   if(adminMode) return true;
-  toast('🔒 임원진 모드에서만 변경할 수 있어요');
+  toast('임원진 모드에서만 변경할 수 있어요');
   return false;
 }
 
@@ -1056,7 +1056,7 @@ function renderAdminBadge(){
   const b = document.getElementById('adminBadge');
   if(!b) return;
   b.classList.toggle('on', adminMode);
-  b.textContent = adminMode ? '🔓 임원진 모드' : '🔒 보기 전용';
+  b.textContent = adminMode ? '임원진 모드' : '보기 전용';
 }
 
 function renderModeBar(){
@@ -1651,7 +1651,7 @@ document.addEventListener('click', (e)=>{
 document.addEventListener('change', (e)=>{
   const gatedEl = e.target.closest('[data-act="traits"],[data-act="posroles"],[data-act="venueprice"],[data-act="venuetime"]');
   if(gatedEl && !adminMode){
-    toast('🔒 임원진 모드에서만 변경할 수 있어요');
+    toast('임원진 모드에서만 변경할 수 있어요');
     render(); // 방금 타이핑한 내용을 저장된 값으로 되돌려서 보여준다
     return;
   }
@@ -1906,7 +1906,7 @@ document.addEventListener('pointercancel', ()=>{
 
 document.getElementById('weekSel').addEventListener('change',(e)=>{
   if(!adminMode){
-    toast('🔒 임원진 모드에서만 변경할 수 있어요');
+    toast('임원진 모드에서만 변경할 수 있어요');
     e.target.value = STATE.currentWeek; // 방금 고른 값을 원래 주로 되돌린다
     return;
   }
@@ -1955,7 +1955,7 @@ function commitField(id, fn){
   // swallow the tap. Only save() if the field actually changed something.
   document.getElementById(id).addEventListener('change',()=>{
     if(!adminMode){
-      toast('🔒 임원진 모드에서만 변경할 수 있어요');
+      toast('임원진 모드에서만 변경할 수 있어요');
       render(); // 방금 입력한 내용을 저장된 값으로 되돌려서 보여준다
       return;
     }
