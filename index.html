@@ -244,8 +244,10 @@ details.collapse[open] summary:before{content:'▾ '}
 .capbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .capbar .capnum{font-weight:700}
 .lockmsg{margin-top:8px;font-size:.78rem;color:var(--out);line-height:1.4}
-.adminbtn{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-soft);font-family:inherit;font-size:.74rem;cursor:pointer;white-space:nowrap}
-.adminbtn.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+/* 헤더 맨 위 임원진 모드 배지 — 지금 보기 전용인지 편집 가능한지 어느 탭에서든 바로 보이게 */
+.topline{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.adminbadge{padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;font-family:inherit;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.adminbadge.on{background:var(--pend-soft);color:var(--pend);border-color:var(--pend)}
 .seg button.disabled,.bandbtn.disabled{opacity:.4;pointer-events:none}
 .picker[hidden]{display:none}
 
@@ -259,7 +261,10 @@ details.collapse[open] summary:before{content:'▾ '}
 
 <div class="wrap">
 <header class="top">
-  <div class="wordmark">SAVE&nbsp;FC 스쿼드보드<span class="dot"></span></div>
+  <div class="topline">
+    <div class="wordmark">SAVE&nbsp;FC 스쿼드보드<span class="dot"></span></div>
+    <button type="button" id="adminBadge" class="adminbadge" data-act="adminmode"></button>
+  </div>
   <div class="weeksel">
     <span class="lbl">이번 주</span>
     <select id="weekSel"></select>
@@ -1018,6 +1023,7 @@ function setMyId(id){ try{localStorage.setItem('savefc_who',id)}catch(e){} }
 
 /* ---------- rendering ---------- */
 function render(){
+  renderAdminBadge();
   renderWeekSel();
   renderWho();
   renderQuarterPills('voteQPills');
@@ -1044,6 +1050,13 @@ function renderQuarterPills(containerId){
   if(!el) return;
   el.innerHTML = w.quarters.map((q,i)=>
     `<button type="button" class="${i===curQuarterIdx?'on':''}" data-act="qpick" data-idx="${i}">${q.n}쿼터</button>`).join('');
+}
+
+function renderAdminBadge(){
+  const b = document.getElementById('adminBadge');
+  if(!b) return;
+  b.classList.toggle('on', adminMode);
+  b.textContent = adminMode ? '🔓 임원진 모드' : '🔒 보기 전용';
 }
 
 function renderModeBar(){
@@ -1093,7 +1106,6 @@ function renderVote(){
   document.getElementById('voteCapCard').innerHTML = `
     <div class="capbar">
       <span>선착순 <b>16명</b> 중 <span class="capnum">${capCount}</span>명 참여</span>
-      <button type="button" class="adminbtn ${adminMode?'on':''}" data-act="adminmode">${adminMode? '🔓 임원진 모드 켜짐' : '🔒 임원진 모드'}</button>
     </div>
     <div class="deadlineinfo">${fmtDeadlineInfo(w)}</div>
     ${locked? `<div class="lockmsg">${adminMode? '경기 24시간 전이 지났지만 임원진 모드라서 계속 수정할 수 있어요.' : '경기 24시간 전이 지나서 참석 투표가 마감됐어요. 변경이 필요하면 임원진에게 연락해주세요.'}</div>`
@@ -1159,7 +1171,7 @@ function toggleAdminMode(){
   const wrap=document.createElement('div');
   wrap.className='picker';
   wrap.innerHTML = `<div class="sheet"><h3>임원진 모드</h3>
-    <p class="lede" style="margin-top:2px">PIN을 입력하면 마감 이후에도 투표를 수정하거나 선착순 16명을 넘겨서 추가할 수 있어요.</p>
+    <p class="lede" style="margin-top:2px">PIN을 입력하면 투표·포메이션·회비·선수카드·경기기록 등 팀 데이터를 변경할 수 있어요. PIN이 없으면 보기만 가능해요.</p>
     <input type="password" inputmode="numeric" id="adminPinInput" placeholder="PIN" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;margin:10px 0">
     <button class="addbtn" type="button" id="adminPinOk" style="width:100%">확인</button>
     <button class="close" type="button" style="width:100%;margin-top:8px;background:none;border:1px solid var(--line);border-radius:8px;padding:10px;color:var(--ink-soft);font-family:inherit;cursor:pointer">닫기</button></div>`;
