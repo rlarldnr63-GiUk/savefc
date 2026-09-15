@@ -96,6 +96,7 @@ h2 .bar{width:4px;height:14px;background:var(--accent);border-radius:2px}
 .seg button{border:none;background:var(--surface-2);color:var(--ink-soft);font-family:inherit;font-size:.76rem;padding:6px 9px;cursor:pointer}
 .seg button.in.on{background:var(--in);color:#fff}
 .seg button.out.on{background:var(--out);color:#fff}
+.seg button.maybe.on{background:var(--pend);color:#fff}
 
 /* formation */
 .shapebar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
@@ -159,6 +160,10 @@ footer.note{font-size:.72rem;color:var(--ink-faint);text-align:center;margin-top
 .bandbtn{flex:1;padding:14px 8px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-weight:700;font-size:.9rem;cursor:pointer}
 .bandbtn.in.on{background:var(--in-soft);border-color:var(--in);color:var(--in)}
 .bandbtn.out.on{background:var(--out-soft);border-color:var(--out);color:var(--out)}
+.bandbtn.maybe.on{background:var(--pend-soft);border-color:var(--pend);color:var(--pend)}
+.bandall{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.bandall .lbl{width:100%;font-size:.74rem;color:var(--ink-faint)}
+.bandall button{flex:1;min-width:88px;padding:8px 6px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-soft);font-family:inherit;font-size:.76rem;font-weight:600;cursor:pointer}
 .pollopt{margin-bottom:14px}
 .pollopt:last-child{margin-bottom:0}
 .pollopt-head{display:flex;justify-content:space-between;align-items:baseline;font-size:.85rem;font-weight:600;margin-bottom:5px}
@@ -167,6 +172,7 @@ footer.note{font-size:.72rem;color:var(--ink-faint);text-align:center;margin-top
 .pollbar-fill{height:100%;border-radius:5px}
 .pollbar-fill.in{background:var(--in)}
 .pollbar-fill.out{background:var(--out)}
+.pollbar-fill.maybe{background:var(--pend)}
 .pollnames{margin-top:4px}
 .pollnames summary{font-size:.74rem;color:var(--ink-faint);cursor:pointer;list-style:none}
 .pollnames summary::-webkit-details-marker{display:none}
@@ -299,6 +305,7 @@ details.collapse[open] summary:before{content:'▾ '}
   <div class="pillbar" id="voteQPills"></div>
   <div class="card" id="voteBandMe"></div>
   <div class="card" id="voteBandBars"></div>
+  <div id="voteNotesCard"></div>
 
   <details class="collapse">
     <summary>전체 명단 · 대리투표 (총무용)</summary>
@@ -587,7 +594,7 @@ function newQuarter(n){
 function newWeek(dateIso){
   return {id:uid(), date:dateIso, label:fmtLabel(dateIso), venue:'', matchTime:'10:00', attendOrder:[],
     quarters:[1,2,3,4].map(newQuarter),
-    goals:[], result:{us:null,them:null,note:''}, injuries:[], ratings:{}};
+    goals:[], result:{us:null,them:null,note:''}, injuries:[], ratings:{}, notes:{}};
 }
 // 예전에는 "몇 번 자리"(인덱스)에 누가 있는지만 저장해서, 정해진 포메이션 틀 안에서만
 // 배치할 수 있었다. 이제는 선수마다 좌표(x%,y%)를 직접 저장해서 피치 어디든 자유롭게
@@ -621,6 +628,7 @@ function migrateWeek(w){
   if(!w.ratings) w.ratings = {};
   if(!w.injuries) w.injuries = [];
   if(!w.matchTime) w.matchTime = '10:00';
+  if(!w.notes) w.notes = {};
   if(!w.attendOrder) w.attendOrder = Array.from(weekAttendeeIds(w));
   return w;
 }
@@ -1111,15 +1119,20 @@ function renderWho(){
 function renderVote(){
   const w = curWeek();
   const q = curQuarter();
-  let cin=0,cout=0,cpend=0;
-  const inList=[], outList=[], pendList=[];
+  if(!w.notes) w.notes = {};
+  let cin=0,cout=0,cmaybe=0,cpend=0;
+  const inList=[], outList=[], maybeList=[], pendList=[];
   STATE.roster.forEach(m=>{
     const v=q.votes[m.id];
-    if(v==='in'){cin++;inList.push(m);} else if(v==='out'){cout++;outList.push(m);} else {cpend++;pendList.push(m);}
+    if(v==='in'){cin++;inList.push(m);}
+    else if(v==='out'){cout++;outList.push(m);}
+    else if(v==='maybe'){cmaybe++;maybeList.push(m);}
+    else {cpend++;pendList.push(m);}
   });
   const total = STATE.roster.length;
   const pctIn = total? Math.round(cin/total*100):0;
   const pctOut = total? Math.round(cout/total*100):0;
+  const pctMaybe = total? Math.round(cmaybe/total*100):0;
 
   const attendOrder = w.attendOrder || [];
   const capCount = attendOrder.length;
@@ -1140,11 +1153,23 @@ function renderVote(){
   const myAlreadyIn = me ? attendOrder.includes(me.id) : false;
   const myInDisabled = !adminMode && (lockedNonAdmin || (capFull && !myAlreadyIn));
   const myOutDisabled = lockedNonAdmin;
+  const myMaybeDisabled = lockedNonAdmin;
   document.getElementById('voteBandMe').innerHTML = me ? `
     <div class="lede" style="margin:0 0 8px">${me.name}(${me.code})님, ${q.n}쿼터 참석하시나요?</div>
     <div class="bandbtns">
       <button type="button" class="bandbtn in ${myVote==='in'?'on':''} ${myInDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="in">✋ 참석</button>
+      <button type="button" class="bandbtn maybe ${myVote==='maybe'?'on':''} ${myMaybeDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="maybe">🤔 미정</button>
       <button type="button" class="bandbtn out ${myVote==='out'?'on':''} ${myOutDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="out">🙅 불참</button>
+    </div>
+    <div class="bandall">
+      <span class="lbl">이번 주 4쿼터 전체를 한 번에</span>
+      <button type="button" class="ghost" ${myInDisabled?'disabled':''} data-act="voteall" data-v="in">전체 참석</button>
+      <button type="button" class="ghost" ${myMaybeDisabled?'disabled':''} data-act="voteall" data-v="maybe">전체 미정</button>
+      <button type="button" class="ghost" ${myOutDisabled?'disabled':''} data-act="voteall" data-v="out">전체 불참</button>
+    </div>
+    <div class="field" style="margin-top:10px">
+      <label>특이사항 메모 (선택 — 예: "3쿼터부터 늦참해요")</label>
+      <input type="text" class="traitsInput" style="margin:4px 0 0" data-act="votenote" data-id="${me.id}" value="${escAttr(w.notes[me.id]||'')}" placeholder="예: 3쿼터부터 늦참해요">
     </div>` : `<div class="lede" style="margin:0">위에서 내 이름을 먼저 선택해주세요.</div>`;
 
   const chipHtml = list => list.length? list.map(m=>`<span class="chip">${m.name}<span class="code">${m.code}</span></span>`).join('') : '<span class="lede" style="margin:0">없음</span>';
@@ -1153,6 +1178,11 @@ function renderVote(){
       <div class="pollopt-head"><span>참석</span><span class="num">${cin}명 · ${pctIn}%</span></div>
       <div class="pollbar"><div class="pollbar-fill in" style="width:${pctIn}%"></div></div>
       <details class="pollnames"><summary>명단 보기</summary><div class="chips" style="margin-top:8px">${chipHtml(inList)}</div></details>
+    </div>
+    <div class="pollopt">
+      <div class="pollopt-head"><span>미정</span><span class="num">${cmaybe}명 · ${pctMaybe}%</span></div>
+      <div class="pollbar"><div class="pollbar-fill maybe" style="width:${pctMaybe}%"></div></div>
+      <details class="pollnames"><summary>명단 보기</summary><div class="chips" style="margin-top:8px">${chipHtml(maybeList)}</div></details>
     </div>
     <div class="pollopt">
       <div class="pollopt-head"><span>불참</span><span class="num">${cout}명 · ${pctOut}%</span></div>
@@ -1164,16 +1194,30 @@ function renderVote(){
       <details class="pollnames"><summary>명단 보기</summary><div class="chips" style="margin-top:8px">${chipHtml(pendList)}</div></details>
     </div>`;
 
+  const noteEntries = STATE.roster.map(m=>[m, w.notes[m.id]]).filter(([,n])=>n && n.trim());
+  const notesCard = document.getElementById('voteNotesCard');
+  if(notesCard){
+    notesCard.innerHTML = noteEntries.length? `
+      <details class="collapse" open>
+        <summary>특이사항 메모 (${noteEntries.length}명)</summary>
+        <div class="rows" style="margin-top:8px">
+          ${noteEntries.map(([m,n])=>`<div class="row"><div class="nm">${m.name}<span class="code">${m.code}</span></div><div class="lede" style="margin:0;flex:2;text-align:right">${escAttr(n)}</div></div>`).join('')}
+        </div>
+      </details>` : '';
+  }
+
   const rows = STATE.roster.map(m=>{
     const v = q.votes[m.id];
     const already = attendOrder.includes(m.id);
     const inDisabled = !adminMode && (lockedNonAdmin || (capFull && !already));
     const outDisabled = !adminMode && lockedNonAdmin;
+    const maybeDisabled = !adminMode && lockedNonAdmin;
     return `<div class="row ${m.id===myId()?'me':''}">
       <div class="no">${m.no||''}</div>
       <div class="nm">${m.name}${m.hurt?' <span class="badge">부상</span>':''}<span class="pos">${m.pos}</span><span class="code">${m.code}</span></div>
       <div class="seg">
         <button type="button" class="in ${v==='in'?'on':''} ${inDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="in">참석</button>
+        <button type="button" class="maybe ${v==='maybe'?'on':''} ${maybeDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="maybe">미정</button>
         <button type="button" class="out ${v==='out'?'on':''} ${outDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="out">불참</button>
       </div>
     </div>`;
@@ -1605,6 +1649,30 @@ document.addEventListener('click', (e)=>{
     if(!nowInWeek) w.attendOrder = w.attendOrder.filter(x=>x!==id);
     save();
   }
+  else if(kind==='voteall'){
+    // 이번 주 4쿼터 전체를 한 번에 같은 값으로 — 본인만 가능(대리투표는 위 'vote' 쪽에서 처리).
+    const id = myId();
+    const v = act.dataset.v;
+    if(!id){ toast('먼저 위에서 내 이름을 설정해주세요'); return; }
+    if(votingLocked(w) && !adminMode){
+      toast('경기 24시간 전 마감이라 투표를 수정할 수 없어요 — 임원진에게 문의해주세요');
+      return;
+    }
+    const wasInWeek = weekAttendeeIds(w).has(id);
+    if(v==='in' && !wasInWeek && !w.attendOrder.includes(id) && w.attendOrder.length>=16 && !adminMode){
+      toast('선착순 16명이 마감됐어요 — 총무/임원진에게 문의해주세요');
+      return;
+    }
+    w.quarters.forEach(qq=>{
+      qq.votes[id] = v;
+      if(v!=='in'){ delete qq.posAtk[id]; delete qq.posDef[id]; }
+    });
+    const nowInWeek = weekAttendeeIds(w).has(id);
+    if(nowInWeek && !w.attendOrder.includes(id)) w.attendOrder.push(id);
+    if(!nowInWeek) w.attendOrder = w.attendOrder.filter(x=>x!==id);
+    save();
+    toast(v==='in'? '4쿼터 전체 참석으로 표시했어요' : v==='out'? '4쿼터 전체 불참으로 표시했어요' : '4쿼터 전체 미정으로 표시했어요');
+  }
   else if(kind==='adminmode'){
     toggleAdminMode();
   }
@@ -1675,6 +1743,16 @@ document.addEventListener('click', (e)=>{
 // 카드/구장 목록처럼 매번 다시 그려지는 input·select는 change 이벤트를 위임 처리한다
 // (고정 id에 리스너를 다는 commitField 패턴은 재생성되는 엘리먼트엔 쓸 수 없어서).
 document.addEventListener('change', (e)=>{
+  const noteEl = e.target.closest('[data-act="votenote"]');
+  if(noteEl){
+    const id = noteEl.dataset.id;
+    if(id!==myId() && !requireAdmin()) return; // 본인 메모는 자유, 남 메모 수정은 임원진만
+    const w = curWeek();
+    if(!w.notes) w.notes = {};
+    w.notes[id] = noteEl.value;
+    save();
+    return;
+  }
   const gatedEl = e.target.closest('[data-act="traits"],[data-act="posroles"],[data-act="venueprice"],[data-act="venuetime"]');
   if(gatedEl && !adminMode){
     toast('임원진 모드에서만 변경할 수 있어요');
