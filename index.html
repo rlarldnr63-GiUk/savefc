@@ -277,7 +277,7 @@ details.collapse[open] summary:before{content:'▾ '}
   <button data-tab="vote" class="on">🗳️ 참여투표</button>
   <button data-tab="form">⚽ 포메이션</button>
   <button data-tab="match">🏟️ 구장·결과</button>
-  <button data-tab="cards">🃏 선수카드</button>
+  <button data-tab="cards" id="cardsTabBtn">🃏 선수카드</button>
   <button data-tab="analysis">📊 분석</button>
   <button data-tab="stats">📋 현황</button>
 </nav>
@@ -341,14 +341,16 @@ details.collapse[open] summary:before{content:'▾ '}
     <div class="chips" id="outChips"></div>
   </div>
 
-  <h2 style="margin-top:20px"><span class="bar"></span>🏆 최상의 포메이션</h2>
-  <details class="collapse"><summary>사용법 보기</summary>
-    <p class="lede" style="margin-top:6px">지금 선택된 포메이션(<b id="bestXIShapeLabel"></b>) 기준으로, 선수카드의 능력치(OVR)와 선호 포지션을 반영해서 조건별 최상의 라인업을 자동으로 짜봤어요. 마음에 안 들면 아래에서 선수를 직접 드래그해서 자리를 옮기거나 맞바꿀 수 있어요 (실제 배치와는 별개로, 이 조정 내용은 보는 사람 화면에만 남고 저장되지는 않아요).</p>
-  </details>
-  <div class="pillbar" id="bestXIScopePills"></div>
-  <button type="button" class="ghost" id="resetBestXIBtn" style="width:100%;margin-bottom:10px">↺ 추천 배치로 초기화</button>
-  <div class="pitch" id="bestXIPitch"></div>
-  <div class="lede" id="bestXIStat" style="margin-top:8px"></div>
+  <div id="bestXIBlock">
+    <h2 style="margin-top:20px"><span class="bar"></span>🏆 BEST 11</h2>
+    <details class="collapse"><summary>사용법 보기</summary>
+      <p class="lede" style="margin-top:6px">지금 선택된 포메이션(<b id="bestXIShapeLabel"></b>) 기준으로, 선수카드의 능력치(OVR)와 선호 포지션을 반영해서 조건별 최상의 라인업을 자동으로 짜봤어요. 마음에 안 들면 아래에서 선수를 직접 드래그해서 자리를 옮기거나 맞바꿀 수 있어요 (실제 배치와는 별개로, 이 조정 내용은 보는 사람 화면에만 남고 저장되지는 않아요).</p>
+    </details>
+    <div class="pillbar" id="bestXIScopePills"></div>
+    <button type="button" class="ghost" id="resetBestXIBtn" style="width:100%;margin-bottom:10px">↺ 추천 배치로 초기화</button>
+    <div class="pitch" id="bestXIPitch"></div>
+    <div class="lede" id="bestXIStat" style="margin-top:8px"></div>
+  </div>
 </section>
 
 <section class="tab" id="tab-match">
@@ -684,9 +686,9 @@ let ballZone = 'mid';    // 'left' | 'mid' | 'right'
 // 투표를 대신 고쳐줄 수 있다. 기기별로 localStorage에 저장(실제 로그인 시스템은 아님).
 const ADMIN_PIN = '2022';
 let adminMode = (function(){ try{ return localStorage.getItem('savefc_admin')==='1'; }catch(e){ return false; } })();
-// 임원진 모드가 아니면 팀 공통 데이터(투표, 포메이션, 회비, 선수카드, 경기기록 등)를
-// 하나도 바꿀 수 없다 — 예외 없이 전부 잠금. 순수 화면 이동(탭/쿼터/공격·수비 전환,
-// 공 위치 가이드, 최상의 포메이션 미리보기 등 저장되지 않는 것들)만 누구나 가능하다.
+// 임원진 모드(선수 모드)가 아니면 본인 참석투표를 뺀 나머지 팀 공통 데이터(포메이션,
+// 회비, 선수카드, 경기기록 등)를 바꿀 수 없다. 순수 화면 이동(탭/쿼터/공격·수비 전환,
+// 공 위치 가이드, BEST 11 미리보기 등 저장되지 않는 것들)도 누구나 가능하다.
 function requireAdmin(){
   if(adminMode) return true;
   toast('임원진 모드에서만 변경할 수 있어요');
@@ -1024,6 +1026,7 @@ function setMyId(id){ try{localStorage.setItem('savefc_who',id)}catch(e){} }
 /* ---------- rendering ---------- */
 function render(){
   renderAdminBadge();
+  renderPlayerGates();
   renderWeekSel();
   renderWho();
   renderQuarterPills('voteQPills');
@@ -1056,7 +1059,28 @@ function renderAdminBadge(){
   const b = document.getElementById('adminBadge');
   if(!b) return;
   b.classList.toggle('on', adminMode);
-  b.textContent = adminMode ? '임원진 모드' : '보기 전용';
+  b.textContent = adminMode ? '임원진 모드' : '선수 모드';
+}
+
+// 선수 모드(비임원진)에서는 선수카드 탭과 BEST 11(비공식 미리보기)을 아예 숨긴다 —
+// 못 바꾸게 막는 걸 넘어서 관리용 화면 자체를 안 보이게 하는 게 목적.
+function renderPlayerGates(){
+  const hide = !adminMode;
+  const cardsBtn = document.getElementById('cardsTabBtn');
+  const cardsSection = document.getElementById('tab-cards');
+  if(cardsBtn) cardsBtn.style.display = hide ? 'none' : '';
+  if(cardsSection){
+    cardsSection.style.display = hide ? 'none' : '';
+    if(hide && cardsSection.classList.contains('on')){
+      // 선수카드 탭을 보던 중 임원진 모드가 꺼지면, 빈 화면 대신 참여투표 탭으로 되돌린다.
+      cardsSection.classList.remove('on');
+      if(cardsBtn) cardsBtn.classList.remove('on');
+      document.getElementById('tab-vote').classList.add('on');
+      document.querySelector('nav.tabs button[data-tab="vote"]').classList.add('on');
+    }
+  }
+  const bestXIBlock = document.getElementById('bestXIBlock');
+  if(bestXIBlock) bestXIBlock.style.display = hide ? 'none' : '';
 }
 
 function renderModeBar(){
@@ -1171,7 +1195,7 @@ function toggleAdminMode(){
   const wrap=document.createElement('div');
   wrap.className='picker';
   wrap.innerHTML = `<div class="sheet"><h3>임원진 모드</h3>
-    <p class="lede" style="margin-top:2px">PIN을 입력하면 투표·포메이션·회비·선수카드·경기기록 등 팀 데이터를 변경할 수 있어요. PIN이 없으면 보기만 가능해요.</p>
+    <p class="lede" style="margin-top:2px">선수 모드에서는 본인 참석투표만 할 수 있어요. PIN을 입력하면 포메이션·회비·선수카드·경기기록 등 나머지 팀 데이터도 변경할 수 있어요.</p>
     <input type="password" inputmode="numeric" id="adminPinInput" placeholder="PIN" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;margin:10px 0">
     <button class="addbtn" type="button" id="adminPinOk" style="width:100%">확인</button>
     <button class="close" type="button" style="width:100%;margin-top:8px;background:none;border:1px solid var(--line);border-radius:8px;padding:10px;color:var(--ink-soft);font-family:inherit;cursor:pointer">닫기</button></div>`;
@@ -1521,7 +1545,7 @@ function renderStats(){
 }
 
 /* ---------- events ---------- */
-const ADMIN_GATED_ACTS = new Set(['vote','shape','delinj','delgoal','star','duestoggle','hurttoggle','venuepref']);
+const ADMIN_GATED_ACTS = new Set(['shape','delinj','delgoal','star','duestoggle','hurttoggle','venuepref']);
 
 document.addEventListener('click', (e)=>{
   // 방금 실제 드래그(탭이 아니라 진짜 이동)로 배치를 끝낸 직후에 뒤따라오는 네이티브
@@ -1556,6 +1580,8 @@ document.addEventListener('click', (e)=>{
 
   if(kind==='vote'){
     const id=act.dataset.id, v=act.dataset.v;
+    // 본인 참석투표는 선수 모드에서도 누구나 할 수 있다 — 남 대신 눌러주는 대리투표만 임원진 전용.
+    if(id!==myId() && !requireAdmin()) return;
     const q = curQuarter();
     if(!w.attendOrder) w.attendOrder = [];
     if(votingLocked(w) && !adminMode){
@@ -2002,7 +2028,7 @@ document.getElementById('resetFormBtn').addEventListener('click',()=>{
 document.getElementById('resetBestXIBtn').addEventListener('click',()=>{
   bestXIPos = null;
   render();
-  toast('최상의 포메이션을 추천 배치로 초기화했어요');
+  toast('BEST 11을 추천 배치로 초기화했어요');
 });
 
 render(); // 즉시 첫 화면부터 보여준다 (기본값/시드 데이터로 먼저 그린 뒤, 연결되면 실시간 값으로 갱신)
