@@ -245,6 +245,8 @@ details.collapse[open] summary:before{content:'▾ '}
 .venuepref-row .pref-label{font-size:.78rem;color:var(--ink-soft)}
 .injwarn{font-size:.78rem;color:var(--out);margin-top:2px}
 .traitsInput{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:5px 7px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.72rem}
+.posrow{display:flex;gap:4px;margin-bottom:6px}
+.posrow select{flex:1;min-width:0;padding:5px 2px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.68rem}
 .hurtbtn{margin-top:6px;width:100%;padding:5px;font-size:.72rem}
 .postag{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--accent-soft);color:var(--accent);margin-left:6px;white-space:nowrap}
 .postag.best{background:var(--pend-soft);color:var(--pend)}
@@ -318,7 +320,7 @@ details.collapse[open] summary:before{content:'▾ '}
 
   <details class="collapse">
     <summary>전체 명단 · 대리투표 (총무용)</summary>
-    <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요. (선택된 쿼터 기준)</p>
+    <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요 (선택된 쿼터 기준). 아래 두 번째 줄은 지각비(3천/5천)·노쇼비(2만) 체크예요 — 담당자 판단으로 눌러주세요, 같은 값을 다시 누르면 정상으로 되돌아가요.</p>
     <div class="rows" id="voteRows"></div>
   </details>
 </section>
@@ -334,7 +336,17 @@ details.collapse[open] summary:before{content:'▾ '}
     <button type="button" class="atk" data-act="mode" data-mode="atk">⚔️ 공격 시</button>
     <button type="button" class="def" data-act="mode" data-mode="def">🛡️ 수비 시</button>
   </div>
-  <div class="pillbar" id="ballZoneBar" style="display:none;align-items:center">
+  <div class="shapebar" id="shapeBar"></div>
+  <button type="button" class="ghost" id="resetFormBtn" style="width:100%;margin-bottom:10px">↺ 초기화 (선택한 포메이션 기본 자리로)</button>
+  <div class="pitch" id="pitch"></div>
+  <div class="bench">
+    <div class="benchhead" id="benchHead">벤치 (이 쿼터 참석, 미배치)</div>
+    <div class="chips" id="benchChips"></div>
+    <div class="benchhead">이 쿼터 불참 / 미투표</div>
+    <div class="chips" id="outChips"></div>
+  </div>
+
+  <div class="pillbar" id="ballZoneBar" style="display:none;align-items:center;margin-top:14px">
     <span style="font-size:.76rem;color:var(--ink-faint);margin-right:2px">⚽ 공 위치</span>
     <button type="button" data-act="ballzone" data-zone="left">왼쪽</button>
     <button type="button" data-act="ballzone" data-zone="mid">중앙</button>
@@ -348,15 +360,6 @@ details.collapse[open] summary:before{content:'▾ '}
       <p class="lede" style="margin:0">라인 <b>높이 조절</b> — 공이 멀리 있으면 수비라인을 끌어올려서 팀을 압축하고, 뒷공간 침투 위협이 있으면 내려요. 라인은 항상 한 몸처럼 움직여야 해요 — 한 명만 처지거나 튀어나오면 그 틈이 뚫려요.</p>
     </div>
   </details>
-  <div class="shapebar" id="shapeBar"></div>
-  <button type="button" class="ghost" id="resetFormBtn" style="width:100%;margin-bottom:10px">↺ 초기화 (선택한 포메이션 기본 자리로)</button>
-  <div class="pitch" id="pitch"></div>
-  <div class="bench">
-    <div class="benchhead" id="benchHead">벤치 (이 쿼터 참석, 미배치)</div>
-    <div class="chips" id="benchChips"></div>
-    <div class="benchhead">이 쿼터 불참 / 미투표</div>
-    <div class="chips" id="outChips"></div>
-  </div>
 
   <div id="bestXIBlock">
     <h2 style="margin-top:20px"><span class="bar"></span>🏆 BEST 11</h2>
@@ -427,14 +430,6 @@ details.collapse[open] summary:before{content:'▾ '}
         <button class="addbtn" id="injAddBtn" type="button">부상 추가</button>
         <div id="injList" style="margin-top:10px"></div>
       </div>
-    </details>
-  </div>
-
-  <div class="panel">
-    <details class="collapse">
-      <summary>🕒 지각비 · 노쇼비 체크</summary>
-      <p class="lede" style="margin-top:6px">지각 20분 전 미도착 3천원 / 경기 지각 5천원 / 노쇼(무단 불참) 2만원 — 담당자 판단으로 눌러주세요. 같은 값을 다시 누르면 정상으로 되돌아가요.</p>
-      <div class="rows" id="lateFeeRows" style="margin-top:8px"></div>
     </details>
   </div>
 </section>
@@ -578,6 +573,7 @@ ROSTER.forEach((m,i)=>{ m.code = 'SFC' + String(i+1).padStart(2,'0'); });
 // 각 포메이션은 "기본 배치 템플릿"일 뿐이다. 실제로는 자유롭게 어디로든 드래그해서
 // 옮길 수 있고(예: 오른쪽에 공격수 3명 몰아두기), 이 좌표는 프리셋 적용·초기화할 때
 // 출발점으로만 쓰인다.
+const POS_CODES = ['GK','LB','CB','RB','LWB','RWB','CDM','CM','LM','RM','CAM','LAM','RAM','LW','ST','RW'];
 const SHAPES = {
  '4-3-3':[['GK',50,94],['LB',15,76],['CB',35,80],['CB',65,80],['RB',85,76],
           ['CM',28,54],['CM',50,58],['CM',72,54],
@@ -757,6 +753,14 @@ function applyShapeTemplate(){
    기록해두고, 자리를 고를 때 그 순서대로 후보를 정렬해서 보여준다. ---------- */
 function memberPosRoles(m){
   return (m.posRoles||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+}
+const RANK_LABELS = ['1순위','2순위','3순위'];
+function posRoleSelect(m, rank){
+  const cur = memberPosRoles(m)[rank] || '';
+  return `<select data-act="posrole" data-id="${m.id}" data-rank="${rank}">
+    <option value="">${RANK_LABELS[rank]} 없음</option>
+    ${POS_CODES.map(c=>`<option value="${c}" ${cur===c?'selected':''}>${c}</option>`).join('')}
+  </select>`;
 }
 function posPriority(m, role){
   if(!role) return Infinity;
@@ -1075,7 +1079,6 @@ function render(){
   renderGoals();
   renderRatings();
   renderInjuries();
-  renderLateFees();
   renderPlayerCards();
   renderDues();
   renderStats();
@@ -1254,13 +1257,15 @@ function renderVote(){
       </details>` : '';
   }
 
+  if(!w.lateFees) w.lateFees = {};
+  const feeBtn = (m,val,cls) => `<button type="button" class="${cls} ${w.lateFees[m.id]===val?'on':''}" data-act="latefee" data-id="${m.id}" data-v="${val}">${LATE_FEE_LABELS[val]}</button>`;
   const rows = STATE.roster.map(m=>{
     const v = q.votes[m.id];
     const already = attendOrder.includes(m.id);
     const inDisabled = !adminMode && (lockedNonAdmin || (capFull && !already));
     const outDisabled = !adminMode && lockedNonAdmin;
     const maybeDisabled = !adminMode && lockedNonAdmin;
-    return `<div class="row ${m.id===myId()?'me':''}">
+    return `<div class="row ${m.id===myId()?'me':''}" style="flex-wrap:wrap;row-gap:6px">
       <div class="no">${m.no||''}</div>
       <div class="nm">${m.name}${m.hurt?' <span class="badge">부상</span>':''}<span class="pos">${m.pos}</span><span class="code">${m.code}</span></div>
       <div class="seg">
@@ -1268,6 +1273,7 @@ function renderVote(){
         <button type="button" class="maybe ${v==='maybe'?'on':''} ${maybeDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="maybe">미정</button>
         <button type="button" class="out ${v==='out'?'on':''} ${outDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="out">불참</button>
       </div>
+      <div class="seg" style="flex-basis:100%">${feeBtn(m,'late3','late')}${feeBtn(m,'late5','late')}${feeBtn(m,'noshow','noshow')}</div>
     </div>`;
   }).join('');
   document.getElementById('voteRows').innerHTML = rows;
@@ -1383,16 +1389,6 @@ function renderRatings(){
 
 const LATE_FEE_LABELS = {late3:'지각 3천', late5:'지각 5천', noshow:'노쇼 2만'};
 const LATE_FEE_AMOUNTS = {late3:3000, late5:5000, noshow:20000};
-function renderLateFees(){
-  const w = curWeek();
-  if(!w.lateFees) w.lateFees = {};
-  const btn = (m,val,cls) => `<button type="button" class="${cls} ${w.lateFees[m.id]===val?'on':''}" data-act="latefee" data-id="${m.id}" data-v="${val}">${LATE_FEE_LABELS[val]}</button>`;
-  document.getElementById('lateFeeRows').innerHTML = STATE.roster.map(m=>`
-    <div class="row">
-      <div class="nm">${m.name}<span class="code">${m.code}</span></div>
-      <div class="seg">${btn(m,'late3','late')}${btn(m,'late5','late')}${btn(m,'noshow','noshow')}</div>
-    </div>`).join('');
-}
 
 function renderPlayerCards(){
   document.getElementById('playerCards').innerHTML = STATE.roster.map(m=>{
@@ -1407,7 +1403,8 @@ function renderPlayerCards(){
       <div class="pname">${m.name}${m.hurt?' <span class="badge">부상</span>':''}</div>
       <div class="pcode">${m.code} · ${m.pos}${m.no?' · #'+m.no:''}</div>
       <input class="traitsInput" type="text" data-act="traits" data-id="${m.id}" value="${escAttr(m.traits||'')}" placeholder="특징 (예: 빠른 발, 크로스 정확)">
-      <input class="traitsInput" type="text" data-act="posroles" data-id="${m.id}" value="${escAttr(m.posRoles||'')}" placeholder="선호 포지션 우선순위 (예: ST, CAM, LW)">
+      <div class="lede" style="margin:4px 0 2px">선호 포지션 우선순위</div>
+      <div class="posrow">${[0,1,2].map(rank=>posRoleSelect(m,rank)).join('')}</div>
       <div class="pmeta"><span>평점 ${r.n}회${r.avg!=null?' (평균 '+r.avg.toFixed(1)+'★)':''}</span></div>
       <div class="pmeta">${r.mom? `<span class="mombadge">MOM ${r.mom}회</span>`:''}<span>${duesStatusText(m.id)}</span></div>
       <div class="pmeta">부상률 ${inj.rate.toFixed(0)}% (${inj.cnt}건 / 참석 ${inj.weeksAttended}회)</div>
@@ -1914,7 +1911,7 @@ document.addEventListener('change', (e)=>{
     save();
     return;
   }
-  const gatedEl = e.target.closest('[data-act="traits"],[data-act="posroles"],[data-act="venueprice"],[data-act="venuetime"]');
+  const gatedEl = e.target.closest('[data-act="traits"],[data-act="posrole"],[data-act="venueprice"],[data-act="venuetime"]');
   if(gatedEl && !adminMode){
     toast('임원진 모드에서만 변경할 수 있어요');
     render(); // 방금 타이핑한 내용을 저장된 값으로 되돌려서 보여준다
@@ -1926,10 +1923,16 @@ document.addEventListener('change', (e)=>{
     if(m){ m.traits = traitsEl.value; save(); }
     return;
   }
-  const posRolesEl = e.target.closest('[data-act="posroles"]');
-  if(posRolesEl){
-    const m = STATE.roster.find(r=>r.id===posRolesEl.dataset.id);
-    if(m){ m.posRoles = posRolesEl.value; save(); }
+  const posRoleEl = e.target.closest('[data-act="posrole"]');
+  if(posRoleEl){
+    const id = posRoleEl.dataset.id;
+    const m = STATE.roster.find(r=>r.id===id);
+    if(m){
+      const selects = document.querySelectorAll(`select[data-act="posrole"][data-id="${id}"]`);
+      const vals = Array.from(selects).sort((a,b)=>a.dataset.rank-b.dataset.rank).map(s=>s.value).filter(Boolean);
+      m.posRoles = vals.join(',');
+      save();
+    }
     return;
   }
   const priceEl = e.target.closest('[data-act="venueprice"]');
