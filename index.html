@@ -491,8 +491,12 @@ details.collapse[open] summary:before{content:'▾ '}
         <span class="lbl" id="duesMonthLabel"></span>
         <button class="navbtn" id="duesNextBtn" type="button">›</button>
       </div>
-      <p class="lede" style="margin-bottom:8px">이름을 누르면 오늘 날짜로 납부 체크가 돼요 (다시 누르면 미납으로 되돌아가요).</p>
+      <p class="lede" style="margin-bottom:8px">이름을 누르면 오늘 날짜로 납부 체크가 되고, 목록에서는 빠져요 (기록은 안 지워져요).</p>
       <div class="chips" id="duesChips"></div>
+      <details class="collapse" style="margin-top:10px">
+        <summary>✓ 납부 완료 명단 (취소하려면 눌러주세요)</summary>
+        <div class="chips" id="duesPaidChips" style="margin-top:8px"></div>
+      </details>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:.82rem" id="duesSummary"></div>
     </div>
   </div>
@@ -1444,14 +1448,20 @@ function renderDues(){
   STATE.dues[duesViewMonth] = STATE.dues[duesViewMonth] || {};
   const paidMap = STATE.dues[duesViewMonth];
   document.getElementById('duesMonthLabel').textContent = monthLabel(duesViewMonth);
-  let paidCount=0;
-  document.getElementById('duesChips').innerHTML = STATE.roster.map(m=>{
+  const chipHtml = m => {
     const v = paidMap[m.id];
     const paid = !!v;
-    if(paid) paidCount++;
-    return `<span class="chip duechip ${paid?'paid':''}" data-act="duestoggle" data-id="${m.id}">${m.name}${paid?' ✓'+duesDateLabel(v):''}</span>`;
-  }).join('');
-  document.getElementById('duesSummary').textContent = `${paidCount} / ${STATE.roster.length}명 납부`;
+    return {paid, html: `<span class="chip duechip ${paid?'paid':''}" data-act="duestoggle" data-id="${m.id}">${m.name}${paid?' ✓'+duesDateLabel(v):''}</span>`};
+  };
+  const rows = STATE.roster.map(chipHtml);
+  const unpaid = rows.filter(r=>!r.paid);
+  const paidRows = rows.filter(r=>r.paid);
+  // 낸 사람은 미납자 목록에서 빠져서 "누가 아직 안 냈는지" 한눈에 보이고, 기록 자체는
+  // 안 지워지니까 아래 "납부 완료" 펼침에서 계속 보이고 다시 누르면 미납으로 되돌릴 수 있다.
+  document.getElementById('duesChips').innerHTML = unpaid.length? unpaid.map(r=>r.html).join('') : '<span class="lede" style="margin:0">전원 납부 완료!</span>';
+  const paidEl = document.getElementById('duesPaidChips');
+  if(paidEl) paidEl.innerHTML = paidRows.length? paidRows.map(r=>r.html).join('') : '<span class="lede" style="margin:0">아직 없음</span>';
+  document.getElementById('duesSummary').textContent = `${paidRows.length} / ${STATE.roster.length}명 납부`;
 }
 
 function renderShapeBar(){
