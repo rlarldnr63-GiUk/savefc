@@ -320,8 +320,14 @@ details.collapse[open] summary:before{content:'▾ '}
 
   <details class="collapse">
     <summary>전체 명단 · 대리투표 (총무용)</summary>
-    <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요 (선택된 쿼터 기준). 아래 두 번째 줄은 지각비(3천/5천)·노쇼비(2만) 체크예요 — 담당자 판단으로 눌러주세요, 같은 값을 다시 누르면 정상으로 되돌아가요.</p>
+    <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요. (선택된 쿼터 기준)</p>
     <div class="rows" id="voteRows"></div>
+  </details>
+
+  <details class="collapse">
+    <summary>🕒 지각비 · 노쇼비 체크 (확정 참석자만)</summary>
+    <p class="lede" style="margin-top:6px">선착순 참석 확정자만 뜨니까 클릭 한 번이면 돼요. 지각 20분 전 미도착 3천원 / 경기 지각 5천원 / 노쇼 2만원 — 담당자 판단으로 눌러주세요. 같은 값을 다시 누르면 정상으로 되돌아가요.</p>
+    <div class="rows" id="lateFeeQuick" style="margin-top:8px"></div>
   </details>
 </section>
 
@@ -1257,15 +1263,13 @@ function renderVote(){
       </details>` : '';
   }
 
-  if(!w.lateFees) w.lateFees = {};
-  const feeBtn = (m,val,cls) => `<button type="button" class="${cls} ${w.lateFees[m.id]===val?'on':''}" data-act="latefee" data-id="${m.id}" data-v="${val}">${LATE_FEE_LABELS[val]}</button>`;
   const rows = STATE.roster.map(m=>{
     const v = q.votes[m.id];
     const already = attendOrder.includes(m.id);
     const inDisabled = !adminMode && (lockedNonAdmin || (capFull && !already));
     const outDisabled = !adminMode && lockedNonAdmin;
     const maybeDisabled = !adminMode && lockedNonAdmin;
-    return `<div class="row ${m.id===myId()?'me':''}" style="flex-wrap:wrap;row-gap:6px">
+    return `<div class="row ${m.id===myId()?'me':''}">
       <div class="no">${m.no||''}</div>
       <div class="nm">${m.name}${m.hurt?' <span class="badge">부상</span>':''}<span class="pos">${m.pos}</span><span class="code">${m.code}</span></div>
       <div class="seg">
@@ -1273,10 +1277,22 @@ function renderVote(){
         <button type="button" class="maybe ${v==='maybe'?'on':''} ${maybeDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="maybe">미정</button>
         <button type="button" class="out ${v==='out'?'on':''} ${outDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="out">불참</button>
       </div>
-      <div class="seg" style="flex-basis:100%">${feeBtn(m,'late3','late')}${feeBtn(m,'late5','late')}${feeBtn(m,'noshow','noshow')}</div>
     </div>`;
   }).join('');
   document.getElementById('voteRows').innerHTML = rows;
+
+  // 지각비는 32명 전체가 아니라 실제로 '참석'에 투표한 사람만 — 훨씬 짧아서 클릭 한 번으로 끝난다.
+  // attendOrder가 아니라 weekAttendeeIds(투표 기준 재계산)를 쓴다 — attendOrder는 예전 주차
+  // 데이터 중 일부가 비어있는 경우가 있어서(초기 시드 당시 채워지지 않은 케이스) 더 안정적이다.
+  if(!w.lateFees) w.lateFees = {};
+  const feeBtn = (m,val,cls) => `<button type="button" class="${cls} ${w.lateFees[m.id]===val?'on':''}" data-act="latefee" data-id="${m.id}" data-v="${val}">${LATE_FEE_LABELS[val]}</button>`;
+  const confirmedIds = weekAttendeeIds(w);
+  const confirmed = STATE.roster.filter(m=>confirmedIds.has(m.id));
+  document.getElementById('lateFeeQuick').innerHTML = confirmed.length? confirmed.map(m=>`
+    <div class="row">
+      <div class="nm">${m.name}<span class="code">${m.code}</span></div>
+      <div class="seg">${feeBtn(m,'late3','late')}${feeBtn(m,'late5','late')}${feeBtn(m,'noshow','noshow')}</div>
+    </div>`).join('') : '<div class="lede" style="margin:0">아직 확정된 참석자가 없어요.</div>';
 }
 
 // 임원진 모드 on/off. PIN을 아는 사람만 켤 수 있고, 켜져 있으면 마감/선착순
