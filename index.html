@@ -491,7 +491,7 @@ details.collapse[open] summary:before{content:'▾ '}
         <span class="lbl" id="duesMonthLabel"></span>
         <button class="navbtn" id="duesNextBtn" type="button">›</button>
       </div>
-      <p class="lede" style="margin-bottom:8px">이름을 누르면 납부 체크가 토글돼요.</p>
+      <p class="lede" style="margin-bottom:8px">이름을 누르면 오늘 날짜로 납부 체크가 돼요 (다시 누르면 미납으로 되돌아가요).</p>
       <div class="chips" id="duesChips"></div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:.82rem" id="duesSummary"></div>
     </div>
@@ -958,11 +958,17 @@ function barRow(label, valueText, pct, cls){
 function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
 function monthLabel(key){ const [y,m]=key.split('-'); return y+'년 '+parseInt(m,10)+'월'; }
 function shiftMonth(key,delta){ const [y,m]=key.split('-').map(Number); const d=new Date(y,m-1+delta,1); return monthKey(d); }
+function todayIso(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+// 회비 납부값은 원래 그냥 true/false였는데, 이제 납부한 날짜(YYYY-MM-DD) 문자열을 넣어서
+// "언제 냈는지"도 같이 보여준다. 예전에 이미 true로 저장된 것도 있으니(날짜 정보 없음)
+// 문자열일 때만 날짜로 포맷하고, 그냥 true면 날짜 없이 체크 표시만 보여준다.
+function shortMD(iso){ const d=new Date(iso+'T00:00:00'); return (d.getMonth()+1)+'/'+d.getDate(); }
+function duesDateLabel(v){ return (typeof v==='string')? ' '+shortMD(v) : ''; }
 let duesViewMonth = monthKey(new Date());
 function duesStatusText(id){
   const key = monthKey(new Date());
-  const paid = STATE.dues[key] && STATE.dues[key][id];
-  return paid? '이번 달 회비 ✓' : '이번 달 회비 미납';
+  const v = STATE.dues[key] && STATE.dues[key][id];
+  return v? `이번 달 회비 ✓${duesDateLabel(v)}` : '이번 달 회비 미납';
 }
 
 /* ---------- 백엔드 동기화 (Supabase) ----------
@@ -1440,9 +1446,10 @@ function renderDues(){
   document.getElementById('duesMonthLabel').textContent = monthLabel(duesViewMonth);
   let paidCount=0;
   document.getElementById('duesChips').innerHTML = STATE.roster.map(m=>{
-    const paid = !!paidMap[m.id];
+    const v = paidMap[m.id];
+    const paid = !!v;
     if(paid) paidCount++;
-    return `<span class="chip duechip ${paid?'paid':''}" data-act="duestoggle" data-id="${m.id}">${m.name} ${paid?'✓':''}</span>`;
+    return `<span class="chip duechip ${paid?'paid':''}" data-act="duestoggle" data-id="${m.id}">${m.name}${paid?' ✓'+duesDateLabel(v):''}</span>`;
   }).join('');
   document.getElementById('duesSummary').textContent = `${paidCount} / ${STATE.roster.length}명 납부`;
 }
@@ -1946,7 +1953,7 @@ document.addEventListener('click', (e)=>{
   else if(kind==='duestoggle'){
     const id=act.dataset.id;
     STATE.dues[duesViewMonth] = STATE.dues[duesViewMonth] || {};
-    STATE.dues[duesViewMonth][id] = !STATE.dues[duesViewMonth][id];
+    STATE.dues[duesViewMonth][id] = STATE.dues[duesViewMonth][id] ? false : todayIso();
     save();
   }
   else if(kind==='latefeepaid'){
