@@ -245,8 +245,8 @@ details.collapse[open] summary:before{content:'▾ '}
 .venuepref-row .pref-label{font-size:.78rem;color:var(--ink-soft)}
 .injwarn{font-size:.78rem;color:var(--out);margin-top:2px}
 .traitsInput{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:5px 7px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.72rem}
-.posrow{display:flex;gap:4px;margin-bottom:6px}
-.posrow select{flex:1;min-width:0;padding:5px 2px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.68rem}
+.posrow{display:flex;flex-direction:column;gap:4px;margin-bottom:6px}
+.posrow select{width:100%;box-sizing:border-box;padding:5px 7px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.72rem}
 .hurtbtn{margin-top:6px;width:100%;padding:5px;font-size:.72rem}
 .postag{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--accent-soft);color:var(--accent);margin-left:6px;white-space:nowrap}
 .postag.best{background:var(--pend-soft);color:var(--pend)}
@@ -309,7 +309,7 @@ details.collapse[open] summary:before{content:'▾ '}
   <div class="card" id="voteCapCard"></div>
   <div class="card" id="voteBandAll"></div>
 
-  <details class="collapse">
+  <details class="collapse" open>
     <summary>쿼터별로 다르게 투표하기 (늦참·조퇴 등)</summary>
     <div class="pillbar" id="voteQPills" style="margin-top:8px"></div>
     <div class="card" id="voteBandMe"></div>
