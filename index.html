@@ -504,7 +504,7 @@ details.collapse[open] summary:before{content:'▾ '}
 
   <div class="panel">
     <h2><span class="bar"></span>지각비 · 노쇼비 현황</h2>
-    <div class="card"><table id="lateFeeTable"></table></div>
+    <div class="card" style="overflow-x:auto"><table id="lateFeeTable"></table></div>
   </div>
 
   <div class="panel">
@@ -711,6 +711,7 @@ let STATE = window.__SAVEFC_STATE__ || (function(){
 if(!STATE.currentWeek) STATE.currentWeek = STATE.weeks[STATE.weeks.length-1].id;
 if(!STATE.dues) STATE.dues = {};
 if(!STATE.venueInfo) STATE.venueInfo = {};
+if(!STATE.lateFeesPaid) STATE.lateFeesPaid = {};
 STATE.weeks.forEach(migrateWeek);
 
 let curQuarterIdx = 0;   // 현재 보고 있는 쿼터 (0~3) — 참여투표/포메이션 탭이 공유
@@ -1008,6 +1009,7 @@ function applyIncomingState(row){
   STATE = row;
   if(!STATE.dues) STATE.dues = {};
   if(!STATE.venueInfo) STATE.venueInfo = {};
+  if(!STATE.lateFeesPaid) STATE.lateFeesPaid = {};
   STATE.weeks.forEach(migrateWeek);
   if(!STATE.currentWeek) STATE.currentWeek = STATE.weeks[STATE.weeks.length-1].id;
   render();
@@ -1769,11 +1771,14 @@ function renderStats(){
       feeAgg[id].total += LATE_FEE_AMOUNTS[v] || 0;
     });
   });
+  if(!STATE.lateFeesPaid) STATE.lateFeesPaid = {};
   const feeRows = STATE.roster.filter(m=>feeAgg[m.id].total>0).sort((a,b)=>feeAgg[b.id].total-feeAgg[a.id].total).map(m=>{
     const f = feeAgg[m.id];
-    return `<tr><td>${m.name}</td><td class="n">${f.late3}</td><td class="n">${f.late5}</td><td class="n">${f.noshow}</td><td class="n">${f.total.toLocaleString()}원</td></tr>`;
+    const paid = !!STATE.lateFeesPaid[m.id];
+    return `<tr><td>${m.name}</td><td class="n">${f.late3}</td><td class="n">${f.late5}</td><td class="n">${f.noshow}</td><td class="n">${f.total.toLocaleString()}원</td>
+      <td><span class="chip duechip ${paid?'paid':''}" data-act="latefeepaid" data-id="${m.id}">${paid?'납부✓':'미납'}</span></td></tr>`;
   }).join('');
-  document.getElementById('lateFeeTable').innerHTML = `<tr><th>이름</th><th>지각 3천</th><th>지각 5천</th><th>노쇼</th><th>합계</th></tr>` + (feeRows||'<tr><td colspan="5" style="color:var(--ink-faint)">기록 없음</td></tr>');
+  document.getElementById('lateFeeTable').innerHTML = `<tr><th>이름</th><th>지각 3천</th><th>지각 5천</th><th>노쇼</th><th>합계</th><th>납부</th></tr>` + (feeRows||'<tr><td colspan="6" style="color:var(--ink-faint)">기록 없음</td></tr>');
 
   const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
   const allInj=[];
@@ -1794,7 +1799,7 @@ function renderStats(){
 }
 
 /* ---------- events ---------- */
-const ADMIN_GATED_ACTS = new Set(['shape','duestoggle','hurttoggle','venuepref','delinj','delgoal','star','latefee']);
+const ADMIN_GATED_ACTS = new Set(['shape','duestoggle','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid']);
 
 document.addEventListener('click', (e)=>{
   // 방금 실제 드래그(탭이 아니라 진짜 이동)로 배치를 끝낸 직후에 뒤따라오는 네이티브
@@ -1942,6 +1947,12 @@ document.addEventListener('click', (e)=>{
     const id=act.dataset.id;
     STATE.dues[duesViewMonth] = STATE.dues[duesViewMonth] || {};
     STATE.dues[duesViewMonth][id] = !STATE.dues[duesViewMonth][id];
+    save();
+  }
+  else if(kind==='latefeepaid'){
+    const id=act.dataset.id;
+    STATE.lateFeesPaid = STATE.lateFeesPaid || {};
+    STATE.lateFeesPaid[id] = !STATE.lateFeesPaid[id];
     save();
   }
   else if(kind==='hurttoggle'){
