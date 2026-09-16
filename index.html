@@ -475,6 +475,9 @@ details.collapse[open] summary:before{content:'▾ '}
 
   <div class="panel">
     <h2><span class="bar"></span>🏆 선수 기록실</h2>
+    <details class="collapse"><summary>숫자가 왜 이렇게 높죠?</summary>
+      <p class="lede" style="margin-top:6px">일부 선수는 이 보드로 넘어오기 전 고알레 앱에 쌓여있던 기록을 시작점으로 반영해뒀어요(닉네임이 실명과 확실히 매칭되는 사람만). 틀린 사람이나 빠진 사람이 있으면 알려주세요, 바로 고칠게요.</p>
+    </details>
     <div id="scorerChart"></div>
   </div>
 </section>
@@ -1650,9 +1653,28 @@ function renderInjuryAnalysis(){
 // 선수 기록실: 경기수·쿼터수·득점·도움·공격P·MOM을 한 표로, 득점/도움 TOP3는 카드로.
 // 전체 기간 누적(고알레의 "경기 방식"/기간 필터는 이 앱에 매치 타입 데이터가 없어서 제외).
 let statsSortKey = 'pts', statsSortDir = 'desc';
+// 이 보드로 넘어오기 전, 고알레 앱에 쌓여있던 실제 기록 — 사용자가 공유해준 "선수 기록실"
+// 화면을 보고 닉네임이 실명과 확실히 매칭되는 사람만 옮겨 적었다. 애매한 닉네임(빈디1041,
+// 양평콥, 갱No.1, 양성모 등— 로스터 실명과 정확히 안 맞아서 다른 사람일 수 있음)은 엉뚱한
+// 사람에게 기록을 붙이는 사고를 막기 위해 일부러 뺐다. 이후 SAVE FC 보드에서 새로 쌓이는
+// 기록에 이 숫자가 시작점으로 더해진다.
+const LEGACY_STATS = {
+  ksh:  {games:96, quarters:273, goals:88, assists:88, mom:5},  // 구승회
+  kch:  {games:85, quarters:229, goals:7,  assists:19, mom:7},  // 김창희
+  pjy:  {games:71, quarters:188, goals:75, assists:32, mom:13}, // 박준열
+  yjm:  {games:61, quarters:146, goals:1,  assists:2,  mom:1},  // 양정모
+  kjh1: {games:66, quarters:192, goals:6,  assists:5,  mom:27}, // 김재현
+  pgh:  {games:53, quarters:125, goals:1,  assists:0,  mom:2},  // 박건희
+  kjh2: {games:56, quarters:149, goals:30, assists:11, mom:9},  // 김준형
+  kui:  {games:68, quarters:175, goals:3,  assists:4,  mom:3},  // 김의리
+  ysb:  {games:67, quarters:181, goals:100,assists:23, mom:8},  // 윤상빈
+};
 function computePlayerStats(){
   const stats = {};
-  STATE.roster.forEach(m=>{ stats[m.id] = {m, games:0, quarters:0, goals:0, assists:0, mom:0}; });
+  STATE.roster.forEach(m=>{
+    const legacy = LEGACY_STATS[m.id] || {games:0,quarters:0,goals:0,assists:0,mom:0};
+    stats[m.id] = {m, games:legacy.games, quarters:legacy.quarters, goals:legacy.goals, assists:legacy.assists, mom:legacy.mom};
+  });
   STATE.weeks.forEach(w=>{
     weekAttendeeIds(w).forEach(id=>{ if(stats[id]) stats[id].games++; });
     w.quarters.forEach(q=>{
@@ -1663,7 +1685,7 @@ function computePlayerStats(){
       if(g.assistId && stats[g.assistId]) stats[g.assistId].assists++;
     });
   });
-  STATE.roster.forEach(m=>{ stats[m.id].mom = ratingFor(m.id).mom || 0; });
+  STATE.roster.forEach(m=>{ stats[m.id].mom += ratingFor(m.id).mom || 0; });
   return Object.values(stats).map(s=>({...s, pts: s.goals+s.assists}));
 }
 
