@@ -288,9 +288,11 @@ details.collapse[open] summary:before{content:'▾ '}
   <button data-tab="vote" class="on">🗳️ 참여투표</button>
   <button data-tab="form">⚽ 포메이션</button>
   <button data-tab="match" id="matchTabBtn">🏟️ 구장·결과</button>
+  <button data-tab="latefees" id="lateFeeTabBtn">🕒 지각비</button>
   <button data-tab="cards" id="cardsTabBtn">🃏 선수카드</button>
   <button data-tab="analysis">📊 분석</button>
   <button data-tab="stats">📋 현황</button>
+  <button data-tab="tactics">📖 팀 전술</button>
 </nav>
 
 <main>
@@ -323,29 +325,28 @@ details.collapse[open] summary:before{content:'▾ '}
     <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요. (선택된 쿼터 기준)</p>
     <div class="rows" id="voteRows"></div>
   </details>
-
-  <details class="collapse">
-    <summary>🕒 지각비 · 노쇼비 체크 (확정 참석자만)</summary>
-    <p class="lede" style="margin-top:6px">선착순 참석 확정자만 뜨니까 클릭 한 번이면 돼요. 지각 20분 전 미도착 3천원 / 경기 지각 5천원 / 노쇼 2만원 — 담당자 판단으로 눌러주세요. 같은 값을 다시 누르면 정상으로 되돌아가요.</p>
-    <div class="rows" id="lateFeeQuick" style="margin-top:8px"></div>
-  </details>
 </section>
 
 <section class="tab" id="tab-form">
   <h2><span class="bar"></span>포메이션 · 전술판</h2>
   <details class="collapse"><summary>사용법 보기</summary>
-    <p class="lede" style="margin-top:6px">쿼터별로, 공격할 때·수비할 때 포메이션을 따로 짤 수 있어요. 벤치 선수를 피치 위 원하는 자리로 자유롭게 드래그해서 놓을 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 피치의 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로, 선수카드에서 그 포지션을 선호한다고 등록해둔 선수부터 우선순위로 뜨는 배치 창이 열려요 (FM 스타일). 이미 배치된 선수도 드래그로 위치를 옮기거나 벤치 쪽으로 끌면 뺄 수 있어요.</p>
+    <p class="lede" style="margin-top:6px">쿼터별로, 공격할 때·수비할 때 포메이션을 따로 짤 수 있어요. 벤치 선수를 피치 위 원하는 자리로 자유롭게 드래그해서 놓을 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 피치의 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로, 선수카드에서 그 포지션을 선호한다고 등록해둔 선수부터 우선순위로 뜨는 배치 창이 열려요 (FM 스타일). 벤치 선수 이름을 탭해도 같은 방식으로 열린 자리를 골라 배치할 수 있어요 — 드래그가 어려우면 이 방법을 쓰세요. 이미 배치된 선수도 드래그로 위치를 옮기거나 벤치 쪽으로 끌면 뺄 수 있어요. 선수 모드에서는 포메이션이 경기 시작 30분 전에 공개돼요.</p>
   </details>
+  <div class="card" id="formationHiddenNotice" style="display:none"></div>
   <div class="card" id="myQuartersCard" style="display:none"></div>
   <div class="pillbar" id="formQPills"></div>
   <div class="modebar" id="modeBar">
     <button type="button" class="atk" data-act="mode" data-mode="atk">⚔️ 공격 시</button>
     <button type="button" class="def" data-act="mode" data-mode="def">🛡️ 수비 시</button>
   </div>
+  <div class="card" id="posCountCard"></div>
   <div class="shapebar" id="shapeBar"></div>
-  <button type="button" class="ghost" id="resetFormBtn" style="width:100%;margin-bottom:10px">↺ 초기화 (선택한 포메이션 기본 자리로)</button>
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <button type="button" class="ghost" id="resetFormBtn" style="flex:1">↺ 초기화</button>
+    <button type="button" class="ghost" id="copyPrevQuarterBtn" style="flex:1">📋 이전 쿼터 복사</button>
+  </div>
   <div class="pitch" id="pitch"></div>
-  <div class="bench">
+  <div class="bench" id="benchBlock">
     <div class="benchhead" id="benchHead">벤치 (이 쿼터 참석, 미배치)</div>
     <div class="chips" id="benchChips"></div>
     <div class="benchhead">이 쿼터 불참 / 미투표</div>
@@ -440,6 +441,21 @@ details.collapse[open] summary:before{content:'▾ '}
   </div>
 </section>
 
+<section class="tab" id="tab-latefees">
+  <div class="panel">
+    <h2><span class="bar"></span>🕒 지각비 · 노쇼비</h2>
+    <p class="lede">지각 20분 전 미도착 3천원 / 경기 지각 5천원 / 노쇼 2만원 — 담당자 판단으로 눌러주세요. 같은 값을 다시 누르면 정상으로 되돌아가요.</p>
+    <div class="card">
+      <h3 style="margin:0 0 8px;font-size:.85rem">이번 주 확정 참석자 체크</h3>
+      <div class="rows" id="lateFeeQuick"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <h2><span class="bar"></span>누적 현황</h2>
+    <div class="card" style="overflow-x:auto"><table id="lateFeeTable"></table></div>
+  </div>
+</section>
+
 <section class="tab" id="tab-cards">
   <h2><span class="bar"></span>선수카드 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(고알레 스타일)</span></h2>
   <details class="collapse"><summary>사용법 보기</summary>
@@ -507,11 +523,6 @@ details.collapse[open] summary:before{content:'▾ '}
   </div>
 
   <div class="panel">
-    <h2><span class="bar"></span>지각비 · 노쇼비 현황</h2>
-    <div class="card" style="overflow-x:auto"><table id="lateFeeTable"></table></div>
-  </div>
-
-  <div class="panel">
     <details class="collapse">
       <summary>🩹 부상 현황 (전체)</summary>
       <div class="card" id="allInjuries" style="margin-top:8px"></div>
@@ -521,6 +532,52 @@ details.collapse[open] summary:before{content:'▾ '}
   <div class="panel">
     <h2><span class="bar"></span>참여 현황 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(회비 참고용 — 실제 정산은 엑셀 기준)</span></h2>
     <div class="card"><table id="attnTable"></table></div>
+  </div>
+</section>
+
+<section class="tab" id="tab-tactics">
+  <h2><span class="bar"></span>📖 팀 전술</h2>
+  <p class="lede">우리 팀 전술노트·피드백 문서를 정리한 참고 자료예요. 다 같이 숙지해두면 좋아요.</p>
+
+  <div class="panel">
+    <h3 style="margin:14px 0 6px">1. 기초 원칙</h3>
+    <div class="card">
+      <p class="lede" style="margin:0 0 8px"><b>① 공이 없을 때</b> — 가만히 서 있지 말고 셋 중 하나: 패스 받을 위치로 이동하기 / 상대 수비를 끌고 이동하기 / 뒷공간으로 침투하기. 공을 못 받았어도 동료에게 공간을 만들어줬다면 좋은 움직임이에요.</p>
+      <p class="lede" style="margin:0 0 8px"><b>② 공격할 때는 넓게, 깊게 서기</b> — 측면 선수가 바깥으로 넓게 서면 상대 수비도 벌어지고 중앙에 공간이 생겨요. 공을 가진 선수보다 앞서 침투하는 선수가 있어야 상대 수비가 물러나고, 전진할 공간이 생겨요. 정리하면 "한 명은 넓게, 한 명은 가까이, 한 명은 뒤로 침투한다".</p>
+      <p class="lede" style="margin:0 0 8px"><b>③ 선택지를 두 개 이상 만들기</b> — 패스할 곳이 하나뿐이면 상대가 쉽게 예상해요. 가까이 와서 짧은 패스를 받아줄 사람, 측면 뒤 공간으로 침투할 사람, 중앙에서 받아줄 사람이 서로 달라야 해요. 이걸 언마크(Unmark)라고 하는데 세 종류가 있어요: <b>서포트 언마크</b>(가까이 움직여 패스 선택지를 만들어줌), <b>딥 언마크</b>(수비 뒤 공간으로 침투해 골대 방향 전진), <b>픽스 언마크</b>(수비수를 붙잡아두거나 끌고 가서 동료가 쓸 공간을 만듦).</p>
+      <p class="lede" style="margin:0"><b>④ 수비는 공만 보지 말고 상대의 앞을 막기</b> — 상대가 공을 받을 때 뒤에서 따라가는 게 아니라 상대와 우리 골대 사이에 위치해야 해요. 한 선수가 압박하러 나가면 주변 선수들이 그 자리를 같이 메워줘야 하고요. 수비할 때 항상 봐야 하는 세 가지: <b>1. 공, 2. 상대 선수, 3. 우리 골대</b>. 공만 따라가면 상대를 놓치고, 상대만 보면 공간을 놓쳐요.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin:14px 0 6px">2. 압박 원칙</h3>
+    <div class="card">
+      <p class="lede" style="margin:0 0 8px"><b>압박의 정의</b> — 상대가 못 돌아서게, 아예 볼 진행 방향 하나를 묻어버리는 것. 두 명이 한 사람을 동시에 압박하거나 다가가다 너무 멀리서 물러나면 안 되고, 한 사람이 한 사람을 맡아서 거리를 벌리지 않고 닿을 거리까지 압박해야 해요.</p>
+      <p class="lede" style="margin:0"><a href="https://www.youtube.com/watch?v=idGjWiVBzOE" target="_blank" rel="noopener">▶ 4-4-2 압박 기본 형태 참고 영상</a></p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin:14px 0 6px">3. 포지션별 참고 영상</h3>
+    <div class="card">
+      <p class="lede" style="margin:0 0 6px">윙어 — 이것만 봐도 어느 정도 숙지 가능해요, 특히 마지막 수비하는 법</p>
+      <p class="lede" style="margin:0 0 4px"><a href="https://www.instagram.com/p/DOhmPRaAb_w/?img_index=1" target="_blank" rel="noopener">▶ 참고 영상 1</a></p>
+      <p class="lede" style="margin:0"><a href="https://youtu.be/ycrpPKid864" target="_blank" rel="noopener">▶ 참고 영상 2</a></p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin:14px 0 6px">4. 세트피스 키커 순서</h3>
+    <div class="card" style="overflow-x:auto">
+      <table>
+        <tr><th></th><th>왼쪽</th><th>오른쪽</th></tr>
+        <tr><td>프리킥(먼)</td><td>승회&gt;준형&gt;은성</td><td>은성&gt;준형&gt;승회</td></tr>
+        <tr><td>프리킥(가까움)</td><td>준열&gt;준형&gt;은성</td><td>영진&gt;승회&gt;준열</td></tr>
+        <tr><td>코너킥</td><td>은성&gt;준열&gt;준형</td><td>승회&gt;영진&gt;왼발</td></tr>
+        <tr><td>슈팅자</td><td>승회 영진 왼발</td><td>준열&gt;은성&gt;준형</td></tr>
+        <tr><td>페널티킥</td><td colspan="2">준열&gt;준형&gt;은성 (공통)</td></tr>
+      </table>
+    </div>
   </div>
 </section>
 
@@ -583,6 +640,34 @@ const ROSTER = [
 // 각자 아이디 — 로그인 없이도 서로를 구분할 수 있는 고정 표기용 코드 (SFC01~)
 ROSTER.forEach((m,i)=>{ m.code = 'SFC' + String(i+1).padStart(2,'0'); });
 
+// 전술노트.docx의 "선수별 장단점" 서술을 선수카드 장점/단점 칸의 초기값으로 씀 — 로스터 이름과
+// 확실히 매칭되는 사람만 포함(준협·성모·준혁은 로스터에 동명이인이 없어 이번에도 추측하지 않고 제외).
+const TRAIT_SEED = {
+  ysb:{strong:'밸런스 좋음, 양발 슈팅 가능, 연계', weak:'피지컬(버텨주는), 헤딩, 반대전환 어려움'},
+  pjy:{strong:'활동량, 주력, 슈팅, 밸런스, 터치, 수비, 압박', weak:'가끔 슈팅 난사 및 볼 끌기, 왼발 사용 빈도 적음'},
+  cwy:{strong:'개인기, 드리블, 터치, 패스, 크로스, 축구 센스', weak:'슈팅이 조금 아쉬움, 수비적인 움직임이 적음, 피지컬'},
+  jjh:{strong:'피지컬, 힘, 슛/킥 파워, 활동량, 드리블', weak:'시야가 조금 좁음, 연계력 부족, 공격적인 성향'},
+  yjy:{strong:'민첩성, 속도, 드리블, 활동량', weak:'시야 좁음, 판단력, 침착성'},
+  ksh:{strong:'축구센스, 패스, 드리블, 개인기, 밸런스', weak:'낮은 수비 참여도, 피지컬, 드리블을 한두 템포 더 끎'},
+  ktw:{strong:'볼터치, 기본기, 대담한 드리블, 패스', weak:'활동량, 적극성, 피지컬, 드리블 끌다 패스 타이밍 놓침'},
+  obj:{strong:'패스 구질, 숏패스 타이밍', weak:'신체 밸런스, 주력, 패스 타이밍, 시야, 롱킥'},
+  kjh2:{strong:'개인기, 밸런스·볼터치 집중도, 킥(슛, 롱킥)', weak:'잦은 개인기 사용, 스피드'},
+  yyj:{strong:'킥(슈팅, 롱킥), 수비력, 반대전환, 경기조율', weak:'스피드, 활동량 많으면 패스·터치 미스'},
+  jhw:{strong:'밀고 들어가는 힘, 왼발 사용', weak:'잦은 드리블 시도, 패스 타이밍, 풀백 활동량'},
+  pgh:{strong:'태클', weak:'전체적인 기본기 부족, 신체적 어려움'},
+  kui:{strong:'패스 구질, 짧은 패스', weak:'주력, 활동량, 반대전환·킥 어려움, 늦은 패스타이밍, 수비 위치선정'},
+  kjh1:{strong:'주력, 수비력, 양발 사용, 왼발킥', weak:'시야가 짧음, 침착성 부족'},
+  kjh3:{strong:'볼소유, 패스 타이밍, 오프더볼', weak:'피지컬(스피드·밸런스), 슈팅, 롱킥, 반대전환'},
+  kch:{strong:'활동량, 터치, 드리블, 좋은 움직임', weak:'피지컬, 마무리 패스, 슈팅, 롱킥'},
+  yjm:{strong:'스피드, 피지컬, 짧은 패스·킥력', weak:'전체적인 기본기, 침착성, 판단력 부족'},
+};
+function migrateRoster(m){
+  if(m.strong===undefined && m.weak===undefined && TRAIT_SEED[m.id]){
+    m.strong = TRAIT_SEED[m.id].strong;
+    m.weak = TRAIT_SEED[m.id].weak;
+  }
+}
+
 // 각 포메이션은 "기본 배치 템플릿"일 뿐이다. 실제로는 자유롭게 어디로든 드래그해서
 // 옮길 수 있고(예: 오른쪽에 공격수 3명 몰아두기), 이 좌표는 프리셋 적용·초기화할 때
 // 출발점으로만 쓰인다.
@@ -610,6 +695,38 @@ const SHAPES = {
           ['CM',30,54],['CM',50,58],['CM',70,54],
           ['ST',38,20],['ST',62,20]],
 };
+
+// FM 스타일 "포지션별 인원" 집계와 "추천 포메이션" 계산을 위한 대분류 매핑.
+const POS_GROUP = {GK:'GK', LB:'DF',CB:'DF',RB:'DF',LWB:'DF',RWB:'DF',
+  CDM:'MF',CM:'MF',LM:'MF',RM:'MF',CAM:'MF',LAM:'MF',RAM:'MF', LW:'FW',ST:'FW',RW:'FW'};
+function shapeGroupCounts(shapeName){
+  const cnt = {GK:0,DF:0,MF:0,FW:0};
+  (SHAPES[shapeName]||[]).forEach(s=>{ const g=POS_GROUP[s[0]]; if(g) cnt[g]++; });
+  return cnt;
+}
+// 이번 쿼터 확정 참석자('참석' 투표)들의 선호 포지션 1순위를 대분류로 묶어서,
+// 그 인원 구성과 가장 가까운(DF·MF·FW 비율 차이가 가장 작은) 포메이션을 추천한다.
+// 선호 포지션을 등록하지 않은 사람은 집계에서 제외한다(추측하지 않음).
+function recommendShape(q){
+  const attendees = STATE.roster.filter(m=>q.votes[m.id]==='in');
+  const cnt = {GK:0,DF:0,MF:0,FW:0};
+  let unset = 0;
+  attendees.forEach(m=>{
+    const top = memberPosRoles(m)[0];
+    const g = top ? POS_GROUP[top] : null;
+    if(g) cnt[g]++; else unset++;
+  });
+  const outTotal = cnt.DF+cnt.MF+cnt.FW;
+  let best = '4-3-3', bestScore = Infinity;
+  Object.keys(SHAPES).forEach(name=>{
+    const sc = shapeGroupCounts(name);
+    const sOutTotal = sc.DF+sc.MF+sc.FW;
+    const score = outTotal===0 ? 0 : ['DF','MF','FW'].reduce((acc,g)=>
+      acc + Math.abs(cnt[g]/outTotal - sc[g]/sOutTotal), 0);
+    if(score < bestScore){ bestScore = score; best = name; }
+  });
+  return {best, cnt, unset, attendeeCount: attendees.length};
+}
 
 function uid(){return Math.random().toString(36).slice(2,9)}
 function nextSunday(from){
@@ -695,6 +812,29 @@ function fmtDeadlineInfo(w){
   return `마감: ${dstr} · ${left}`;
 }
 
+// 포메이션은 경기 시작 30분 전에만 선수 모드에 공개된다(임원진은 언제든 보임·수정 가능).
+// weekDeadlineMs와 같은 방식으로 matchTime 기준 시각을 계산한다.
+function formationRevealMs(w){
+  const t = w.matchTime || '10:00';
+  const d = new Date(`${w.date}T${t}:00`);
+  return d.getTime() - 30*60*1000;
+}
+function formationHidden(w){
+  return !adminMode && Date.now() < formationRevealMs(w);
+}
+function fmtRevealInfo(w){
+  const rv = formationRevealMs(w);
+  const d = new Date(rv);
+  const dstr = `${d.getMonth()+1}/${d.getDate()}(${WEEKDAY_KO[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const diff = rv - Date.now();
+  if(diff <= 0) return `공개: ${dstr} · 공개됨`;
+  const days = Math.floor(diff/86400000);
+  const hours = Math.floor((diff%86400000)/3600000);
+  const mins = Math.floor((diff%3600000)/60000);
+  const left = days>0 ? `${days}일 ${hours}시간 남음` : hours>0 ? `${hours}시간 ${mins}분 남음` : `${mins}분 남음`;
+  return `공개: ${dstr} · ${left}`;
+}
+
 let STATE = window.__SAVEFC_STATE__ || (function(){
   // Merged in from the live page's own saved state (someone already voted
   // 참석 as 이경현 on the 9/6 week, set 1쿼터 공격 포메이션을 4-2-3-1로 바꾸고,
@@ -717,6 +857,7 @@ if(!STATE.dues) STATE.dues = {};
 if(!STATE.venueInfo) STATE.venueInfo = {};
 if(!STATE.lateFeesPaid) STATE.lateFeesPaid = {};
 STATE.weeks.forEach(migrateWeek);
+STATE.roster.forEach(migrateRoster);
 
 let curQuarterIdx = 0;   // 현재 보고 있는 쿼터 (0~3) — 참여투표/포메이션 탭이 공유
 let curMode = 'atk';     // 'atk'(공격 시) | 'def'(수비 시) — 포메이션 탭 전용
@@ -1021,6 +1162,7 @@ function applyIncomingState(row){
   if(!STATE.venueInfo) STATE.venueInfo = {};
   if(!STATE.lateFeesPaid) STATE.lateFeesPaid = {};
   STATE.weeks.forEach(migrateWeek);
+  STATE.roster.forEach(migrateRoster);
   if(!STATE.currentWeek) STATE.currentWeek = STATE.weeks[STATE.weeks.length-1].id;
   render();
   return true;
@@ -1093,6 +1235,8 @@ function render(){
   renderModeBar();
   renderBallZoneBar();
   renderShapeBar();
+  renderPosCount();
+  renderFormationReveal();
   renderMyQuarters();
   renderPitch();
   renderBestXI();
@@ -1103,6 +1247,7 @@ function render(){
   renderPlayerCards();
   renderDues();
   renderStats();
+  renderLateFees();
   renderAnalysis();
 }
 
@@ -1150,8 +1295,28 @@ function renderPlayerGates(){
   if(shapeBar) shapeBar.style.display = hide ? 'none' : '';
   const resetFormBtn = document.getElementById('resetFormBtn');
   if(resetFormBtn) resetFormBtn.style.display = hide ? 'none' : '';
+  const copyPrevQuarterBtn = document.getElementById('copyPrevQuarterBtn');
+  if(copyPrevQuarterBtn) copyPrevQuarterBtn.style.display = hide ? 'none' : '';
+  const posCountCard = document.getElementById('posCountCard');
+  if(posCountCard) posCountCard.style.display = hide ? 'none' : '';
   const tacticsGuideBlock = document.getElementById('tacticsGuideBlock');
   if(tacticsGuideBlock) tacticsGuideBlock.style.display = hide ? 'none' : '';
+  gateTab('lateFeeTabBtn', 'tab-latefees', hide);
+}
+
+// 선수 모드에서는 경기 시작 30분 전까지 포메이션(피치·벤치·내 출전 요약)을 숨긴다.
+function renderFormationReveal(){
+  const w = curWeek();
+  const hidden = formationHidden(w);
+  const notice = document.getElementById('formationHiddenNotice');
+  if(notice){
+    notice.style.display = hidden ? '' : 'none';
+    notice.innerHTML = `⏰ 이번 주 포메이션은 경기 시작 30분 전에 공개돼요.<div class="lede" style="margin-top:4px">${fmtRevealInfo(w)}</div>`;
+  }
+  const pitch = document.getElementById('pitch');
+  if(pitch) pitch.style.display = hidden ? 'none' : '';
+  const benchBlock = document.getElementById('benchBlock');
+  if(benchBlock) benchBlock.style.display = hidden ? 'none' : '';
 }
 
 function renderModeBar(){
@@ -1295,19 +1460,6 @@ function renderVote(){
     </div>`;
   }).join('');
   document.getElementById('voteRows').innerHTML = rows;
-
-  // 지각비는 32명 전체가 아니라 실제로 '참석'에 투표한 사람만 — 훨씬 짧아서 클릭 한 번으로 끝난다.
-  // attendOrder가 아니라 weekAttendeeIds(투표 기준 재계산)를 쓴다 — attendOrder는 예전 주차
-  // 데이터 중 일부가 비어있는 경우가 있어서(초기 시드 당시 채워지지 않은 케이스) 더 안정적이다.
-  if(!w.lateFees) w.lateFees = {};
-  const feeBtn = (m,val,cls) => `<button type="button" class="${cls} ${w.lateFees[m.id]===val?'on':''}" data-act="latefee" data-id="${m.id}" data-v="${val}">${LATE_FEE_LABELS[val]}</button>`;
-  const confirmedIds = weekAttendeeIds(w);
-  const confirmed = STATE.roster.filter(m=>confirmedIds.has(m.id));
-  document.getElementById('lateFeeQuick').innerHTML = confirmed.length? confirmed.map(m=>`
-    <div class="row">
-      <div class="nm">${m.name}<span class="code">${m.code}</span></div>
-      <div class="seg">${feeBtn(m,'late3','late')}${feeBtn(m,'late5','late')}${feeBtn(m,'noshow','noshow')}</div>
-    </div>`).join('') : '<div class="lede" style="margin:0">아직 확정된 참석자가 없어요.</div>';
 }
 
 // 임원진 모드 on/off. PIN을 아는 사람만 켤 수 있고, 켜져 있으면 마감/선착순
@@ -1434,6 +1586,8 @@ function renderPlayerCards(){
       <div class="pname">${m.name}${m.hurt?' <span class="badge">부상</span>':''}</div>
       <div class="pcode">${m.code} · ${m.pos}${m.no?' · #'+m.no:''}</div>
       <input class="traitsInput" type="text" data-act="traits" data-id="${m.id}" value="${escAttr(m.traits||'')}" placeholder="특징 (예: 빠른 발, 크로스 정확)">
+      <input class="traitsInput" type="text" data-act="strong" data-id="${m.id}" value="${escAttr(m.strong||'')}" placeholder="장점">
+      <input class="traitsInput" type="text" data-act="weak" data-id="${m.id}" value="${escAttr(m.weak||'')}" placeholder="단점">
       <div class="lede" style="margin:4px 0 2px">선호 포지션 우선순위</div>
       <div class="posrow">${[0,1,2].map(rank=>posRoleSelect(m,rank)).join('')}</div>
       <div class="pmeta"><span>평점 ${r.n}회${r.avg!=null?' (평균 '+r.avg.toFixed(1)+'★)':''}</span></div>
@@ -1470,6 +1624,16 @@ function renderShapeBar(){
     `<button type="button" class="${s===cur?'on':''}" data-act="shape" data-shape="${s}">${s}</button>`).join('');
 }
 
+// FM처럼, 이번 쿼터 확정 인원을 포지션 대분류로 보여주고 가장 잘 맞는 포메이션을 추천한다.
+function renderPosCount(){
+  const el = document.getElementById('posCountCard');
+  if(!el) return;
+  const rec = recommendShape(curQuarter());
+  const unsetTxt = rec.unset ? ` (포지션 미설정 ${rec.unset}명 제외)` : '';
+  el.innerHTML = `<div class="lede" style="margin:0">이번 쿼터 확정 인원 — GK ${rec.cnt.GK} · DF ${rec.cnt.DF} · MF ${rec.cnt.MF} · FW ${rec.cnt.FW}${unsetTxt}</div>
+    <button type="button" class="ghost" style="width:100%;margin-top:6px" data-act="applyrecshape" data-shape="${rec.best}">🎯 추천 포메이션: ${rec.best} 적용</button>`;
+}
+
 // 볼사이드 압축 화살표: 지금 배치된 좌표에서 공 쪽으로 얼마나 좁혀 이동해야 하는지
 // 보여주는 순수 시각 가이드. GK는 조금만, 필드 플레이어는 더 크게 이동한다.
 // 실제 좌표(pos)는 바꾸지 않고 화면에 화살표만 얹는다 — 저장되지 않는다.
@@ -1498,8 +1662,8 @@ function renderMyQuarters(){
   const el = document.getElementById('myQuartersCard');
   const my = myId();
   const me = my ? STATE.roster.find(m=>m.id===my) : null;
-  if(!me){ el.style.display = 'none'; return; }
   const w = curWeek();
+  if(!me || formationHidden(w)){ el.style.display = 'none'; return; }
   const lines = w.quarters.map(q=>{
     const v = q.votes[my];
     if(v==='out') return `${q.n}쿼터: 불참`;
@@ -1765,6 +1929,49 @@ function renderScorerChart(){
   document.getElementById('scorerChart').innerHTML = top3Html + `<div class="card" style="overflow-x:auto"><table>${theadHtml}${rowsHtml}</table></div>`;
 }
 
+// 지각비 · 노쇼비 — 예전엔 참여투표 탭 폴드 + 현황 탭 집계표 2곳에 흩어져 있던 걸
+// 전용 탭(tab-latefees, 임원진 전용) 하나로 합친 것. 데이터 스키마(w.lateFees,
+// STATE.lateFeesPaid)는 그대로다.
+function renderLateFees(){
+  const quickEl = document.getElementById('lateFeeQuick');
+  if(quickEl){
+    const w = curWeek();
+    if(!w.lateFees) w.lateFees = {};
+    // 지각비는 32명 전체가 아니라 실제로 '참석'에 투표한 사람만 — 훨씬 짧아서 클릭 한 번으로 끝난다.
+    // attendOrder가 아니라 weekAttendeeIds(투표 기준 재계산)를 쓴다 — attendOrder는 예전 주차
+    // 데이터 중 일부가 비어있는 경우가 있어서(초기 시드 당시 채워지지 않은 케이스) 더 안정적이다.
+    const feeBtn = (m,val,cls) => `<button type="button" class="${cls} ${w.lateFees[m.id]===val?'on':''}" data-act="latefee" data-id="${m.id}" data-v="${val}">${LATE_FEE_LABELS[val]}</button>`;
+    const confirmedIds = weekAttendeeIds(w);
+    const confirmed = STATE.roster.filter(m=>confirmedIds.has(m.id));
+    quickEl.innerHTML = confirmed.length? confirmed.map(m=>`
+      <div class="row">
+        <div class="nm">${m.name}<span class="code">${m.code}</span></div>
+        <div class="seg">${feeBtn(m,'late3','late')}${feeBtn(m,'late5','late')}${feeBtn(m,'noshow','noshow')}</div>
+      </div>`).join('') : '<div class="lede" style="margin:0">아직 확정된 참석자가 없어요.</div>';
+  }
+
+  const tableEl = document.getElementById('lateFeeTable');
+  if(tableEl){
+    const feeAgg = {};
+    STATE.roster.forEach(m=>{ feeAgg[m.id] = {late3:0, late5:0, noshow:0, total:0}; });
+    STATE.weeks.forEach(w=>{
+      Object.entries(w.lateFees||{}).forEach(([id,v])=>{
+        if(!feeAgg[id]) return;
+        feeAgg[id][v] = (feeAgg[id][v]||0) + 1;
+        feeAgg[id].total += LATE_FEE_AMOUNTS[v] || 0;
+      });
+    });
+    if(!STATE.lateFeesPaid) STATE.lateFeesPaid = {};
+    const feeRows = STATE.roster.filter(m=>feeAgg[m.id].total>0).sort((a,b)=>feeAgg[b.id].total-feeAgg[a.id].total).map(m=>{
+      const f = feeAgg[m.id];
+      const paid = !!STATE.lateFeesPaid[m.id];
+      return `<tr><td>${m.name}</td><td class="n">${f.late3}</td><td class="n">${f.late5}</td><td class="n">${f.noshow}</td><td class="n">${f.total.toLocaleString()}원</td>
+        <td><span class="chip duechip ${paid?'paid':''}" data-act="latefeepaid" data-id="${m.id}">${paid?'납부✓':'미납'}</span></td></tr>`;
+    }).join('');
+    tableEl.innerHTML = `<tr><th>이름</th><th>지각 3천</th><th>지각 5천</th><th>노쇼</th><th>합계</th><th>납부</th></tr>` + (feeRows||'<tr><td colspan="6" style="color:var(--ink-faint)">기록 없음</td></tr>');
+  }
+}
+
 function renderStats(){
   const venues={};
   STATE.weeks.forEach(w=>{
@@ -1778,24 +1985,6 @@ function renderStats(){
     return `<tr><td>${v}</td><td class="n">${r.w}승</td><td class="n">${r.d}무</td><td class="n">${r.l}패</td><td class="n">${pct}%</td></tr>`;
   }).join('');
   document.getElementById('venueTable').innerHTML = `<tr><th>구장</th><th>승</th><th>무</th><th>패</th><th>승률</th></tr>` + (vRows||'<tr><td colspan="5" style="color:var(--ink-faint)">아직 기록된 경기 없음</td></tr>');
-
-  const feeAgg = {};
-  STATE.roster.forEach(m=>{ feeAgg[m.id] = {late3:0, late5:0, noshow:0, total:0}; });
-  STATE.weeks.forEach(w=>{
-    Object.entries(w.lateFees||{}).forEach(([id,v])=>{
-      if(!feeAgg[id]) return;
-      feeAgg[id][v] = (feeAgg[id][v]||0) + 1;
-      feeAgg[id].total += LATE_FEE_AMOUNTS[v] || 0;
-    });
-  });
-  if(!STATE.lateFeesPaid) STATE.lateFeesPaid = {};
-  const feeRows = STATE.roster.filter(m=>feeAgg[m.id].total>0).sort((a,b)=>feeAgg[b.id].total-feeAgg[a.id].total).map(m=>{
-    const f = feeAgg[m.id];
-    const paid = !!STATE.lateFeesPaid[m.id];
-    return `<tr><td>${m.name}</td><td class="n">${f.late3}</td><td class="n">${f.late5}</td><td class="n">${f.noshow}</td><td class="n">${f.total.toLocaleString()}원</td>
-      <td><span class="chip duechip ${paid?'paid':''}" data-act="latefeepaid" data-id="${m.id}">${paid?'납부✓':'미납'}</span></td></tr>`;
-  }).join('');
-  document.getElementById('lateFeeTable').innerHTML = `<tr><th>이름</th><th>지각 3천</th><th>지각 5천</th><th>노쇼</th><th>합계</th><th>납부</th></tr>` + (feeRows||'<tr><td colspan="6" style="color:var(--ink-faint)">기록 없음</td></tr>');
 
   const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
   const allInj=[];
@@ -1816,7 +2005,7 @@ function renderStats(){
 }
 
 /* ---------- events ---------- */
-const ADMIN_GATED_ACTS = new Set(['shape','duestoggle','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid']);
+const ADMIN_GATED_ACTS = new Set(['shape','applyrecshape','duestoggle','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid']);
 
 document.addEventListener('click', (e)=>{
   // 방금 실제 드래그(탭이 아니라 진짜 이동)로 배치를 끝낸 직후에 뒤따라오는 네이티브
@@ -1925,6 +2114,11 @@ document.addEventListener('click', (e)=>{
     bestXIPos = null; // 자리 배열이 통째로 바뀌므로 최상의 포메이션 직접 조정값도 초기화
     save();
   }
+  else if(kind==='applyrecshape'){
+    curQuarter()[curShapeKey()] = act.dataset.shape;
+    bestXIPos = null;
+    save();
+  }
   else if(kind==='bestxiscope'){
     bestXIScope = act.dataset.scope;
     bestXIPos = null; // 후보군이 바뀌므로 직접 조정값 초기화, 새 추천으로 다시 시작
@@ -1999,7 +2193,7 @@ document.addEventListener('change', (e)=>{
     save();
     return;
   }
-  const gatedEl = e.target.closest('[data-act="traits"],[data-act="posrole"],[data-act="venueprice"],[data-act="venuetime"]');
+  const gatedEl = e.target.closest('[data-act="traits"],[data-act="strong"],[data-act="weak"],[data-act="posrole"],[data-act="venueprice"],[data-act="venuetime"]');
   if(gatedEl && !adminMode){
     toast('임원진 모드에서만 변경할 수 있어요');
     render(); // 방금 타이핑한 내용을 저장된 값으로 되돌려서 보여준다
@@ -2009,6 +2203,18 @@ document.addEventListener('change', (e)=>{
   if(traitsEl){
     const m = STATE.roster.find(r=>r.id===traitsEl.dataset.id);
     if(m){ m.traits = traitsEl.value; save(); }
+    return;
+  }
+  const strongEl = e.target.closest('[data-act="strong"]');
+  if(strongEl){
+    const m = STATE.roster.find(r=>r.id===strongEl.dataset.id);
+    if(m){ m.strong = strongEl.value; save(); }
+    return;
+  }
+  const weakEl = e.target.closest('[data-act="weak"]');
+  if(weakEl){
+    const m = STATE.roster.find(r=>r.id===weakEl.dataset.id);
+    if(m){ m.weak = weakEl.value; save(); }
     return;
   }
   const posRoleEl = e.target.closest('[data-act="posrole"]');
@@ -2355,6 +2561,23 @@ document.getElementById('resetFormBtn').addEventListener('click',()=>{
   if(!requireAdmin()) return;
   applyShapeTemplate();
   toast('선택한 포메이션 기본 자리로 초기화했어요');
+});
+document.getElementById('copyPrevQuarterBtn').addEventListener('click',()=>{
+  if(!requireAdmin()) return;
+  if(curQuarterIdx===0){ toast('1쿼터는 복사할 이전 쿼터가 없어요'); return; }
+  const w = curWeek();
+  const prev = w.quarters[curQuarterIdx-1];
+  const cur = w.quarters[curQuarterIdx];
+  cur.shapeAtk = prev.shapeAtk;
+  cur.shapeDef = prev.shapeDef;
+  const attendees = new Set(Object.entries(cur.votes).filter(([,v])=>v==='in').map(([id])=>id));
+  cur.posAtk = {};
+  cur.posDef = {};
+  Object.entries(prev.posAtk).forEach(([id,p])=>{ if(attendees.has(id)) cur.posAtk[id] = {...p}; });
+  Object.entries(prev.posDef).forEach(([id,p])=>{ if(attendees.has(id)) cur.posDef[id] = {...p}; });
+  bestXIPos = null;
+  save();
+  toast('이전 쿼터 배치를 복사했어요');
 });
 document.getElementById('resetBestXIBtn').addEventListener('click',()=>{
   bestXIPos = null;
