@@ -101,27 +101,17 @@ h2 .bar{width:4px;height:14px;background:var(--accent);border-radius:2px}
 .seg button.noshow.on{background:var(--out);color:#fff}
 
 /* formation */
-.shapebar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.shapebar button{padding:6px 11px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-size:.78rem;cursor:pointer}
-.shapebar button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.pitch{position:relative;width:100%;max-width:380px;margin:0 auto;aspect-ratio:68/100;border-radius:10px;overflow:hidden;background:repeating-linear-gradient(180deg,var(--pitch1) 0 11.11%,var(--pitch2) 11.11% 22.22%);border:2px solid rgba(255,255,255,.5);touch-action:none}
+.pitch{position:relative;width:100%;max-width:300px;margin:0 auto;aspect-ratio:68/100;border-radius:10px;overflow:hidden;background:repeating-linear-gradient(180deg,var(--pitch1) 0 11.11%,var(--pitch2) 11.11% 22.22%);border:2px solid rgba(255,255,255,.5);touch-action:none}
 .pitch svg{position:absolute;inset:0;width:100%;height:100%}
 .pitch.dropok{outline:3px solid #fff;outline-offset:-3px}
-.mpitch{position:relative;width:100%;max-width:250px;margin:0 auto;aspect-ratio:68/100;border-radius:8px;overflow:hidden;background:repeating-linear-gradient(180deg,var(--pitch1) 0 11.11%,var(--pitch2) 11.11% 22.22%);border:2px solid rgba(255,255,255,.5)}
-.mpitch svg{position:absolute;inset:0;width:100%;height:100%}
-.mslot{position:absolute;transform:translate(-50%,-50%);width:19%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.94);border:1.5px solid var(--accent-deep);display:flex;align-items:center;justify-content:center;font-size:.5rem;line-height:1;color:var(--accent-deep);font-weight:700;text-align:center;padding:1px}
-.mslot.me{background:#FFD84D;box-shadow:0 0 0 2px var(--accent)}
-.slot{position:absolute;transform:translate(-50%,-50%);width:15.5%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.94);border:2px solid var(--accent-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:grab;font-size:.62rem;line-height:1.1;color:var(--accent-deep);font-weight:700;text-align:center;padding:2px;box-shadow:0 2px 5px rgba(0,0,0,.25);touch-action:none;transition:outline .1s,transform .1s;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
-.slot .p{font-size:.66rem}
-.slot.me{background:#FFD84D;border-color:var(--accent-deep);box-shadow:0 0 0 3px var(--accent),0 2px 6px rgba(0,0,0,.3);z-index:2}
+/* 중계 그래픽처럼 유니폼(등번호) + 이름표로 표시. clip-path로 어깨선·소매 있는 셔츠 모양을 만든다. */
+.slot{position:absolute;transform:translate(-50%,-50%);width:17%;display:flex;flex-direction:column;align-items:center;cursor:grab;touch-action:none;transition:outline .1s,transform .1s;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
+.slot .jersey{width:100%;aspect-ratio:1/0.95;background:var(--accent-deep);clip-path:polygon(35% 0%,65% 0%,78% 10%,100% 22%,85% 35%,80% 26%,80% 100%,20% 100%,20% 26%,15% 35%,0% 22%,22% 10%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:10%;color:#fff;font-weight:800;font-size:.8rem;box-shadow:0 2px 5px rgba(0,0,0,.3)}
+.slot .nametag{margin-top:2px;background:rgba(255,255,255,.95);color:var(--accent-deep);font-size:.56rem;font-weight:700;padding:1px 5px;border-radius:5px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.slot.me .jersey{background:#FFD84D;color:var(--accent-deep)}
+.slot.me .nametag{box-shadow:0 0 0 2px var(--accent)}
 .slot.dragging{opacity:.3}
 .slot.dropok{outline:3px solid #fff;transform:translate(-50%,-50%) scale(1.08)}
-.bslot{position:absolute;transform:translate(-50%,-50%);width:15.5%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.94);border:2px solid var(--accent-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.58rem;line-height:1.15;color:var(--accent-deep);font-weight:700;text-align:center;padding:2px;box-shadow:0 2px 5px rgba(0,0,0,.2);transition:outline .1s,transform .1s}
-.bslot.empty{background:rgba(255,255,255,.5);color:rgba(15,58,36,.5);font-weight:600}
-.bslot[data-id]{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
-.bslot.dragging{opacity:.3}
-.bslot.dropok{outline:3px solid #fff;transform:translate(-50%,-50%) scale(1.08)}
-.bslot .ovr{font-size:.5rem;font-weight:500;opacity:.75}
 .bench{margin-top:10px}
 .benchhead{font-size:.75rem;color:var(--ink-faint);margin:10px 0 4px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;min-height:30px;border-radius:10px;transition:outline .1s}
@@ -223,11 +213,6 @@ details.collapse[open] summary:before{content:'▾ '}
 .pillbar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .pillbar button{padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-size:.78rem;cursor:pointer}
 .pillbar button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.modebar{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--line);margin-bottom:10px}
-.modebar button{flex:1;border:none;background:var(--surface-2);color:var(--ink-soft);font-family:inherit;font-weight:700;font-size:.82rem;padding:10px;cursor:pointer}
-.modebar button.on{color:#fff}
-.modebar button.atk.on{background:var(--out)}
-.modebar button.def.on{background:var(--accent-deep)}
 
 .chartrow{display:flex;flex-direction:column;gap:3px;margin-bottom:10px}
 .chartrow:last-child{margin-bottom:0}
@@ -324,36 +309,35 @@ details.collapse[open] summary:before{content:'▾ '}
   <div class="card" id="voteBandBars" style="margin-top:12px"></div>
   <div id="voteNotesCard"></div>
 
-  <details class="collapse">
-    <summary>전체 명단 · 대리투표 (총무용)</summary>
-    <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요. (선택된 쿼터 기준) 이번 주 용병은 목록 맨 아래 "용병" 표시로 같이 보여요.</p>
-    <div class="rows" id="voteRows"></div>
+  <div class="card" id="guestVoteCard" style="margin-top:12px">
+    <div class="lede" style="margin:0 0 8px">🧳 이번 주 용병 (정식 회원 아님, 선택된 쿼터 기준)</div>
+    <div class="rows" id="guestVoteRows"></div>
     <div class="field" style="margin-top:10px">
-      <label>+ 이번 주 용병 추가 (정식 회원 아님, 이번 주에만 표시)</label>
-      <div style="display:flex;gap:6px;margin-top:4px">
-        <input type="text" id="guestNameInput" class="traitsInput" style="margin:0;flex:1" placeholder="용병 이름">
+      <div style="display:flex;gap:6px">
+        <input type="text" id="guestNameInput" class="traitsInput" style="margin:0;flex:1" placeholder="용병 이름 추가">
         <button type="button" class="ghost" id="guestAddBtn" style="width:auto;padding:0 14px">추가</button>
       </div>
     </div>
+  </div>
+
+  <details class="collapse">
+    <summary>전체 명단 · 대리투표 (총무용)</summary>
+    <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요. (선택된 쿼터 기준)</p>
+    <div class="rows" id="voteRows"></div>
   </details>
 </section>
 
 <section class="tab" id="tab-form">
   <h2><span class="bar"></span>포메이션 · 전술판</h2>
   <details class="collapse"><summary>사용법 보기</summary>
-    <p class="lede" style="margin-top:6px">선수 모드에서는 그림 대신 "한눈에 보기" 텍스트로 라인업이 줄 단위로 보여요 — 경기 시작 30분 전에 공개돼요. 임원진 모드에서는 그 아래 그래픽 피치로 실제 배치를 편집해요: 쿼터별로, 공격할 때·수비할 때 포메이션을 따로 짤 수 있고, 벤치 선수를 피치 위 원하는 자리로 자유롭게 드래그해서 놓을 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 피치의 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로 우선순위 배치 창이 열려요(FM 스타일). 벤치 선수 이름을 탭해도 같은 방식으로 열린 자리를 골라 배치할 수 있어요 — 드래그가 어려우면 이 방법을 쓰세요.</p>
+    <p class="lede" style="margin-top:6px">경기 시작 30분 전에 공개돼요. 임원진 모드에서는 피치 위 선수를 드래그해서 자유롭게 옮길 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로 우선순위 배치 창이 열려요. 벤치 선수 이름을 탭해도 같은 방식으로 열린 자리를 골라 배치할 수 있어요 — 드래그가 어려우면 이 방법을 쓰세요. 지난 쿼터와 비교해서 바뀐 사람은 "교체"로 자동 표시돼요.</p>
   </details>
   <div class="card" id="formationHiddenNotice" style="display:none"></div>
   <div class="card" id="myQuartersCard" style="display:none"></div>
   <div class="pillbar" id="formQPills"></div>
-  <div class="modebar" id="modeBar">
-    <button type="button" class="atk" data-act="mode" data-mode="atk">⚔️ 공격 시</button>
-    <button type="button" class="def" data-act="mode" data-mode="def">🛡️ 수비 시</button>
-  </div>
-  <div class="card" id="simpleFormationCard" style="display:none"></div>
   <div class="card" id="posCountCard"></div>
-  <div class="shapebar" id="shapeBar"></div>
-  <div style="display:flex;gap:8px;margin-bottom:10px">
+  <div class="lede" id="subsInfo" style="display:none;text-align:center;margin:0 0 8px;font-weight:700"></div>
+  <div style="display:flex;gap:8px;margin-bottom:10px" id="formEditBtns">
     <button type="button" class="ghost" id="resetFormBtn" style="flex:1">↺ 초기화</button>
     <button type="button" class="ghost" id="copyPrevQuarterBtn" style="flex:1">📋 이전 쿼터 복사</button>
   </div>
@@ -365,31 +349,14 @@ details.collapse[open] summary:before{content:'▾ '}
     <div class="chips" id="outChips"></div>
   </div>
 
-  <div class="pillbar" id="ballZoneBar" style="display:none;align-items:center;margin-top:14px">
-    <span style="font-size:.76rem;color:var(--ink-faint);margin-right:2px">⚽ 공 위치</span>
-    <button type="button" data-act="ballzone" data-zone="left">왼쪽</button>
-    <button type="button" data-act="ballzone" data-zone="mid">중앙</button>
-    <button type="button" data-act="ballzone" data-zone="right">오른쪽</button>
-  </div>
-  <details class="collapse" id="tacticsGuideBlock" style="margin-bottom:10px">
+  <details class="collapse" id="tacticsGuideBlock" style="margin-top:14px">
     <summary>🧠 실전 수비 가이드</summary>
     <div class="card" style="margin-top:8px">
-      <p class="lede" style="margin:0 0 8px"><b>볼사이드 압축</b> — 공이 있는 쪽으로 팀 전체가 같이 좁혀 이동해요. 위 "공 위치" 버튼을 눌러보면 지금 배치를 기준으로 어느 쪽으로 얼마나 좁혀야 하는지 화살표로 보여줘요 (수비 시 모드에서만).</p>
+      <p class="lede" style="margin:0 0 8px"><b>볼사이드 압축</b> — 공이 있는 쪽으로 팀 전체가 같이 좁혀 이동해요.</p>
       <p class="lede" style="margin:0 0 8px"><b>압박 신호</b> — 상대가 공을 등지거나 트래핑이 크게 튀면 가까운 한 명이 먼저 압박해요. 그 순간 나머지 전원이 커버·좁히기로 같이 반응해야 뒷공간이 안 뚫려요. 한 명만 튀어나가고 나머지가 그대로면 위험해요.</p>
       <p class="lede" style="margin:0">라인 <b>높이 조절</b> — 공이 멀리 있으면 수비라인을 끌어올려서 팀을 압축하고, 뒷공간 침투 위협이 있으면 내려요. 라인은 항상 한 몸처럼 움직여야 해요 — 한 명만 처지거나 튀어나오면 그 틈이 뚫려요.</p>
     </div>
   </details>
-
-  <div id="bestXIBlock">
-    <h2 style="margin-top:20px"><span class="bar"></span>🏆 BEST 11</h2>
-    <details class="collapse"><summary>사용법 보기</summary>
-      <p class="lede" style="margin-top:6px">지금 선택된 포메이션(<b id="bestXIShapeLabel"></b>) 기준으로, 선수카드의 능력치(OVR)와 선호 포지션을 반영해서 조건별 최상의 라인업을 자동으로 짜봤어요. 마음에 안 들면 아래에서 선수를 직접 드래그해서 자리를 옮기거나 맞바꿀 수 있어요 (실제 배치와는 별개로, 이 조정 내용은 보는 사람 화면에만 남고 저장되지는 않아요).</p>
-    </details>
-    <div class="pillbar" id="bestXIScopePills"></div>
-    <button type="button" class="ghost" id="resetBestXIBtn" style="width:100%;margin-bottom:10px">↺ 추천 배치로 초기화</button>
-    <div class="pitch" id="bestXIPitch"></div>
-    <div class="lede" id="bestXIStat" style="margin-top:8px"></div>
-  </div>
 </section>
 
 <section class="tab" id="tab-match">
@@ -748,8 +715,8 @@ function shapeGroupCounts(shapeName){
 // 이번 쿼터 확정 참석자('참석' 투표)들의 선호 포지션 1순위를 대분류로 묶어서,
 // 그 인원 구성과 가장 가까운(DF·MF·FW 비율 차이가 가장 작은) 포메이션을 추천한다.
 // 선호 포지션을 등록하지 않은 사람은 집계에서 제외한다(추측하지 않음).
-function recommendShape(q){
-  const attendees = STATE.roster.filter(m=>q.votes[m.id]==='in');
+function recommendShape(q, roster){
+  const attendees = (roster||STATE.roster).filter(m=>q.votes[m.id]==='in');
   const cnt = {GK:0,DF:0,MF:0,FW:0};
   let unset = 0;
   attendees.forEach(m=>{
@@ -907,11 +874,7 @@ STATE.weeks.forEach(migrateWeek);
 STATE.roster.forEach(migrateRoster);
 
 let curQuarterIdx = 0;   // 현재 보고 있는 쿼터 (0~3) — 참여투표/포메이션 탭이 공유
-let curMode = 'atk';     // 'atk'(공격 시) | 'def'(수비 시) — 포메이션 탭 전용
-// 공 위치 가이드: "볼사이드 압축" 원칙을 눈으로 보여주기 위한 순수 화면 표시용 상태.
-// 수비 시 모드에서만 의미가 있고, 저장/동기화되지 않는다 — 보는 사람마다 자기 화면에서만
-// 자유롭게 좌/중앙/우를 눌러보는 참고용 오버레이라서 STATE에 넣지 않는다.
-let ballZone = 'mid';    // 'left' | 'mid' | 'right'
+const curMode = 'atk';   // 공격/수비 모드 구분은 없앴고, 항상 공격(atk) 좌표 하나만 쓴다
 // 구장·결과 정보칸/선수카드 둘 다 뷰어 로컬 "보기/수정" 전환 상태 — 평소엔 정보만 보이고
 // 수정 버튼을 눌러야 입력칸이 나온다. 공유 저장 안 함(탭 열 때마다 보기 모드로 시작).
 let matchInfoEditing = false;
@@ -988,101 +951,6 @@ function nearestRole(x,y,shapeName){
   let best = slots[0][0], bestD = Infinity;
   slots.forEach(s=>{ const d = Math.hypot(s[1]-x, s[2]-y); if(d<bestD){ bestD=d; best=s[0]; } });
   return best;
-}
-
-/* ---------- 최상의 포메이션 추천: 조건(올타임/현재 스쿼드/이번 경기 투표자)별로
-   OVR·선호 포지션을 기준으로 최적 라인업을 자동으로 짜서 참고용으로 보여준다.
-   실제 배치(curPositions)와는 별개의, 저장되지 않는 계산 결과다. ---------- */
-let bestXIScope = 'alltime'; // 'alltime' | 'squad' | 'thisweek' — 뷰어 로컬 상태 (공유 저장 안 함)
-let bestXIPos = null; // {memberId:{x,y}} — 추천 배치를 사용자가 드래그로 직접 조정한 값. null이면 자동 추천 그대로. 뷰어 로컬, 공유 저장 안 함.
-function ovrOf(m){ const r=ratingFor(m.id); return r.ovr!=null? r.ovr : 60; }
-function bestXIPool(){
-  if(bestXIScope==='squad') return STATE.roster.filter(m=>!m.hurt);
-  if(bestXIScope==='thisweek') { const ids=weekAttendeeIds(curWeek()); return STATE.roster.filter(m=>ids.has(m.id)); }
-  return STATE.roster.slice();
-}
-function computeBestXI(pool, shapeName){
-  const slots = SHAPES[shapeName];
-  const used = new Set();
-  const assign = {};
-  // GK 자리부터: 실제 GK 포지션 선수 중 OVR이 높은 사람을 우선, 없으면 최선의 남은 사람으로 채운다.
-  slots.forEach((s,i)=>{
-    if(s[0]!=='GK') return;
-    const gkCands = pool.filter(m=>m.pos==='GK' && !used.has(m.id)).sort((a,b)=>ovrOf(b)-ovrOf(a));
-    const fallback = pool.filter(m=>!used.has(m.id)).sort((a,b)=>ovrOf(b)-ovrOf(a));
-    const pick = gkCands[0] || fallback[0];
-    if(pick){ assign[i]=pick.id; used.add(pick.id); }
-  });
-  // 나머지 자리: 그 포지션을 선호 포지션으로 등록해둔 사람을 우선순위대로, 그 다음은 OVR 높은 순.
-  slots.forEach((s,i)=>{
-    if(s[0]==='GK' || assign[i]!==undefined) return;
-    const role = s[0];
-    const cands = pool.filter(m=>!used.has(m.id)).slice().sort((a,b)=>{
-      const pa=posPriority(a,role), pb=posPriority(b,role);
-      if(pa!==pb) return pa-pb;
-      return ovrOf(b)-ovrOf(a);
-    });
-    const pick = cands[0];
-    if(pick){ assign[i]=pick.id; used.add(pick.id); }
-  });
-  return assign;
-}
-function renderBestXI(){
-  const pillEl = document.getElementById('bestXIScopePills');
-  if(!pillEl) return;
-  const scopes = [['alltime','올타임'], ['squad','현재 스쿼드'], ['thisweek','이번 경기 투표자']];
-  pillEl.innerHTML = scopes.map(([k,label])=>
-    `<button type="button" class="${bestXIScope===k?'on':''}" data-act="bestxiscope" data-scope="${k}">${label}</button>`).join('');
-
-  const shape = curShape();
-  document.getElementById('bestXIShapeLabel').textContent = shape;
-  const pool = bestXIPool();
-  const assign = computeBestXI(pool, shape);
-  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
-  const slots = SHAPES[shape];
-  let html = pitchMarkings();
-  let total=0, cnt=0;
-  slots.forEach((s,i)=>{
-    const [role,x,y]=s;
-    const pid = assign[i];
-    const person = pid && byId[pid];
-    if(person){
-      total += ovrOf(person); cnt++;
-      const p = (bestXIPos && bestXIPos[pid]) || {x, y};
-      html += `<div class="bslot" data-id="${pid}" style="left:${p.x}%;top:${p.y}%">
-        <div>${person.name}</div><div class="ovr">${ovrOf(person)}</div>
-      </div>`;
-    } else {
-      html += `<div class="bslot empty" style="left:${x}%;top:${y}%">
-        <div>${role}</div><div class="ovr">공석</div>
-      </div>`;
-    }
-  });
-  document.getElementById('bestXIPitch').innerHTML = html;
-  const avg = cnt? (total/cnt).toFixed(1) : '–';
-  document.getElementById('bestXIStat').textContent =
-    `후보 ${pool.length}명 중 ${cnt}/${slots.length}자리 배치 · 평균 OVR ${avg}${bestXIPos? ' · 직접 조정됨':''}`;
-}
-function applyBestXIDrag(id, x, y){
-  if(!bestXIPos){
-    // 자동 추천 배치를 그대로 얼려서(freeze) 이 시점부터 드래그로 직접 조정 가능한 상태로 전환한다.
-    const shape = curShape();
-    const pool = bestXIPool();
-    const assign = computeBestXI(pool, shape);
-    const slots = SHAPES[shape];
-    bestXIPos = {};
-    slots.forEach((s,i)=>{ const pid = assign[i]; if(pid) bestXIPos[pid] = {x:s[1], y:s[2]}; });
-  }
-  // 다른 선수가 있는 자리 위에 놓으면 두 선수의 자리를 맞바꾼다.
-  const swapId = Object.keys(bestXIPos).find(pid=> pid!==id && Math.hypot(bestXIPos[pid].x-x, bestXIPos[pid].y-y) < 6);
-  if(swapId){
-    const tmp = bestXIPos[id];
-    bestXIPos[id] = bestXIPos[swapId];
-    bestXIPos[swapId] = tmp;
-  } else {
-    bestXIPos[id] = {x, y};
-  }
-  render();
 }
 
 /* ---------- 고알레 스타일 능력치 : 선수별로 참석자 각자가 투표(1~5★), 평균을 냄 ---------- */
@@ -1294,15 +1162,11 @@ function render(){
   renderQuarterPills('voteQPills');
   renderQuarterPills('formQPills');
   renderVote();
-  renderModeBar();
-  renderBallZoneBar();
-  renderShapeBar();
   renderPosCount();
-  renderSimpleFormation();
   renderFormationReveal();
   renderMyQuarters();
   renderPitch();
-  renderBestXI();
+  renderSubsInfo();
   renderMatch();
   renderGoals();
   renderRatings();
@@ -1352,14 +1216,8 @@ function renderPlayerGates(){
   const hide = !adminMode;
   gateTab('cardsTabBtn', 'tab-cards', hide);
   gateTab('matchTabBtn', 'tab-match', hide);
-  const bestXIBlock = document.getElementById('bestXIBlock');
-  if(bestXIBlock) bestXIBlock.style.display = hide ? 'none' : '';
-  const shapeBar = document.getElementById('shapeBar');
-  if(shapeBar) shapeBar.style.display = hide ? 'none' : '';
-  const resetFormBtn = document.getElementById('resetFormBtn');
-  if(resetFormBtn) resetFormBtn.style.display = hide ? 'none' : '';
-  const copyPrevQuarterBtn = document.getElementById('copyPrevQuarterBtn');
-  if(copyPrevQuarterBtn) copyPrevQuarterBtn.style.display = hide ? 'none' : '';
+  const formEditBtns = document.getElementById('formEditBtns');
+  if(formEditBtns) formEditBtns.style.display = hide ? 'none' : '';
   const posCountCard = document.getElementById('posCountCard');
   if(posCountCard) posCountCard.style.display = hide ? 'none' : '';
   const tacticsGuideBlock = document.getElementById('tacticsGuideBlock');
@@ -1367,9 +1225,9 @@ function renderPlayerGates(){
   gateTab('lateFeeTabBtn', 'tab-latefees', hide);
 }
 
-// 선수 모드에서는 경기 시작 30분 전까지 포메이션(피치·벤치·내 출전 요약·한눈에 보기)을 숨긴다.
-// 공개된 후에도, 드래그 편집용 그래픽 피치·벤치는 임원진에게만 보이고 — 선수 모드에는
-// renderSimpleFormation()이 그려주는 "한눈에 보기" 텍스트만 보인다.
+// 선수 모드에서는 경기 시작 30분 전까지 포메이션(피치·벤치·내 출전 요약)을 통째로 숨긴다.
+// 공개된 후에는 선수 모드도 같은 피치를 보되(드래그는 임원진만 가능 — pointerdown에서 막힘),
+// 별도의 "한눈에 보기" 축소판을 더 만들지 않고 피치 하나로 통일한다.
 function renderFormationReveal(){
   const w = curWeek();
   const hidden = formationHidden(w);
@@ -1379,24 +1237,9 @@ function renderFormationReveal(){
     notice.innerHTML = `⏰ 이번 주 포메이션은 경기 시작 30분 전에 공개돼요.<div class="lede" style="margin-top:4px">${fmtRevealInfo(w)}</div>`;
   }
   const pitch = document.getElementById('pitch');
-  if(pitch) pitch.style.display = (hidden || !adminMode) ? 'none' : '';
+  if(pitch) pitch.style.display = hidden ? 'none' : '';
   const benchBlock = document.getElementById('benchBlock');
-  if(benchBlock) benchBlock.style.display = (hidden || !adminMode) ? 'none' : '';
-  if(hidden){
-    const simpleCard = document.getElementById('simpleFormationCard');
-    if(simpleCard) simpleCard.style.display = 'none';
-  }
-}
-
-function renderModeBar(){
-  document.querySelectorAll('#modeBar button').forEach(b=>b.classList.toggle('on', b.dataset.mode===curMode));
-}
-
-function renderBallZoneBar(){
-  const bar = document.getElementById('ballZoneBar');
-  if(!bar) return;
-  bar.style.display = curMode==='def' ? 'flex' : 'none';
-  bar.querySelectorAll('button[data-act="ballzone"]').forEach(b=>b.classList.toggle('on', b.dataset.zone===ballZone));
+  if(benchBlock) benchBlock.style.display = hidden ? 'none' : '';
 }
 
 function renderWeekSel(){
@@ -1513,7 +1356,7 @@ function renderVote(){
       </details>` : '';
   }
 
-  const rows = roster.map(m=>{
+  const voteRowHtml = m => {
     const v = q.votes[m.id];
     const already = attendOrder.includes(m.id);
     const inDisabled = !adminMode && (lockedNonAdmin || (capFull && !already));
@@ -1528,8 +1371,11 @@ function renderVote(){
         <button type="button" class="out ${v==='out'?'on':''} ${outDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="out">불참</button>
       </div>
     </div>`;
-  }).join('');
-  document.getElementById('voteRows').innerHTML = rows;
+  };
+  document.getElementById('voteRows').innerHTML = STATE.roster.map(voteRowHtml).join('');
+  const guests = w.guests||[];
+  document.getElementById('guestVoteRows').innerHTML = guests.length? guests.map(voteRowHtml).join('')
+    : '<div class="lede" style="margin:0">아직 등록된 용병이 없어요.</div>';
 }
 
 // 임원진 모드 on/off. PIN을 아는 사람만 켤 수 있고, 켜져 있으면 마감/선착순
@@ -1712,46 +1558,17 @@ function renderDues(){
   document.getElementById('duesSummary').textContent = `${paidRows.length} / ${STATE.roster.length}명 납부`;
 }
 
-function renderShapeBar(){
-  const cur = curShape();
-  document.getElementById('shapeBar').innerHTML = Object.keys(SHAPES).map(s=>
-    `<button type="button" class="${s===cur?'on':''}" data-act="shape" data-shape="${s}">${s}</button>`).join('');
-}
-
-// FM처럼, 이번 쿼터 확정 인원을 포지션 대분류로 보여주고 가장 잘 맞는 포메이션을 추천한다.
+// FM처럼, 이번 쿼터 확정 인원을 포지션 대분류로 보여준다 (GK/DF/MF/FW 인원수 참고용).
 function renderPosCount(){
   const el = document.getElementById('posCountCard');
   if(!el) return;
-  const rec = recommendShape(curQuarter());
+  const rec = recommendShape(curQuarter(), weekRoster(curWeek()));
   const unsetTxt = rec.unset ? ` (포지션 미설정 ${rec.unset}명 제외)` : '';
-  el.innerHTML = `<div class="lede" style="margin:0">이번 쿼터 확정 인원 — GK ${rec.cnt.GK} · DF ${rec.cnt.DF} · MF ${rec.cnt.MF} · FW ${rec.cnt.FW}${unsetTxt}</div>
-    <button type="button" class="ghost" style="width:100%;margin-top:6px" data-act="applyrecshape" data-shape="${rec.best}">🎯 추천 포메이션: ${rec.best} 적용</button>`;
+  el.innerHTML = `<div class="lede" style="margin:0">이번 쿼터 확정 인원 — GK ${rec.cnt.GK} · DF ${rec.cnt.DF} · MF ${rec.cnt.MF} · FW ${rec.cnt.FW}${unsetTxt}</div>`;
 }
 
-// 볼사이드 압축 화살표: 지금 배치된 좌표에서 공 쪽으로 얼마나 좁혀 이동해야 하는지
-// 보여주는 순수 시각 가이드. GK는 조금만, 필드 플레이어는 더 크게 이동한다.
-// 실제 좌표(pos)는 바꾸지 않고 화면에 화살표만 얹는다 — 저장되지 않는다.
-function shiftArrowsSvg(pos, byId, zone){
-  const dir = zone==='left' ? -1 : 1;
-  let arrows = '';
-  Object.entries(pos).forEach(([pid,p])=>{
-    const person = byId[pid];
-    if(!person) return;
-    const amt = (person.pos==='GK' ? 4 : 11) * dir;
-    const tx = Math.max(6, Math.min(94, p.x + amt));
-    if(Math.abs(tx-p.x) < 1) return;
-    arrows += `<line x1="${p.x}" y1="${p.y}" x2="${tx}" y2="${p.y}" stroke="#FFD84D" stroke-width="1.1" marker-end="url(#shiftArrowHead)" opacity=".9"/>`;
-  });
-  if(!arrows) return '';
-  return `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="pointer-events:none">
-    <defs><marker id="shiftArrowHead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#FFD84D"/></marker></defs>
-    ${arrows}
-  </svg>`;
-}
-
-// "나"를 설정해두면, 이번 주 4쿼터 각각 참석 여부와(참석이면) 공격/수비 배치 자리를
-// 좌표 기반 nearestRole()로 한눈에 요약해서 보여준다 — 실제 좌표를 그대로 쓰니 배치가
-// 아무리 세밀해도(정확한 x,y) 항상 정확한 포지션 라벨이 나온다.
+// "나"를 설정해두면, 이번 주 4쿼터 각각 참석 여부와(참석이면) 배치 자리를 좌표 기반
+// nearestRole()로 한눈에 요약해서 보여준다.
 function renderMyQuarters(){
   const el = document.getElementById('myQuartersCard');
   const my = myId();
@@ -1763,12 +1580,9 @@ function renderMyQuarters(){
     if(v==='out') return `${q.n}쿼터: 불참`;
     if(v==='maybe') return `${q.n}쿼터: 미정`;
     if(v!=='in') return `${q.n}쿼터: 미투표`;
-    const atkPos = q.posAtk[my], defPos = q.posDef[my];
-    const atkRole = atkPos? nearestRole(atkPos.x, atkPos.y, q.shapeAtk) : null;
-    const defRole = defPos? nearestRole(defPos.x, defPos.y, q.shapeDef) : null;
-    if(!atkRole && !defRole) return `${q.n}쿼터: 참석 (미배치)`;
-    if(atkRole && defRole) return `${q.n}쿼터: 공격 ${atkRole} · 수비 ${defRole}`;
-    return `${q.n}쿼터: ${atkRole? '공격 '+atkRole : '수비 '+defRole}`;
+    const p = q.posAtk[my];
+    const role = p? nearestRole(p.x, p.y, q.shapeAtk) : null;
+    return `${q.n}쿼터: ${role || '참석 (미배치)'}`;
   });
   el.style.display = '';
   el.innerHTML = `<div class="benchhead" style="margin-top:0">📍 ${me.name}님, 이번 주 내 출전</div>
@@ -1785,38 +1599,21 @@ function pitchMarkings(){
   </svg>`;
 }
 
-// 실제 축구팀 그래픽처럼, 작은 미니 피치에 지금 배치된 좌표(x,y) 그대로 점으로 찍어서 보여주는
-// "한눈에 보기" 뷰. 아래 큰 그래픽 피치(임원진 전용, 드래그 편집)와 똑같은 좌표를 쓰지만 훨씬
-// 작고 탭/드래그가 안 되는 보기 전용이다.
-function renderSimpleFormation(){
-  const el = document.getElementById('simpleFormationCard');
-  if(!el) return;
-  const pos = curPositions();
-  const byId = Object.fromEntries(weekRoster(curWeek()).map(m=>[m.id,m]));
-  const my = myId();
-  const entries = Object.entries(pos).filter(([id])=>byId[id]);
-  if(!entries.length){
-    el.style.display = 'none';
-    return;
-  }
-  let dots = '';
-  entries.forEach(([id,p])=>{
-    const person = byId[id];
-    dots += `<div class="mslot ${id===my?'me':''}" style="left:${p.x}%;top:${p.y}%">${person.name}</div>`;
-  });
-  el.style.display = '';
-  el.innerHTML = `<div class="lede" style="margin:0 0 8px;text-align:center">📋 ${curMode==='atk'?'공격':'수비'} 시 · 한눈에 보기</div>
-    <div class="mpitch">${pitchMarkings()}${dots}</div>`;
+// 실제 중계 그래픽처럼, 선수 하나하나를 등번호 유니폼 아이콘 + 이름표로 그린다.
+function jerseySlotHtml(person, pid, x, y, isMe){
+  const no = person.no!=null ? person.no : '-';
+  return `<div class="slot ${isMe?'me':''}" style="left:${x}%;top:${y}%" data-id="${pid}">
+    <div class="jersey">${no}</div>
+    <div class="nametag">${person.name}</div>
+  </div>`;
 }
 
 function renderPitch(){
   const q = curQuarter();
-  const shape = curShape();
   const pos = curPositions();
   const roster = weekRoster(curWeek());
   const byId = Object.fromEntries(roster.map(m=>[m.id,m]));
   let html = pitchMarkings();
-  if(curMode==='def' && ballZone!=='mid') html += shiftArrowsSvg(pos, byId, ballZone);
   // 배치된 선수 — 좌표(x%,y%)를 직접 들고 있어서 피치 어디로든 자유롭게 드래그할 수 있다.
   // (예전엔 포메이션 템플릿 자리에 점선 원을 항상 띄워뒀는데, 선수를 드래그해서 옮기면
   // 원래 있던 자리에 그 원이 남아있는 것처럼 보여서 헷갈린다는 피드백을 받고 뺐다.
@@ -1826,18 +1623,58 @@ function renderPitch(){
   Object.entries(pos).forEach(([pid,p])=>{
     const person = byId[pid];
     if(!person) return;
-    html += `<div class="slot ${pid===my?'me':''}" style="left:${p.x}%;top:${p.y}%" data-id="${pid}">
-      <div class="p">${person.name}</div>
-    </div>`;
+    html += jerseySlotHtml(person, pid, p.x, p.y, pid===my);
   });
   document.getElementById('pitch').innerHTML = html;
 
   const placed = new Set(Object.keys(pos));
   const bench = roster.filter(m=>q.votes[m.id]==='in' && !placed.has(m.id));
   const outp = roster.filter(m=>q.votes[m.id]!=='in');
-  document.getElementById('benchHead').textContent = `벤치 (${q.n}쿼터 참석, ${curMode==='atk'?'공격':'수비'} 미배치)`;
+  document.getElementById('benchHead').textContent = `벤치 (${q.n}쿼터 참석, 미배치)`;
   document.getElementById('benchChips').innerHTML = bench.length? bench.map(m=>`<span class="chip" data-act="slotpick" data-id="${m.id}">${m.name}${m.guest?' (용병)':''}</span>`).join('') : '<span style="color:var(--ink-faint);font-size:.8rem">없음</span>';
   document.getElementById('outChips').innerHTML = outp.length? outp.map(m=>`<span class="chip out">${m.name}</span>`).join('') : '<span style="color:var(--ink-faint);font-size:.8rem">없음</span>';
+}
+
+// 지난 쿼터와 이번 쿼터의 배치를 비교해서 빠진 사람(아웃)·새로 들어온 사람(인)을 찾고,
+// 가까운 위치끼리 짝지어 "A → B" 교체로 보여준다(용병도 포함). 좌표 기준이라 누가 어느
+// 자리에 새로 들어왔는지와 무관하게 항상 정확하게 잡힌다.
+function quarterSubs(prevQ, curQ, byId){
+  const prevIds = Object.keys(prevQ.posAtk);
+  const curIds = new Set(Object.keys(curQ.posAtk));
+  const prevSet = new Set(prevIds);
+  const outIds = prevIds.filter(id=>!curIds.has(id));
+  const inIds = Object.keys(curQ.posAtk).filter(id=>!prevSet.has(id));
+  const pairs = [];
+  const usedIn = new Set();
+  outIds.forEach(outId=>{
+    const op = prevQ.posAtk[outId];
+    let best=null, bestD=Infinity;
+    inIds.forEach(inId=>{
+      if(usedIn.has(inId)) return;
+      const ip = curQ.posAtk[inId];
+      const d = Math.hypot(op.x-ip.x, op.y-ip.y);
+      if(d<bestD){ bestD=d; best=inId; }
+    });
+    if(best){ usedIn.add(best); pairs.push([outId,best]); }
+    else pairs.push([outId,null]);
+  });
+  inIds.filter(id=>!usedIn.has(id)).forEach(id=>pairs.push([null,id]));
+  return pairs
+    .filter(([o,i])=>(o&&byId[o])||(i&&byId[i]))
+    .map(([o,i])=>`${o&&byId[o]?byId[o].name:'?'} → ${i&&byId[i]?byId[i].name:'?'}`);
+}
+
+function renderSubsInfo(){
+  const el = document.getElementById('subsInfo');
+  if(!el) return;
+  const w = curWeek();
+  if(curQuarterIdx===0 || formationHidden(w)){ el.style.display='none'; return; }
+  const roster = weekRoster(w);
+  const byId = Object.fromEntries(roster.map(m=>[m.id,m]));
+  const subs = quarterSubs(w.quarters[curQuarterIdx-1], w.quarters[curQuarterIdx], byId);
+  if(!subs.length){ el.style.display='none'; return; }
+  el.style.display = '';
+  el.textContent = '🔄 교체: ' + subs.join(', ');
 }
 
 
@@ -2124,7 +1961,7 @@ function renderStats(){
 }
 
 /* ---------- events ---------- */
-const ADMIN_GATED_ACTS = new Set(['shape','applyrecshape','duestoggle','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid']);
+const ADMIN_GATED_ACTS = new Set(['duestoggle','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid']);
 
 document.addEventListener('click', (e)=>{
   // 방금 실제 드래그(탭이 아니라 진짜 이동)로 배치를 끝낸 직후에 뒤따라오는 네이티브
@@ -2213,34 +2050,6 @@ document.addEventListener('click', (e)=>{
   }
   else if(kind==='qpick'){
     curQuarterIdx = parseInt(act.dataset.idx,10);
-    bestXIPos = null; // 쿼터가 바뀌면 기준 포메이션도 바뀌므로 직접 조정값 초기화
-    render();
-  }
-  else if(kind==='mode'){
-    curMode = act.dataset.mode;
-    bestXIPos = null; // 공격/수비가 바뀌면 기준 포메이션 자체가 바뀌므로 직접 조정값은 초기화
-    render();
-  }
-  else if(kind==='ballzone'){
-    ballZone = act.dataset.zone;
-    renderBallZoneBar();
-    renderPitch();
-  }
-  else if(kind==='shape'){
-    // 포메이션을 바꿔도 이미 자유롭게 배치한 위치는 그대로 둔다 — "초기화" 버튼을
-    // 눌러야 새 포메이션의 기본 자리로 다시 깔린다.
-    curQuarter()[curShapeKey()] = act.dataset.shape;
-    bestXIPos = null; // 자리 배열이 통째로 바뀌므로 최상의 포메이션 직접 조정값도 초기화
-    save();
-  }
-  else if(kind==='applyrecshape'){
-    curQuarter()[curShapeKey()] = act.dataset.shape;
-    bestXIPos = null;
-    save();
-  }
-  else if(kind==='bestxiscope'){
-    bestXIScope = act.dataset.scope;
-    bestXIPos = null; // 후보군이 바뀌므로 직접 조정값 초기화, 새 추천으로 다시 시작
     render();
   }
   else if(kind==='statssort'){
@@ -2422,7 +2231,7 @@ function openBenchPicker(memberId){
     .slice().sort((a,b)=> posPriority(person,a[0])-posPriority(person,b[0]));
   const wrap=document.createElement('div');
   wrap.className='picker';
-  wrap.innerHTML = `<div class="sheet"><h3>${person?person.name:''} 배치할 자리 (${q.n}쿼터 · ${curMode==='atk'?'공격':'수비'})</h3>
+  wrap.innerHTML = `<div class="sheet"><h3>${person?person.name:''} 배치할 자리 (${q.n}쿼터)</h3>
     ${openSlots.map(s=>{
       const pr = posPriority(person, s[0]);
       const tag = pr===0? `<span class="postag best">1순위</span>` : pr!==Infinity? `<span class="postag">${pr+1}순위</span>` : '';
@@ -2489,9 +2298,8 @@ document.addEventListener('pointerdown', (e)=>{
   if(e.button!==undefined && e.button!==0) return; // 좌클릭/터치만
   const slotEl = e.target.closest('.slot');
   const chipEl = e.target.closest('.chip[data-act="slotpick"]');
-  const bxEl = e.target.closest('.bslot[data-id]');
-  if(!slotEl && !chipEl && !bxEl) return;
-  if((slotEl || chipEl) && !requireAdmin()) return; // bestXI 미리보기(bxEl)는 저장 안 되니 예외
+  if(!slotEl && !chipEl) return;
+  if(!requireAdmin()) return;
   const byId = Object.fromEntries(weekRoster(curWeek()).map(m=>[m.id,m]));
 
   if(slotEl){
@@ -2499,15 +2307,10 @@ document.addEventListener('pointerdown', (e)=>{
     const person = byId[id];
     dragState = {kind:'slot', id, el:slotEl, moved:false,
       startX:e.clientX, startY:e.clientY, ghost:ghostFor(person?person.name:'')};
-  } else if(chipEl){
+  } else {
     const id = chipEl.dataset.id;
     const person = byId[id];
     dragState = {kind:'bench', id, el:chipEl, moved:false,
-      startX:e.clientX, startY:e.clientY, ghost:ghostFor(person?person.name:'')};
-  } else {
-    const id = bxEl.dataset.id;
-    const person = byId[id];
-    dragState = {kind:'bestxi', id, el:bxEl, moved:false,
       startX:e.clientX, startY:e.clientY, ghost:ghostFor(person?person.name:'')};
   }
   moveGhost(dragState.ghost, e.clientX, e.clientY);
@@ -2531,11 +2334,7 @@ document.addEventListener('pointermove', (e)=>{
   const pitchEl = document.getElementById('pitch');
   const pitchUnder = under && (under===pitchEl || pitchEl.contains(under));
   const benchUnder = under && under.closest('#benchChips');
-  const bestXIEl = document.getElementById('bestXIPitch');
-  const bestXIUnder = under && (under===bestXIEl || bestXIEl.contains(under));
-  if(dragState.kind==='bestxi'){
-    if(bestXIUnder) bestXIEl.classList.add('dropok');
-  } else if(pitchUnder) pitchEl.classList.add('dropok');
+  if(pitchUnder) pitchEl.classList.add('dropok');
   else if(benchUnder && dragState.kind==='slot') benchUnder.classList.add('dropok');
 });
 
@@ -2549,7 +2348,6 @@ document.addEventListener('pointerup', (e)=>{
   if(!ds.moved){
     if(ds.kind==='slot') openSlotActions(ds.id);
     else if(ds.kind==='bench') openBenchPicker(ds.id);
-    // kind==='bestxi': 그냥 탭한 경우는 아무 동작 없음 — 드래그로만 조정한다.
     return;
   }
   ds.ghost.style.display='none';
@@ -2557,21 +2355,6 @@ document.addEventListener('pointerup', (e)=>{
   const pitchEl = document.getElementById('pitch');
   const pitchUnder = under && (under===pitchEl || pitchEl.contains(under));
   const benchUnder = under && under.closest('#benchChips');
-
-  if(ds.kind==='bestxi'){
-    const bestXIEl = document.getElementById('bestXIPitch');
-    const bestXIUnder = under && (under===bestXIEl || bestXIEl.contains(under));
-    if(bestXIUnder){
-      const r = bestXIEl.getBoundingClientRect();
-      let x = (e.clientX - r.left) / r.width * 100;
-      let y = (e.clientY - r.top) / r.height * 100;
-      x = Math.max(3, Math.min(97, x));
-      y = Math.max(3, Math.min(97, y));
-      applyBestXIDrag(ds.id, x, y);
-      markSuppressClick();
-    }
-    return;
-  }
 
   const pos = curPositions();
   if(pitchUnder){
@@ -2607,7 +2390,6 @@ document.getElementById('weekSel').addEventListener('change',(e)=>{
     return;
   }
   STATE.currentWeek = e.target.value;
-  bestXIPos = null; // 주가 바뀌면 "이번 경기 투표자" 후보군 등 기준이 통째로 바뀌므로 초기화
   save();
 });
 document.getElementById('newWeekBtn').addEventListener('click',()=>{
@@ -2706,7 +2488,7 @@ document.getElementById('duesNextBtn').addEventListener('click',()=>{ duesViewMo
 document.getElementById('resetFormBtn').addEventListener('click',()=>{
   if(!requireAdmin()) return;
   applyShapeTemplate();
-  toast('선택한 포메이션 기본 자리로 초기화했어요');
+  toast('기본 자리로 초기화했어요');
 });
 document.getElementById('copyPrevQuarterBtn').addEventListener('click',()=>{
   if(!requireAdmin()) return;
@@ -2721,7 +2503,6 @@ document.getElementById('copyPrevQuarterBtn').addEventListener('click',()=>{
   cur.posDef = {};
   Object.entries(prev.posAtk).forEach(([id,p])=>{ if(attendees.has(id)) cur.posAtk[id] = {...p}; });
   Object.entries(prev.posDef).forEach(([id,p])=>{ if(attendees.has(id)) cur.posDef[id] = {...p}; });
-  bestXIPos = null;
   save();
   toast('이전 쿼터 배치를 복사했어요');
 });
@@ -2733,11 +2514,6 @@ document.getElementById('matchInfoEditBtn').addEventListener('click',()=>{
 document.getElementById('matchInfoDoneBtn').addEventListener('click',()=>{
   matchInfoEditing = false;
   renderMatch();
-});
-document.getElementById('resetBestXIBtn').addEventListener('click',()=>{
-  bestXIPos = null;
-  render();
-  toast('BEST 11을 추천 배치로 초기화했어요');
 });
 
 render(); // 즉시 첫 화면부터 보여준다 (기본값/시드 데이터로 먼저 그린 뒤, 연결되면 실시간 값으로 갱신)
