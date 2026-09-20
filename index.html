@@ -1568,8 +1568,10 @@ function renderPosCount(){
   const el = document.getElementById('posCountCard');
   if(!el) return;
   const rec = recommendShape(curQuarter(), weekRoster(curWeek()));
-  const unsetTxt = rec.unset ? ` (포지션 미설정 ${rec.unset}명 제외)` : '';
-  el.innerHTML = `<div class="lede" style="margin:0">이번 쿼터 확정 인원 — GK ${rec.cnt.GK} · DF ${rec.cnt.DF} · MF ${rec.cnt.MF} · FW ${rec.cnt.FW}${unsetTxt}</div>`;
+  // 선호 포지션을 등록 안 해둔 사람은 이 GK/DF/MF/FW 집계에서만 빠진다 — 실제 피치 배치와는
+  // 무관하다(용병처럼 선호 포지션이 없어도 실제로는 얼마든지 뛸 수 있다). 괜히 "제외"라고
+  // 적으면 피치에서 빠진 것처럼 오해할 수 있어서 문구에는 안 보여준다.
+  el.innerHTML = `<div class="lede" style="margin:0">이번 쿼터 확정 인원 — GK ${rec.cnt.GK} · DF ${rec.cnt.DF} · MF ${rec.cnt.MF} · FW ${rec.cnt.FW}</div>`;
 }
 
 // "나"를 설정해두면, 이번 주 4쿼터 각각 참석 여부와(참석이면) 배치 자리를 좌표 기반
