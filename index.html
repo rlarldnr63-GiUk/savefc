@@ -339,22 +339,18 @@ details.collapse[open] summary:before{content:'▾ '}
 
 <section class="tab" id="tab-form">
   <h2><span class="bar"></span>포메이션 · 전술판</h2>
-  <details class="collapse"><summary>사용법 보기</summary>
-    <p class="lede" style="margin-top:6px">경기 시작 30분 전에 공개돼요. 임원진 모드에서는 피치 위 선수를 드래그해서 자유롭게 옮길 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로 우선순위 배치 창이 열려요. 벤치 선수 이름을 탭해도 같은 방식으로 열린 자리를 골라 배치할 수 있어요 — 드래그가 어려우면 이 방법을 쓰세요. 지난 쿼터와 비교해서 바뀐 사람은 "교체"로 자동 표시돼요.</p>
-  </details>
   <div class="card" id="formationHiddenNotice" style="display:none"></div>
   <div class="card" id="myQuartersCard" style="display:none"></div>
   <div class="pillbar" id="formQPills"></div>
   <div style="display:flex;gap:8px;margin-bottom:10px" id="formEditBtns">
     <button type="button" class="ghost" id="resetFormBtn" style="flex:1">↺ 초기화</button>
     <button type="button" class="ghost" id="copyPrevQuarterBtn" style="flex:1">📋 이전 쿼터 복사</button>
+    <button type="button" class="ghost" id="saveFormBtn" style="flex:1">💾 저장</button>
   </div>
   <div class="pitch" id="pitch"></div>
   <div class="bench" id="benchBlock">
     <div class="benchhead" id="benchHead">벤치 (이 쿼터 참석, 미배치)</div>
     <div class="chips" id="benchChips"></div>
-    <div class="benchhead">이 쿼터 불참 / 미투표</div>
-    <div class="chips" id="outChips"></div>
     <div class="benchhead" id="subsHead" style="display:none">🔄 교체 선수</div>
     <div class="chips" id="subsChips" style="display:none"></div>
   </div>
@@ -881,7 +877,8 @@ function curPositions(){ return curQuarter()[curPosKey()]; }
 // ("초기화" 버튼, GK는 GK 자리로 최대한 먼저 배정).
 function applyShapeTemplate(){
   const q = curQuarter();
-  const slots = SHAPES[curShape()];
+  // 저장해둔 우리 팀 포메이션이 있으면 그걸 기본 틀로 쓰고, 없으면 4-3-3 등 기본값을 쓴다.
+  const slots = (STATE.customFormation && STATE.customFormation.length) ? STATE.customFormation : SHAPES[curShape()];
   const attendees = weekRoster(curWeek()).filter(m=>q.votes[m.id]==='in');
   const gk = attendees.find(m=>m.pos==='GK');
   const rest = attendees.filter(m=>!gk || m.id!==gk.id);
@@ -894,6 +891,19 @@ function applyShapeTemplate(){
   });
   q[curPosKey()] = newPos;
   save();
+}
+
+// 지금 짜둔 배치를 "우리 팀 포메이션"으로 저장해둔다 — 각 자리의 역할은 현재 선택된
+// 포메이션 틀 기준으로 가장 가까운 자리 이름을 붙여서(nearestRole), 다음에 "초기화"를
+// 누르면 이 배치가 기본값이 된다. 팀 전체가 공유하는 값이라 모든 주에 적용된다.
+function saveFormationTemplate(){
+  const pos = curPositions();
+  const shape = curShape();
+  const slots = Object.values(pos).map(p => [nearestRole(p.x, p.y, shape), p.x, p.y]);
+  if(!slots.length){ toast('저장할 배치가 없어요'); return; }
+  STATE.customFormation = slots;
+  save();
+  toast('이번 포메이션을 저장했어요 — 앞으로 초기화하면 이 배치로 채워져요');
 }
 
 /* ---------- FM 스타일 포지션 적성: 선수마다 "이 포지션들 가능해요"를 우선순위 순으로
@@ -1292,7 +1302,7 @@ function renderVote(){
       <button type="button" class="bandbtn out ${myVote==='out'?'on':''} ${myOutDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="out">🙅 불참</button>
     </div>` : '';
 
-  const chipHtml = list => list.length? list.map(m=>`<span class="chip">${m.name}<span class="code">${m.code}</span></span>`).join('') : '<span class="lede" style="margin:0">없음</span>';
+  const chipHtml = list => list.length? list.map(m=>`<span class="chip">${m.name}${m.code?`<span class="code">${m.code}</span>`:''}${m.guest?' 🧳':''}</span>`).join('') : '<span class="lede" style="margin:0">없음</span>';
   document.getElementById('voteBandBars').innerHTML = `
     <div class="pollopt">
       <div class="pollopt-head"><span>참석</span><span class="num">${cin}명 · ${pctIn}%</span></div>
@@ -1334,7 +1344,7 @@ function renderVote(){
     const maybeDisabled = !adminMode && lockedNonAdmin;
     return `<div class="row ${m.id===myId()?'me':''}">
       <div class="no">${m.no||''}</div>
-      <div class="nm">${m.name}${m.hurt?' <span class="badge">부상</span>':''}${m.guest?' <span class="badge">용병</span>':''}<span class="pos">${m.pos||''}</span><span class="code">${m.code||''}</span></div>
+      <div class="nm">${m.name}${m.hurt?' <span class="badge">부상</span>':''}${m.guest?' <span class="badge">용병</span>':''}${m.pos?`<span class="pos">${m.pos}</span>`:''}${m.code?`<span class="code">${m.code}</span>`:''}</div>
       <div class="seg">
         <button type="button" class="in ${v==='in'?'on':''} ${inDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="in">참석</button>
         <button type="button" class="maybe ${v==='maybe'?'on':''} ${maybeDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="maybe">미정</button>
@@ -1593,10 +1603,8 @@ function renderPitch(){
   const placed = new Set(Object.keys(pos));
   const todaySquad = weekAttendeeIds(w);
   const bench = roster.filter(m=>todaySquad.has(m.id) && !placed.has(m.id));
-  const outp = roster.filter(m=>!todaySquad.has(m.id));
   document.getElementById('benchHead').textContent = `벤치 (오늘 출전, ${q.n}쿼터 미배치)`;
   document.getElementById('benchChips').innerHTML = bench.length? bench.map(m=>`<span class="chip" data-act="slotpick" data-id="${m.id}">${m.name}${m.guest?' (용병)':''}</span>`).join('') : '<span style="color:var(--ink-faint);font-size:.8rem">없음</span>';
-  document.getElementById('outChips').innerHTML = outp.length? outp.map(m=>`<span class="chip out">${m.name}</span>`).join('') : '<span style="color:var(--ink-faint);font-size:.8rem">없음</span>';
 }
 
 // 지난 쿼터에는 없다가 이번 쿼터에 새로 배치된 사람 = 교체 선수(용병 포함).
@@ -2294,13 +2302,25 @@ document.addEventListener('pointerup', (e)=>{
 
   const pos = curPositions();
   if(pitchUnder){
-    // 놓은 자리 그대로 배치 — 피치 안 어디든 자유롭게.
+    // 놓은 자리 그대로 배치 — 피치 안 어디든 자유롭게. 단, 그 자리에 이미 다른 선수가
+    // 있으면 "교체"로 취급한다: 피치 위 선수끼리면 서로 자리를 맞바꾸고, 벤치에서 끌고 온
+    // 선수면 원래 있던 선수를 벤치로 보내고 그 자리를 대신 차지한다.
     const r = pitchEl.getBoundingClientRect();
     let x = (e.clientX - r.left) / r.width * 100;
     let y = (e.clientY - r.top) / r.height * 100;
     x = Math.max(3, Math.min(97, x));
     y = Math.max(3, Math.min(97, y));
-    pos[ds.id] = {x, y};
+    const targetId = Object.keys(pos).find(pid => pid!==ds.id && Math.hypot(pos[pid].x-x, pos[pid].y-y) < 6);
+    if(targetId && ds.kind==='slot'){
+      const dsOldPos = pos[ds.id];
+      pos[ds.id] = pos[targetId];
+      pos[targetId] = dsOldPos;
+    } else if(targetId){
+      delete pos[targetId];
+      pos[ds.id] = {x, y};
+    } else {
+      pos[ds.id] = {x, y};
+    }
     save();
     markSuppressClick(); // 방금 놓은 지점에서 곧바로 뒤따르는 click이 배경 탭으로 오인되지 않게
   } else if(benchUnder && ds.kind==='slot'){
@@ -2441,6 +2461,10 @@ document.getElementById('copyPrevQuarterBtn').addEventListener('click',()=>{
   Object.entries(prev.posDef).forEach(([id,p])=>{ if(attendees.has(id)) cur.posDef[id] = {...p}; });
   save();
   toast('이전 쿼터 배치를 복사했어요');
+});
+document.getElementById('saveFormBtn').addEventListener('click',()=>{
+  if(!requireAdmin()) return;
+  saveFormationTemplate();
 });
 document.getElementById('matchInfoEditBtn').addEventListener('click',()=>{
   if(!requireAdmin()) return;
