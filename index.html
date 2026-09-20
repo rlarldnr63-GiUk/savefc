@@ -195,6 +195,16 @@ details.collapse[open] summary:before{content:'▾ '}
 .pcode{font-size:.68rem;color:var(--ink-faint);margin:2px 0 6px}
 .pmeta{font-size:.68rem;color:var(--ink-soft);display:flex;align-items:center;gap:6px;margin-top:2px}
 .mombadge{font-size:.6rem;font-weight:700;background:var(--pend-soft);color:var(--pend);padding:1px 6px;border-radius:8px}
+.posbadges{display:flex;gap:4px;flex-wrap:wrap;margin:2px 0 8px}
+.posbadge{background:var(--accent-soft);color:var(--accent-deep);font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:6px}
+.posbadge.off{background:var(--surface-2);color:var(--ink-faint)}
+.footrow{display:flex;gap:10px;margin-bottom:8px}
+.footicon{width:52px;height:58px;flex:none;background:#2E9E4F;border-radius:45% 45% 50% 50%/58% 58% 42% 42%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25)}
+.footicon .fside{font-size:.56rem;font-weight:700;opacity:.9}
+.footicon .fnum{font-size:1.05rem;font-weight:800;line-height:1.1}
+.traitline{font-size:.72rem;margin-top:3px;line-height:1.3}
+.traitline.good{color:var(--in)}
+.traitline.bad{color:var(--out)}
 
 /* star rating */
 .stars{display:flex;gap:2px}
@@ -336,7 +346,6 @@ details.collapse[open] summary:before{content:'▾ '}
   <div class="card" id="myQuartersCard" style="display:none"></div>
   <div class="pillbar" id="formQPills"></div>
   <div class="card" id="posCountCard"></div>
-  <div class="lede" id="subsInfo" style="display:none;text-align:center;margin:0 0 8px;font-weight:700"></div>
   <div style="display:flex;gap:8px;margin-bottom:10px" id="formEditBtns">
     <button type="button" class="ghost" id="resetFormBtn" style="flex:1">↺ 초기화</button>
     <button type="button" class="ghost" id="copyPrevQuarterBtn" style="flex:1">📋 이전 쿼터 복사</button>
@@ -347,6 +356,8 @@ details.collapse[open] summary:before{content:'▾ '}
     <div class="chips" id="benchChips"></div>
     <div class="benchhead">이 쿼터 불참 / 미투표</div>
     <div class="chips" id="outChips"></div>
+    <div class="benchhead" id="subsHead" style="display:none">🔄 교체 선수</div>
+    <div class="chips" id="subsChips" style="display:none"></div>
   </div>
 
   <details class="collapse" id="tacticsGuideBlock" style="margin-top:14px">
@@ -1040,11 +1051,6 @@ function todayIso(){ const d=new Date(); return d.getFullYear()+'-'+String(d.get
 function shortMD(iso){ const d=new Date(iso+'T00:00:00'); return (d.getMonth()+1)+'/'+d.getDate(); }
 function duesDateLabel(v){ return (typeof v==='string')? ' '+shortMD(v) : ''; }
 let duesViewMonth = monthKey(new Date());
-function duesStatusText(id){
-  const key = monthKey(new Date());
-  const v = STATE.dues[key] && STATE.dues[key][id];
-  return v? `이번 달 회비 ✓${duesDateLabel(v)}` : '이번 달 회비 미납';
-}
 
 /* ---------- 백엔드 동기화 (Supabase) ----------
    한의원 웹사이트에서 이미 쓰고 있는 Supabase 프로젝트를 "같이" 쓰되, 완전히
@@ -1508,19 +1514,19 @@ function renderPlayerCards(){
     const inj=playerInjuryStats(m.id);
     const editing = cardEditingId === m.id;
     const posTxt = memberPosRoles(m).join(' > ') || '-';
+    const posBadges = memberPosRoles(m).map(p=>`<span class="posbadge">${p}</span>`).join('') || '<span class="posbadge off">미설정</span>';
+    const footIcon = (side,val) => `<div class="footicon"><span class="fside">${side}</span><span class="fnum">${val!=null?val:'-'}</span></div>`;
     const infoBlock = editing ? `
-      <input class="traitsInput" type="text" data-act="traits" data-id="${m.id}" value="${escAttr(m.traits||'')}" placeholder="특징 (예: 빠른 발, 크로스 정확)">
       <input class="traitsInput" type="text" data-act="strong" data-id="${m.id}" value="${escAttr(m.strong||'')}" placeholder="장점">
       <input class="traitsInput" type="text" data-act="weak" data-id="${m.id}" value="${escAttr(m.weak||'')}" placeholder="단점">
       <div class="lede" style="margin:4px 0 2px">선호 포지션 우선순위</div>
       <div class="posrow">${[0,1,2].map(rank=>posRoleSelect(m,rank)).join('')}</div>
       <div class="lede" style="margin:6px 0 2px">양발 능력치 (최대 5)</div>
       <div class="posrow">${footSelect(m,'L')}${footSelect(m,'R')}</div>` : `
-      <div class="pmeta">특징: ${m.traits? escHtml(m.traits) : '-'}</div>
-      <div class="pmeta">장점: ${m.strong? escHtml(m.strong) : '-'}</div>
-      <div class="pmeta">단점: ${m.weak? escHtml(m.weak) : '-'}</div>
-      <div class="pmeta">선호 포지션: ${escHtml(posTxt)}</div>
-      <div class="pmeta">양발: 왼발 ${m.footL!=null?m.footL:'-'} · 오른발 ${m.footR!=null?m.footR:'-'}</div>`;
+      <div class="posbadges">${posBadges}</div>
+      <div class="footrow">${footIcon('왼발',m.footL)}${footIcon('오른발',m.footR)}</div>
+      ${m.strong? `<div class="traitline good">👍 ${escHtml(m.strong)}</div>` : ''}
+      ${m.weak? `<div class="traitline bad">👎 ${escHtml(m.weak)}</div>` : ''}`;
     return `<div class="pcard">
       <div class="pcard-top">
         <div class="ovr num">${r.ovr!=null? r.ovr : '–'}</div>
@@ -1529,8 +1535,7 @@ function renderPlayerCards(){
       <div class="pname">${m.name}${m.hurt?' <span class="badge">부상</span>':''}</div>
       <div class="pcode">${m.code} · ${m.pos}${m.no?' · #'+m.no:''}</div>
       ${infoBlock}
-      <div class="pmeta"><span>평점 ${r.n}회${r.avg!=null?' (평균 '+r.avg.toFixed(1)+'★)':''}</span></div>
-      <div class="pmeta">${r.mom? `<span class="mombadge">MOM ${r.mom}회</span>`:''}<span>${duesStatusText(m.id)}</span></div>
+      <div class="pmeta"><span>평점 ${r.n}회${r.avg!=null?' (평균 '+r.avg.toFixed(1)+'★)':''}</span>${r.mom? ` <span class="mombadge">MOM ${r.mom}회</span>`:''}</div>
       <div class="pmeta">부상률 ${inj.rate.toFixed(0)}% (${inj.cnt}건 / 참석 ${inj.weeksAttended}회)</div>
       <button type="button" class="ghost" data-act="cardedit" data-id="${m.id}" style="width:100%;margin-top:6px">${editing? '✓ 완료' : '✏️ 수정'}</button>
       <button type="button" class="ghost hurtbtn" data-act="hurttoggle" data-id="${m.id}">${m.hurt? '회복 처리':'부상으로 표시'}</button>
@@ -1635,46 +1640,24 @@ function renderPitch(){
   document.getElementById('outChips').innerHTML = outp.length? outp.map(m=>`<span class="chip out">${m.name}</span>`).join('') : '<span style="color:var(--ink-faint);font-size:.8rem">없음</span>';
 }
 
-// 지난 쿼터와 이번 쿼터의 배치를 비교해서 빠진 사람(아웃)·새로 들어온 사람(인)을 찾고,
-// 가까운 위치끼리 짝지어 "A → B" 교체로 보여준다(용병도 포함). 좌표 기준이라 누가 어느
-// 자리에 새로 들어왔는지와 무관하게 항상 정확하게 잡힌다.
-function quarterSubs(prevQ, curQ, byId){
-  const prevIds = Object.keys(prevQ.posAtk);
-  const curIds = new Set(Object.keys(curQ.posAtk));
-  const prevSet = new Set(prevIds);
-  const outIds = prevIds.filter(id=>!curIds.has(id));
-  const inIds = Object.keys(curQ.posAtk).filter(id=>!prevSet.has(id));
-  const pairs = [];
-  const usedIn = new Set();
-  outIds.forEach(outId=>{
-    const op = prevQ.posAtk[outId];
-    let best=null, bestD=Infinity;
-    inIds.forEach(inId=>{
-      if(usedIn.has(inId)) return;
-      const ip = curQ.posAtk[inId];
-      const d = Math.hypot(op.x-ip.x, op.y-ip.y);
-      if(d<bestD){ bestD=d; best=inId; }
-    });
-    if(best){ usedIn.add(best); pairs.push([outId,best]); }
-    else pairs.push([outId,null]);
-  });
-  inIds.filter(id=>!usedIn.has(id)).forEach(id=>pairs.push([null,id]));
-  return pairs
-    .filter(([o,i])=>(o&&byId[o])||(i&&byId[i]))
-    .map(([o,i])=>`${o&&byId[o]?byId[o].name:'?'} → ${i&&byId[i]?byId[i].name:'?'}`);
+// 지난 쿼터에는 없다가 이번 쿼터에 새로 배치된 사람 = 교체 선수(용병 포함).
+function quarterSubsIn(prevQ, curQ){
+  const prevIds = new Set(Object.keys(prevQ.posAtk));
+  return Object.keys(curQ.posAtk).filter(id=>!prevIds.has(id));
 }
 
 function renderSubsInfo(){
-  const el = document.getElementById('subsInfo');
-  if(!el) return;
+  const head = document.getElementById('subsHead');
+  const chipsEl = document.getElementById('subsChips');
+  if(!head || !chipsEl) return;
   const w = curWeek();
-  if(curQuarterIdx===0 || formationHidden(w)){ el.style.display='none'; return; }
-  const roster = weekRoster(w);
-  const byId = Object.fromEntries(roster.map(m=>[m.id,m]));
-  const subs = quarterSubs(w.quarters[curQuarterIdx-1], w.quarters[curQuarterIdx], byId);
-  if(!subs.length){ el.style.display='none'; return; }
-  el.style.display = '';
-  el.textContent = '🔄 교체: ' + subs.join(', ');
+  if(curQuarterIdx===0 || formationHidden(w)){ head.style.display='none'; chipsEl.style.display='none'; return; }
+  const byId = Object.fromEntries(weekRoster(w).map(m=>[m.id,m]));
+  const subIds = quarterSubsIn(w.quarters[curQuarterIdx-1], w.quarters[curQuarterIdx]).filter(id=>byId[id]);
+  if(!subIds.length){ head.style.display='none'; chipsEl.style.display='none'; return; }
+  head.style.display = '';
+  chipsEl.style.display = '';
+  chipsEl.innerHTML = subIds.map(id=>`<span class="chip">${byId[id].name}</span>`).join('');
 }
 
 
@@ -2126,16 +2109,10 @@ document.addEventListener('change', (e)=>{
     save();
     return;
   }
-  const gatedEl = e.target.closest('[data-act="traits"],[data-act="strong"],[data-act="weak"],[data-act="posrole"],[data-act="foot"],[data-act="venueprice"],[data-act="venuetime"]');
+  const gatedEl = e.target.closest('[data-act="strong"],[data-act="weak"],[data-act="posrole"],[data-act="foot"],[data-act="venueprice"],[data-act="venuetime"]');
   if(gatedEl && !adminMode){
     toast('임원진 모드에서만 변경할 수 있어요');
     render(); // 방금 타이핑한 내용을 저장된 값으로 되돌려서 보여준다
-    return;
-  }
-  const traitsEl = e.target.closest('[data-act="traits"]');
-  if(traitsEl){
-    const m = STATE.roster.find(r=>r.id===traitsEl.dataset.id);
-    if(m){ m.traits = traitsEl.value; save(); }
     return;
   }
   const strongEl = e.target.closest('[data-act="strong"]');
