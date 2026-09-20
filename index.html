@@ -104,9 +104,13 @@ h2 .bar{width:4px;height:14px;background:var(--accent);border-radius:2px}
 .shapebar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .shapebar button{padding:6px 11px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-size:.78rem;cursor:pointer}
 .shapebar button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.pitch{position:relative;width:100%;aspect-ratio:68/100;border-radius:10px;overflow:hidden;background:repeating-linear-gradient(180deg,var(--pitch1) 0 11.11%,var(--pitch2) 11.11% 22.22%);border:2px solid rgba(255,255,255,.5);touch-action:none}
+.pitch{position:relative;width:100%;max-width:380px;margin:0 auto;aspect-ratio:68/100;border-radius:10px;overflow:hidden;background:repeating-linear-gradient(180deg,var(--pitch1) 0 11.11%,var(--pitch2) 11.11% 22.22%);border:2px solid rgba(255,255,255,.5);touch-action:none}
 .pitch svg{position:absolute;inset:0;width:100%;height:100%}
 .pitch.dropok{outline:3px solid #fff;outline-offset:-3px}
+.mpitch{position:relative;width:100%;max-width:250px;margin:0 auto;aspect-ratio:68/100;border-radius:8px;overflow:hidden;background:repeating-linear-gradient(180deg,var(--pitch1) 0 11.11%,var(--pitch2) 11.11% 22.22%);border:2px solid rgba(255,255,255,.5)}
+.mpitch svg{position:absolute;inset:0;width:100%;height:100%}
+.mslot{position:absolute;transform:translate(-50%,-50%);width:19%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.94);border:1.5px solid var(--accent-deep);display:flex;align-items:center;justify-content:center;font-size:.5rem;line-height:1;color:var(--accent-deep);font-weight:700;text-align:center;padding:1px}
+.mslot.me{background:#FFD84D;box-shadow:0 0 0 2px var(--accent)}
 .slot{position:absolute;transform:translate(-50%,-50%);width:15.5%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.94);border:2px solid var(--accent-deep);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:grab;font-size:.62rem;line-height:1.1;color:var(--accent-deep);font-weight:700;text-align:center;padding:2px;box-shadow:0 2px 5px rgba(0,0,0,.25);touch-action:none;transition:outline .1s,transform .1s;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
 .slot .p{font-size:.66rem}
 .slot.me{background:#FFD84D;border-color:var(--accent-deep);box-shadow:0 0 0 3px var(--accent),0 2px 6px rgba(0,0,0,.3);z-index:2}
@@ -322,8 +326,15 @@ details.collapse[open] summary:before{content:'▾ '}
 
   <details class="collapse">
     <summary>전체 명단 · 대리투표 (총무용)</summary>
-    <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요. (선택된 쿼터 기준)</p>
+    <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요. (선택된 쿼터 기준) 이번 주 용병은 목록 맨 아래 "용병" 표시로 같이 보여요.</p>
     <div class="rows" id="voteRows"></div>
+    <div class="field" style="margin-top:10px">
+      <label>+ 이번 주 용병 추가 (정식 회원 아님, 이번 주에만 표시)</label>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <input type="text" id="guestNameInput" class="traitsInput" style="margin:0;flex:1" placeholder="용병 이름">
+        <button type="button" class="ghost" id="guestAddBtn" style="width:auto;padding:0 14px">추가</button>
+      </div>
+    </div>
   </details>
 </section>
 
@@ -667,10 +678,34 @@ const TRAIT_SEED = {
   kch:{strong:'활동량, 터치, 드리블, 좋은 움직임', weak:'피지컬, 마무리 패스, 슈팅, 롱킥'},
   yjm:{strong:'스피드, 피지컬, 짧은 패스·킥력', weak:'전체적인 기본기, 침착성, 판단력 부족'},
 };
+// 전술노트.docx의 지난 경기 쿼터별 라인업(수십 경기분)을 실제로 집계해서, 각자 가장 자주
+// 뛴 자리 top3를 선호 포지션 우선순위로 씀 — 선수별 장단점 텍스트와 대조해봐도 잘 맞는다
+// (예: 최원영/박준열 "윙어" 서술 ↔ LW/RW 최다, 정현우 "풀백" 서술 ↔ LB 최다).
+// 표본이 아주 적은 사람(오늘 처음 나온 나인호·강효준·공태현 등)은 참고용으로만 채워둠.
+const POS_SEED = {
+  lgh:'GK', lyj:'GK',
+  csj:'CB,CM,LB', cwy:'LW,RW,CAM', cyb:'RW,RB,RM', hds:'ST,RW,CAM', ies:'RW,ST,LW',
+  ihj:'CB,CM,ST', jhw:'LB,LM,CB', jjh:'CAM,RW,LW', jsj:'CM,ST,CB', kch:'CM,RB,LB',
+  kgb:'LB,CM', kgw:'CB,CM,ST', khj:'CM,LW', kjh1:'CB,CM,ST', kjh2:'CM,CAM,ST',
+  kjh3:'RB,RM,CM', kjk:'RW,CAM,LW', ksh:'RW,CM,CAM', ksh2:'CB,CM,LB', kth:'LB,CM',
+  ktw:'CAM,CDM,ST', kui:'CB,LB,CM', kyc:'CM,RB,LM', lsc:'ST,RW', nih:'RW',
+  obj:'CM,CAM,ST', pgh:'CB,LB,LM', pjy:'LW,RW,CAM', ygb:'LW,CDM,CAM', yjm:'RB,CB,LB',
+  yjy:'ST,RW,CDM', ysb:'ST,CAM,LW', yyj:'CM,CAM,CDM',
+};
+// 문서에 왼발/오른발을 각각 숫자로 매긴 사람은 딱 한 명(상빈, "양발 슈팅 가능 4/5 정도?")뿐이라
+// 그 사람만 채워두고 나머지는 비워둔다 — 애매한 문장에서 실제 사람 능력치를 숫자로 지어내지 않음.
+const FOOT_SEED = { ysb:{footL:4, footR:4} };
 function migrateRoster(m){
   if(m.strong===undefined && m.weak===undefined && TRAIT_SEED[m.id]){
     m.strong = TRAIT_SEED[m.id].strong;
     m.weak = TRAIT_SEED[m.id].weak;
+  }
+  if(!m.posRoles && POS_SEED[m.id]){
+    m.posRoles = POS_SEED[m.id];
+  }
+  if(m.footL===undefined && m.footR===undefined && FOOT_SEED[m.id]){
+    m.footL = FOOT_SEED[m.id].footL;
+    m.footR = FOOT_SEED[m.id].footR;
   }
 }
 
@@ -750,7 +785,12 @@ function newQuarter(n){
 function newWeek(dateIso){
   return {id:uid(), date:dateIso, label:fmtLabel(dateIso), venue:'', matchTime:'10:00', attendOrder:[],
     quarters:[1,2,3,4].map(newQuarter),
-    goals:[], result:{us:null,them:null,note:''}, injuries:[], ratings:{}, notes:{}, lateFees:{}};
+    goals:[], result:{us:null,them:null,note:''}, injuries:[], ratings:{}, notes:{}, lateFees:{}, guests:[]};
+}
+// 정식 로스터가 아니라 이번 주만 뛰는 용병 — 회비/지각비/선수카드/기록실에는 안 뜨고
+// 참여투표·포메이션에서만 정식 로스터와 나란히 보인다.
+function weekRoster(w){
+  return STATE.roster.concat(w.guests||[]);
 }
 // 예전에는 "몇 번 자리"(인덱스)에 누가 있는지만 저장해서, 정해진 포메이션 틀 안에서만
 // 배치할 수 있었다. 이제는 선수마다 좌표(x%,y%)를 직접 저장해서 피치 어디든 자유롭게
@@ -786,6 +826,7 @@ function migrateWeek(w){
   if(!w.matchTime) w.matchTime = '10:00';
   if(!w.notes) w.notes = {};
   if(!w.lateFees) w.lateFees = {};
+  if(!w.guests) w.guests = [];
   if(!w.attendOrder) w.attendOrder = Array.from(weekAttendeeIds(w));
   return w;
 }
@@ -900,7 +941,7 @@ function curPositions(){ return curQuarter()[curPosKey()]; }
 function applyShapeTemplate(){
   const q = curQuarter();
   const slots = SHAPES[curShape()];
-  const attendees = STATE.roster.filter(m=>q.votes[m.id]==='in');
+  const attendees = weekRoster(curWeek()).filter(m=>q.votes[m.id]==='in');
   const gk = attendees.find(m=>m.pos==='GK');
   const rest = attendees.filter(m=>!gk || m.id!==gk.id);
   const newPos = {};
@@ -925,6 +966,14 @@ function posRoleSelect(m, rank){
   return `<select data-act="posrole" data-id="${m.id}" data-rank="${rank}">
     <option value="">${RANK_LABELS[rank]} 없음</option>
     ${POS_CODES.map(c=>`<option value="${c}" ${cur===c?'selected':''}>${c}</option>`).join('')}
+  </select>`;
+}
+function footSelect(m, side){
+  const field = side==='L' ? 'footL' : 'footR';
+  const cur = m[field];
+  return `<select data-act="foot" data-id="${m.id}" data-side="${side}">
+    <option value="">${side==='L'?'왼발':'오른발'} –</option>
+    ${[1,2,3,4,5].map(v=>`<option value="${v}" ${cur===v?'selected':''}>${side==='L'?'왼발':'오른발'} ${v}</option>`).join('')}
   </select>`;
 }
 function posPriority(m, role){
@@ -1370,16 +1419,17 @@ function renderVote(){
   const w = curWeek();
   const q = curQuarter();
   if(!w.notes) w.notes = {};
+  const roster = weekRoster(w);
   let cin=0,cout=0,cmaybe=0,cpend=0;
   const inList=[], outList=[], maybeList=[], pendList=[];
-  STATE.roster.forEach(m=>{
+  roster.forEach(m=>{
     const v=q.votes[m.id];
     if(v==='in'){cin++;inList.push(m);}
     else if(v==='out'){cout++;outList.push(m);}
     else if(v==='maybe'){cmaybe++;maybeList.push(m);}
     else {cpend++;pendList.push(m);}
   });
-  const total = STATE.roster.length;
+  const total = roster.length;
   const pctIn = total? Math.round(cin/total*100):0;
   const pctOut = total? Math.round(cout/total*100):0;
   const pctMaybe = total? Math.round(cmaybe/total*100):0;
@@ -1463,7 +1513,7 @@ function renderVote(){
       </details>` : '';
   }
 
-  const rows = STATE.roster.map(m=>{
+  const rows = roster.map(m=>{
     const v = q.votes[m.id];
     const already = attendOrder.includes(m.id);
     const inDisabled = !adminMode && (lockedNonAdmin || (capFull && !already));
@@ -1471,7 +1521,7 @@ function renderVote(){
     const maybeDisabled = !adminMode && lockedNonAdmin;
     return `<div class="row ${m.id===myId()?'me':''}">
       <div class="no">${m.no||''}</div>
-      <div class="nm">${m.name}${m.hurt?' <span class="badge">부상</span>':''}<span class="pos">${m.pos}</span><span class="code">${m.code}</span></div>
+      <div class="nm">${m.name}${m.hurt?' <span class="badge">부상</span>':''}${m.guest?' <span class="badge">용병</span>':''}<span class="pos">${m.pos||''}</span><span class="code">${m.code||''}</span></div>
       <div class="seg">
         <button type="button" class="in ${v==='in'?'on':''} ${inDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="in">참석</button>
         <button type="button" class="maybe ${v==='maybe'?'on':''} ${maybeDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="maybe">미정</button>
@@ -1617,11 +1667,14 @@ function renderPlayerCards(){
       <input class="traitsInput" type="text" data-act="strong" data-id="${m.id}" value="${escAttr(m.strong||'')}" placeholder="장점">
       <input class="traitsInput" type="text" data-act="weak" data-id="${m.id}" value="${escAttr(m.weak||'')}" placeholder="단점">
       <div class="lede" style="margin:4px 0 2px">선호 포지션 우선순위</div>
-      <div class="posrow">${[0,1,2].map(rank=>posRoleSelect(m,rank)).join('')}</div>` : `
+      <div class="posrow">${[0,1,2].map(rank=>posRoleSelect(m,rank)).join('')}</div>
+      <div class="lede" style="margin:6px 0 2px">양발 능력치 (최대 5)</div>
+      <div class="posrow">${footSelect(m,'L')}${footSelect(m,'R')}</div>` : `
       <div class="pmeta">특징: ${m.traits? escHtml(m.traits) : '-'}</div>
       <div class="pmeta">장점: ${m.strong? escHtml(m.strong) : '-'}</div>
       <div class="pmeta">단점: ${m.weak? escHtml(m.weak) : '-'}</div>
-      <div class="pmeta">선호 포지션: ${escHtml(posTxt)}</div>`;
+      <div class="pmeta">선호 포지션: ${escHtml(posTxt)}</div>
+      <div class="pmeta">양발: 왼발 ${m.footL!=null?m.footL:'-'} · 오른발 ${m.footR!=null?m.footR:'-'}</div>`;
     return `<div class="pcard">
       <div class="pcard-top">
         <div class="ovr num">${r.ovr!=null? r.ovr : '–'}</div>
@@ -1732,38 +1785,36 @@ function pitchMarkings(){
   </svg>`;
 }
 
-// 경기장 그림 대신, 지금 배치된 좌표(x,y)를 그대로 y값 기준 가로줄로 묶어서 텍스트로
-// 보여주는 "한눈에 보기" 뷰. 실제 좌표를 그대로 쓰니 손으로 짠 라인업 메모(예: "원영 상빈
-// 승회 / 정훈 / 창희 효준 / 의리 재현 환주 지후")와 같은 느낌으로 보인다. 드래그로 편집은
-// 안 되고 보기 전용 — 편집은 아래 그래픽 피치에서 한다.
+// 실제 축구팀 그래픽처럼, 작은 미니 피치에 지금 배치된 좌표(x,y) 그대로 점으로 찍어서 보여주는
+// "한눈에 보기" 뷰. 아래 큰 그래픽 피치(임원진 전용, 드래그 편집)와 똑같은 좌표를 쓰지만 훨씬
+// 작고 탭/드래그가 안 되는 보기 전용이다.
 function renderSimpleFormation(){
   const el = document.getElementById('simpleFormationCard');
   if(!el) return;
   const pos = curPositions();
-  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
-  const entries = Object.entries(pos).map(([id,p])=>({id, x:p.x, y:p.y, name:byId[id]?byId[id].name:null})).filter(e=>e.name);
+  const byId = Object.fromEntries(weekRoster(curWeek()).map(m=>[m.id,m]));
+  const my = myId();
+  const entries = Object.entries(pos).filter(([id])=>byId[id]);
   if(!entries.length){
     el.style.display = 'none';
     return;
   }
-  const BAND = 11; // 이 정도 y차이면 같은 줄로 묶는다(피치 세로 100 기준)
-  const bands = {};
-  entries.forEach(e=>{
-    const key = Math.round(e.y / BAND);
-    (bands[key] = bands[key] || []).push(e);
+  let dots = '';
+  entries.forEach(([id,p])=>{
+    const person = byId[id];
+    dots += `<div class="mslot ${id===my?'me':''}" style="left:${p.x}%;top:${p.y}%">${person.name}</div>`;
   });
-  const rows = Object.keys(bands).map(Number).sort((a,b)=>a-b)
-    .map(k => bands[k].sort((a,b)=>a.x-b.x).map(e=>e.name).join('&nbsp;&nbsp;&nbsp;'));
   el.style.display = '';
-  el.innerHTML = `<div class="lede" style="margin:0 0 8px">📋 ${curMode==='atk'?'공격':'수비'} 시 · 한눈에 보기</div>
-    ${rows.map(r=>`<div style="text-align:center;font-weight:700;padding:5px 0;font-size:.92rem">${r}</div>`).join('')}`;
+  el.innerHTML = `<div class="lede" style="margin:0 0 8px;text-align:center">📋 ${curMode==='atk'?'공격':'수비'} 시 · 한눈에 보기</div>
+    <div class="mpitch">${pitchMarkings()}${dots}</div>`;
 }
 
 function renderPitch(){
   const q = curQuarter();
   const shape = curShape();
   const pos = curPositions();
-  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const roster = weekRoster(curWeek());
+  const byId = Object.fromEntries(roster.map(m=>[m.id,m]));
   let html = pitchMarkings();
   if(curMode==='def' && ballZone!=='mid') html += shiftArrowsSvg(pos, byId, ballZone);
   // 배치된 선수 — 좌표(x%,y%)를 직접 들고 있어서 피치 어디로든 자유롭게 드래그할 수 있다.
@@ -1782,10 +1833,10 @@ function renderPitch(){
   document.getElementById('pitch').innerHTML = html;
 
   const placed = new Set(Object.keys(pos));
-  const bench = STATE.roster.filter(m=>q.votes[m.id]==='in' && !placed.has(m.id));
-  const outp = STATE.roster.filter(m=>q.votes[m.id]!=='in');
+  const bench = roster.filter(m=>q.votes[m.id]==='in' && !placed.has(m.id));
+  const outp = roster.filter(m=>q.votes[m.id]!=='in');
   document.getElementById('benchHead').textContent = `벤치 (${q.n}쿼터 참석, ${curMode==='atk'?'공격':'수비'} 미배치)`;
-  document.getElementById('benchChips').innerHTML = bench.length? bench.map(m=>`<span class="chip" data-act="slotpick" data-id="${m.id}">${m.name}</span>`).join('') : '<span style="color:var(--ink-faint);font-size:.8rem">없음</span>';
+  document.getElementById('benchChips').innerHTML = bench.length? bench.map(m=>`<span class="chip" data-act="slotpick" data-id="${m.id}">${m.name}${m.guest?' (용병)':''}</span>`).join('') : '<span style="color:var(--ink-faint);font-size:.8rem">없음</span>';
   document.getElementById('outChips').innerHTML = outp.length? outp.map(m=>`<span class="chip out">${m.name}</span>`).join('') : '<span style="color:var(--ink-faint);font-size:.8rem">없음</span>';
 }
 
@@ -2266,7 +2317,7 @@ document.addEventListener('change', (e)=>{
     save();
     return;
   }
-  const gatedEl = e.target.closest('[data-act="traits"],[data-act="strong"],[data-act="weak"],[data-act="posrole"],[data-act="venueprice"],[data-act="venuetime"]');
+  const gatedEl = e.target.closest('[data-act="traits"],[data-act="strong"],[data-act="weak"],[data-act="posrole"],[data-act="foot"],[data-act="venueprice"],[data-act="venuetime"]');
   if(gatedEl && !adminMode){
     toast('임원진 모드에서만 변경할 수 있어요');
     render(); // 방금 타이핑한 내용을 저장된 값으로 되돌려서 보여준다
@@ -2302,6 +2353,16 @@ document.addEventListener('change', (e)=>{
     }
     return;
   }
+  const footEl = e.target.closest('[data-act="foot"]');
+  if(footEl){
+    const m = STATE.roster.find(r=>r.id===footEl.dataset.id);
+    if(m){
+      const v = footEl.value===''? null : parseInt(footEl.value,10);
+      if(footEl.dataset.side==='L') m.footL = v; else m.footR = v;
+      save();
+    }
+    return;
+  }
   const priceEl = e.target.closest('[data-act="venueprice"]');
   if(priceEl){
     const v = priceEl.value;
@@ -2324,7 +2385,7 @@ function openGuidePicker(x,y,role){
   const q=curQuarter();
   const pos=curPositions();
   const placedIds = new Set(Object.keys(pos));
-  const cands = STATE.roster.filter(m=> q.votes[m.id]==='in' && !placedIds.has(m.id))
+  const cands = weekRoster(curWeek()).filter(m=> q.votes[m.id]==='in' && !placedIds.has(m.id))
     .slice().sort((a,b)=> posPriority(a,role)-posPriority(b,role));
   const wrap=document.createElement('div');
   wrap.className='picker';
@@ -2353,7 +2414,7 @@ function openGuidePicker(x,y,role){
 function openBenchPicker(memberId){
   const q=curQuarter();
   const pos=curPositions();
-  const byId=Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const byId=Object.fromEntries(weekRoster(curWeek()).map(m=>[m.id,m]));
   const person=byId[memberId];
   const slots=SHAPES[curShape()];
   const placedPts = Object.values(pos);
@@ -2382,7 +2443,7 @@ function openBenchPicker(memberId){
 
 // 이미 피치에 배치된 선수를 탭(드래그 아님)했을 때 — 벤치로 빼는 간단한 액션 시트.
 function openSlotActions(memberId){
-  const byId=Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const byId=Object.fromEntries(weekRoster(curWeek()).map(m=>[m.id,m]));
   const person=byId[memberId];
   const wrap=document.createElement('div');
   wrap.className='picker';
@@ -2431,7 +2492,7 @@ document.addEventListener('pointerdown', (e)=>{
   const bxEl = e.target.closest('.bslot[data-id]');
   if(!slotEl && !chipEl && !bxEl) return;
   if((slotEl || chipEl) && !requireAdmin()) return; // bestXI 미리보기(bxEl)는 저장 안 되니 예외
-  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const byId = Object.fromEntries(weekRoster(curWeek()).map(m=>[m.id,m]));
 
   if(slotEl){
     const id = slotEl.dataset.id;
@@ -2557,6 +2618,18 @@ document.getElementById('newWeekBtn').addEventListener('click',()=>{
   STATE.weeks.push(w);
   STATE.currentWeek = w.id;
   save();
+});
+document.getElementById('guestAddBtn').addEventListener('click',()=>{
+  if(!requireAdmin()) return;
+  const input = document.getElementById('guestNameInput');
+  const name = input.value.trim();
+  if(!name){ toast('용병 이름을 입력해주세요'); return; }
+  const w = curWeek();
+  if(!w.guests) w.guests = [];
+  w.guests.push({id:uid(), name, guest:true, pos:'', no:null, code:''});
+  input.value = '';
+  save();
+  toast(`${name} 용병으로 추가했어요`);
 });
 
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
