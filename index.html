@@ -330,7 +330,7 @@ details.collapse[open] summary:before{content:'▾ '}
 <section class="tab" id="tab-form">
   <h2><span class="bar"></span>포메이션 · 전술판</h2>
   <details class="collapse"><summary>사용법 보기</summary>
-    <p class="lede" style="margin-top:6px">쿼터별로, 공격할 때·수비할 때 포메이션을 따로 짤 수 있어요. 벤치 선수를 피치 위 원하는 자리로 자유롭게 드래그해서 놓을 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 피치의 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로, 선수카드에서 그 포지션을 선호한다고 등록해둔 선수부터 우선순위로 뜨는 배치 창이 열려요 (FM 스타일). 벤치 선수 이름을 탭해도 같은 방식으로 열린 자리를 골라 배치할 수 있어요 — 드래그가 어려우면 이 방법을 쓰세요. 이미 배치된 선수도 드래그로 위치를 옮기거나 벤치 쪽으로 끌면 뺄 수 있어요. 선수 모드에서는 포메이션이 경기 시작 30분 전에 공개돼요.</p>
+    <p class="lede" style="margin-top:6px">선수 모드에서는 그림 대신 "한눈에 보기" 텍스트로 라인업이 줄 단위로 보여요 — 경기 시작 30분 전에 공개돼요. 임원진 모드에서는 그 아래 그래픽 피치로 실제 배치를 편집해요: 쿼터별로, 공격할 때·수비할 때 포메이션을 따로 짤 수 있고, 벤치 선수를 피치 위 원하는 자리로 자유롭게 드래그해서 놓을 수 있어요 (오른쪽에 공격수 3명을 몰아두는 것처럼 정해진 틀 없이 마음대로 배치 가능). 피치의 빈 곳을 탭하면 그 위치에 가까운 포지션 기준으로 우선순위 배치 창이 열려요(FM 스타일). 벤치 선수 이름을 탭해도 같은 방식으로 열린 자리를 골라 배치할 수 있어요 — 드래그가 어려우면 이 방법을 쓰세요.</p>
   </details>
   <div class="card" id="formationHiddenNotice" style="display:none"></div>
   <div class="card" id="myQuartersCard" style="display:none"></div>
@@ -339,6 +339,7 @@ details.collapse[open] summary:before{content:'▾ '}
     <button type="button" class="atk" data-act="mode" data-mode="atk">⚔️ 공격 시</button>
     <button type="button" class="def" data-act="mode" data-mode="def">🛡️ 수비 시</button>
   </div>
+  <div class="card" id="simpleFormationCard" style="display:none"></div>
   <div class="card" id="posCountCard"></div>
   <div class="shapebar" id="shapeBar"></div>
   <div style="display:flex;gap:8px;margin-bottom:10px">
@@ -384,17 +385,22 @@ details.collapse[open] summary:before{content:'▾ '}
   <div class="panel">
     <h2><span class="bar"></span>구장 · 경기 결과</h2>
     <div class="card">
-      <div class="field"><label>구장</label><input id="venueInput" placeholder="예: 효창운동장"></div>
-      <div class="field"><label>경기 시작 시각</label><input id="matchTimeInput" type="time"></div>
-      <div class="field"><label>스코어 (우리 : 상대)</label>
-        <div class="scorebar">
-          <input id="usScore" type="number" min="0">
-          <span>:</span>
-          <input id="themScore" type="number" min="0">
-          <span class="wdl" id="wdlBadge">-</span>
+      <div id="matchInfoView"></div>
+      <button type="button" class="ghost" id="matchInfoEditBtn" style="width:100%;margin-top:8px">✏️ 정보 수정</button>
+      <div id="matchInfoEdit" style="display:none">
+        <div class="field"><label>구장</label><input id="venueInput" placeholder="예: 효창운동장"></div>
+        <div class="field"><label>경기 시작 시각</label><input id="matchTimeInput" type="time"></div>
+        <div class="field"><label>스코어 (우리 : 상대)</label>
+          <div class="scorebar">
+            <input id="usScore" type="number" min="0">
+            <span>:</span>
+            <input id="themScore" type="number" min="0">
+            <span class="wdl" id="wdlBadge">-</span>
+          </div>
         </div>
+        <div class="field"><label>메모</label><textarea id="matchNote" rows="2" placeholder="특이사항"></textarea></div>
+        <button type="button" class="ghost" id="matchInfoDoneBtn" style="width:100%">완료</button>
       </div>
-      <div class="field"><label>메모</label><textarea id="matchNote" rows="2" placeholder="특이사항"></textarea></div>
     </div>
   </div>
 
@@ -865,6 +871,10 @@ let curMode = 'atk';     // 'atk'(공격 시) | 'def'(수비 시) — 포메이�
 // 수비 시 모드에서만 의미가 있고, 저장/동기화되지 않는다 — 보는 사람마다 자기 화면에서만
 // 자유롭게 좌/중앙/우를 눌러보는 참고용 오버레이라서 STATE에 넣지 않는다.
 let ballZone = 'mid';    // 'left' | 'mid' | 'right'
+// 구장·결과 정보칸/선수카드 둘 다 뷰어 로컬 "보기/수정" 전환 상태 — 평소엔 정보만 보이고
+// 수정 버튼을 눌러야 입력칸이 나온다. 공유 저장 안 함(탭 열 때마다 보기 모드로 시작).
+let matchInfoEditing = false;
+let cardEditingId = null;
 
 // 임원진 모드: PIN을 아는 임원진만 켤 수 있고, 켜져 있으면 마감/선착순 제한을 무시하고
 // 투표를 대신 고쳐줄 수 있다. 기기별로 localStorage에 저장(실제 로그인 시스템은 아님).
@@ -1093,6 +1103,9 @@ function venuePrefAvg(name){
 
 /* ---------- 작은 시각화용 막대 그래프 (외부 라이브러리 없이 CSS로) ---------- */
 function escAttr(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+// escAttr만으로는 <,> 이 안 막혀서 innerHTML 텍스트 자리(속성값이 아니라)에 자유 입력 텍스트를
+// 그대로 넣으면 안 된다 — 그런 자리엔 반드시 이걸 쓴다.
+function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function barRow(label, valueText, pct, cls){
   const p = Math.max(0, Math.min(100, pct||0));
   return `<div class="chartrow"><div class="chartrow-head"><span>${label}</span><b>${valueText}</b></div>
@@ -1236,6 +1249,7 @@ function render(){
   renderBallZoneBar();
   renderShapeBar();
   renderPosCount();
+  renderSimpleFormation();
   renderFormationReveal();
   renderMyQuarters();
   renderPitch();
@@ -1304,7 +1318,9 @@ function renderPlayerGates(){
   gateTab('lateFeeTabBtn', 'tab-latefees', hide);
 }
 
-// 선수 모드에서는 경기 시작 30분 전까지 포메이션(피치·벤치·내 출전 요약)을 숨긴다.
+// 선수 모드에서는 경기 시작 30분 전까지 포메이션(피치·벤치·내 출전 요약·한눈에 보기)을 숨긴다.
+// 공개된 후에도, 드래그 편집용 그래픽 피치·벤치는 임원진에게만 보이고 — 선수 모드에는
+// renderSimpleFormation()이 그려주는 "한눈에 보기" 텍스트만 보인다.
 function renderFormationReveal(){
   const w = curWeek();
   const hidden = formationHidden(w);
@@ -1314,9 +1330,13 @@ function renderFormationReveal(){
     notice.innerHTML = `⏰ 이번 주 포메이션은 경기 시작 30분 전에 공개돼요.<div class="lede" style="margin-top:4px">${fmtRevealInfo(w)}</div>`;
   }
   const pitch = document.getElementById('pitch');
-  if(pitch) pitch.style.display = hidden ? 'none' : '';
+  if(pitch) pitch.style.display = (hidden || !adminMode) ? 'none' : '';
   const benchBlock = document.getElementById('benchBlock');
-  if(benchBlock) benchBlock.style.display = hidden ? 'none' : '';
+  if(benchBlock) benchBlock.style.display = (hidden || !adminMode) ? 'none' : '';
+  if(hidden){
+    const simpleCard = document.getElementById('simpleFormationCard');
+    if(simpleCard) simpleCard.style.display = 'none';
+  }
 }
 
 function renderModeBar(){
@@ -1509,12 +1529,24 @@ function renderMatch(){
   document.getElementById('themScore').value = w.result.them ?? '';
   document.getElementById('matchNote').value = w.result.note||'';
   const badge=document.getElementById('wdlBadge');
+  let wdl = '-';
   if(w.result.us==null || w.result.them==null){ badge.textContent='-'; badge.className='wdl'; }
   else{
     const d=w.result.us-w.result.them;
     const t = d>0?'W':d<0?'L':'D';
     badge.textContent=t; badge.className='wdl '+t;
+    wdl = t;
   }
+
+  const scoreTxt = (w.result.us==null || w.result.them==null) ? '-' : `${w.result.us} : ${w.result.them} (${wdl})`;
+  document.getElementById('matchInfoView').innerHTML = `
+    <div class="pmeta">구장: ${w.venue? escHtml(w.venue) : '미정'}</div>
+    <div class="pmeta">경기 시작: ${w.matchTime||'10:00'}</div>
+    <div class="pmeta">스코어: ${scoreTxt}</div>
+    <div class="pmeta">메모: ${w.result.note? escHtml(w.result.note) : '없음'}</div>`;
+  document.getElementById('matchInfoView').style.display = matchInfoEditing ? 'none' : '';
+  document.getElementById('matchInfoEdit').style.display = matchInfoEditing ? '' : 'none';
+  document.getElementById('matchInfoEditBtn').style.display = matchInfoEditing ? 'none' : '';
 }
 
 function renderInjuries(){
@@ -1578,6 +1610,18 @@ function renderPlayerCards(){
     const r=ratingFor(m.id);
     const tier=tierFor(r.ovr);
     const inj=playerInjuryStats(m.id);
+    const editing = cardEditingId === m.id;
+    const posTxt = memberPosRoles(m).join(' > ') || '-';
+    const infoBlock = editing ? `
+      <input class="traitsInput" type="text" data-act="traits" data-id="${m.id}" value="${escAttr(m.traits||'')}" placeholder="특징 (예: 빠른 발, 크로스 정확)">
+      <input class="traitsInput" type="text" data-act="strong" data-id="${m.id}" value="${escAttr(m.strong||'')}" placeholder="장점">
+      <input class="traitsInput" type="text" data-act="weak" data-id="${m.id}" value="${escAttr(m.weak||'')}" placeholder="단점">
+      <div class="lede" style="margin:4px 0 2px">선호 포지션 우선순위</div>
+      <div class="posrow">${[0,1,2].map(rank=>posRoleSelect(m,rank)).join('')}</div>` : `
+      <div class="pmeta">특징: ${m.traits? escHtml(m.traits) : '-'}</div>
+      <div class="pmeta">장점: ${m.strong? escHtml(m.strong) : '-'}</div>
+      <div class="pmeta">단점: ${m.weak? escHtml(m.weak) : '-'}</div>
+      <div class="pmeta">선호 포지션: ${escHtml(posTxt)}</div>`;
     return `<div class="pcard">
       <div class="pcard-top">
         <div class="ovr num">${r.ovr!=null? r.ovr : '–'}</div>
@@ -1585,14 +1629,11 @@ function renderPlayerCards(){
       </div>
       <div class="pname">${m.name}${m.hurt?' <span class="badge">부상</span>':''}</div>
       <div class="pcode">${m.code} · ${m.pos}${m.no?' · #'+m.no:''}</div>
-      <input class="traitsInput" type="text" data-act="traits" data-id="${m.id}" value="${escAttr(m.traits||'')}" placeholder="특징 (예: 빠른 발, 크로스 정확)">
-      <input class="traitsInput" type="text" data-act="strong" data-id="${m.id}" value="${escAttr(m.strong||'')}" placeholder="장점">
-      <input class="traitsInput" type="text" data-act="weak" data-id="${m.id}" value="${escAttr(m.weak||'')}" placeholder="단점">
-      <div class="lede" style="margin:4px 0 2px">선호 포지션 우선순위</div>
-      <div class="posrow">${[0,1,2].map(rank=>posRoleSelect(m,rank)).join('')}</div>
+      ${infoBlock}
       <div class="pmeta"><span>평점 ${r.n}회${r.avg!=null?' (평균 '+r.avg.toFixed(1)+'★)':''}</span></div>
       <div class="pmeta">${r.mom? `<span class="mombadge">MOM ${r.mom}회</span>`:''}<span>${duesStatusText(m.id)}</span></div>
       <div class="pmeta">부상률 ${inj.rate.toFixed(0)}% (${inj.cnt}건 / 참석 ${inj.weeksAttended}회)</div>
+      <button type="button" class="ghost" data-act="cardedit" data-id="${m.id}" style="width:100%;margin-top:6px">${editing? '✓ 완료' : '✏️ 수정'}</button>
       <button type="button" class="ghost hurtbtn" data-act="hurttoggle" data-id="${m.id}">${m.hurt? '회복 처리':'부상으로 표시'}</button>
     </div>`;
   }).join('');
@@ -1689,6 +1730,33 @@ function pitchMarkings(){
     <rect x="26" y="2" width="48" height="14" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="0.6"/>
     <rect x="26" y="84" width="48" height="14" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="0.6"/>
   </svg>`;
+}
+
+// 경기장 그림 대신, 지금 배치된 좌표(x,y)를 그대로 y값 기준 가로줄로 묶어서 텍스트로
+// 보여주는 "한눈에 보기" 뷰. 실제 좌표를 그대로 쓰니 손으로 짠 라인업 메모(예: "원영 상빈
+// 승회 / 정훈 / 창희 효준 / 의리 재현 환주 지후")와 같은 느낌으로 보인다. 드래그로 편집은
+// 안 되고 보기 전용 — 편집은 아래 그래픽 피치에서 한다.
+function renderSimpleFormation(){
+  const el = document.getElementById('simpleFormationCard');
+  if(!el) return;
+  const pos = curPositions();
+  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const entries = Object.entries(pos).map(([id,p])=>({id, x:p.x, y:p.y, name:byId[id]?byId[id].name:null})).filter(e=>e.name);
+  if(!entries.length){
+    el.style.display = 'none';
+    return;
+  }
+  const BAND = 11; // 이 정도 y차이면 같은 줄로 묶는다(피치 세로 100 기준)
+  const bands = {};
+  entries.forEach(e=>{
+    const key = Math.round(e.y / BAND);
+    (bands[key] = bands[key] || []).push(e);
+  });
+  const rows = Object.keys(bands).map(Number).sort((a,b)=>a-b)
+    .map(k => bands[k].sort((a,b)=>a.x-b.x).map(e=>e.name).join('&nbsp;&nbsp;&nbsp;'));
+  el.style.display = '';
+  el.innerHTML = `<div class="lede" style="margin:0 0 8px">📋 ${curMode==='atk'?'공격':'수비'} 시 · 한눈에 보기</div>
+    ${rows.map(r=>`<div style="text-align:center;font-weight:700;padding:5px 0;font-size:.92rem">${r}</div>`).join('')}`;
 }
 
 function renderPitch(){
@@ -2171,6 +2239,11 @@ document.addEventListener('click', (e)=>{
     const m=STATE.roster.find(r=>r.id===id);
     if(m){ m.hurt = !m.hurt; save(); }
   }
+  else if(kind==='cardedit'){
+    const id = act.dataset.id;
+    cardEditingId = cardEditingId===id ? null : id;
+    renderPlayerCards();
+  }
   else if(kind==='venuepref'){
     const name=act.dataset.venue, v=parseInt(act.dataset.v,10);
     const me=myId();
@@ -2578,6 +2651,15 @@ document.getElementById('copyPrevQuarterBtn').addEventListener('click',()=>{
   bestXIPos = null;
   save();
   toast('이전 쿼터 배치를 복사했어요');
+});
+document.getElementById('matchInfoEditBtn').addEventListener('click',()=>{
+  if(!requireAdmin()) return;
+  matchInfoEditing = true;
+  renderMatch();
+});
+document.getElementById('matchInfoDoneBtn').addEventListener('click',()=>{
+  matchInfoEditing = false;
+  renderMatch();
 });
 document.getElementById('resetBestXIBtn').addEventListener('click',()=>{
   bestXIPos = null;
