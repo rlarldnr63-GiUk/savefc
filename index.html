@@ -1872,9 +1872,10 @@ function renderLateFees(){
       const f = feeAgg[m.id];
       const paid = !!STATE.lateFeesPaid[m.id];
       return `<tr><td>${m.name}</td><td class="n">${f.late3}</td><td class="n">${f.late5}</td><td class="n">${f.noshow}</td><td class="n">${f.total.toLocaleString()}원</td>
-        <td><span class="chip duechip ${paid?'paid':''}" data-act="latefeepaid" data-id="${m.id}">${paid?'납부✓':'미납'}</span></td></tr>`;
+        <td><span class="chip duechip ${paid?'paid':''}" data-act="latefeepaid" data-id="${m.id}">${paid?'납부✓':'미납'}</span></td>
+        <td><button type="button" class="ghost" data-act="latefeeclear" data-id="${m.id}" style="padding:3px 8px;font-size:.72rem">삭제</button></td></tr>`;
     }).join('');
-    tableEl.innerHTML = `<tr><th>이름</th><th>지각 3천</th><th>지각 5천</th><th>노쇼</th><th>합계</th><th>납부</th></tr>` + (feeRows||'<tr><td colspan="6" style="color:var(--ink-faint)">기록 없음</td></tr>');
+    tableEl.innerHTML = `<tr><th>이름</th><th>지각 3천</th><th>지각 5천</th><th>노쇼</th><th>합계</th><th>납부</th><th></th></tr>` + (feeRows||'<tr><td colspan="7" style="color:var(--ink-faint)">기록 없음</td></tr>');
   }
 }
 
@@ -1911,7 +1912,7 @@ function renderStats(){
 }
 
 /* ---------- events ---------- */
-const ADMIN_GATED_ACTS = new Set(['duestoggle','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid']);
+const ADMIN_GATED_ACTS = new Set(['duestoggle','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid','latefeeclear']);
 
 document.addEventListener('click', (e)=>{
   // 방금 실제 드래그(탭이 아니라 진짜 이동)로 배치를 끝낸 직후에 뒤따라오는 네이티브
@@ -2043,6 +2044,14 @@ document.addEventListener('click', (e)=>{
     STATE.lateFeesPaid = STATE.lateFeesPaid || {};
     STATE.lateFeesPaid[id] = !STATE.lateFeesPaid[id];
     save();
+  }
+  else if(kind==='latefeeclear'){
+    const id=act.dataset.id;
+    if(!confirm('이 사람의 지각비·노쇼비 누적 기록을 전부 지울까요? (실제로 정산 끝났을 때만 사용하세요)')) return;
+    STATE.weeks.forEach(w=>{ if(w.lateFees) delete w.lateFees[id]; });
+    if(STATE.lateFeesPaid) delete STATE.lateFeesPaid[id];
+    save();
+    toast('지각비 기록을 지웠어요');
   }
   else if(kind==='hurttoggle'){
     const id=act.dataset.id;
