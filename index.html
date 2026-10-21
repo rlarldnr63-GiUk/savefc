@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SAVE FC 스쿼드보드</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Oswald:wght@500;600&family=Montserrat:ital,wght@0,700;0,800;1,200;1,800;1,900&display=swap">
 <!-- 팀 데이터를 실시간으로 동기화하는 Supabase(Realtime) SDK. 한의원 사이트에서
      이미 쓰고 있는 Supabase 프로젝트를 그대로 쓰되, savefc 스키마의 테이블 1개만
      사용한다 (배포 가이드의 SQL로 완전히 분리·격리해둔다 — public 스키마 등
@@ -102,26 +102,50 @@ h2 .bar{width:4px;height:14px;background:var(--accent);border-radius:2px}
 
 /* formation */
 /* 구단 인스타 "STARTING XI" 그래픽과 같은 톤: 어두운 녹색 보드 위에 유니폼 + "번호 이름" */
-.lineupboard{background:radial-gradient(120% 70% at 50% 35%,#24603c 0%,#123f27 55%,#0a2617 100%);border-radius:14px;padding:14px 12px 12px;color:#fff;margin-bottom:14px}
-.lineup-head{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin-bottom:6px}
-.lineup-title{font-weight:900;font-style:italic;font-size:1.25rem;letter-spacing:-.5px;line-height:1}
-.lineup-meta{font-size:.72rem;font-weight:700;text-align:right;line-height:1.35;opacity:.92}
+.lineupboard{position:relative;overflow:hidden;border-radius:14px;padding:16px 14px 12px;color:#fff;margin-bottom:14px;font-family:'Montserrat','IBM Plex Sans KR',sans-serif;
+  background:
+    radial-gradient(60% 35% at 15% 20%,rgba(120,200,150,.16),transparent 70%),
+    radial-gradient(50% 30% at 85% 55%,rgba(110,190,140,.12),transparent 70%),
+    radial-gradient(70% 40% at 30% 85%,rgba(90,170,120,.12),transparent 70%),
+    linear-gradient(115deg,transparent 40%,rgba(255,255,255,.05) 48%,transparent 56%),
+    linear-gradient(160deg,#1f5a39 0%,#123f27 45%,#0c2e1c 100%)}
+.lineupboard>*{position:relative}
+.lineupboard>.lineup-watermark{position:absolute;right:-18%;top:2%;width:78%;opacity:.07;pointer-events:none}
+.lineup-league{display:flex;align-items:center;gap:6px;min-height:0;margin-bottom:6px}
+.lineup-league:empty{display:none}
+.lineup-league svg{width:20px;height:24px;flex:none}
+.lineup-league .ln{font-family:'Black Han Sans','IBM Plex Sans KR',sans-serif;font-size:.92rem;line-height:1}
+.lineup-league .le{font-size:.42rem;opacity:.85;letter-spacing:.2px}
+.lineup-title{font-weight:900;font-style:italic;font-size:2.1rem;letter-spacing:-1px;line-height:1;margin:2px 0 10px;text-shadow:0 2px 6px rgba(0,0,0,.35)}
+.lineup-title .xi{font-weight:200;font-size:2.7rem;margin-left:6px;letter-spacing:-2px}
+.lineup-match{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lineup-crest{width:38px;height:38px;object-fit:contain}
+.lineup-opp{width:36px;height:36px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:900;letter-spacing:-.3px;background:rgba(0,0,0,.25)}
+.lineup-opp:empty{display:none}
+.lineup-meta{font-size:.95rem;font-weight:800;line-height:1.2;margin-left:6px}
+.lineup-meta div+div{font-family:'IBM Plex Sans KR',sans-serif;font-weight:700}
 .pitch{position:relative;width:100%;max-width:330px;margin:0 auto 6px;aspect-ratio:68/100;overflow:visible;touch-action:none}
 .pitch svg.markings{position:absolute;inset:0;width:100%;height:100%}
 .pitch.dropok{outline:2px dashed rgba(255,255,255,.7);outline-offset:-2px;border-radius:8px}
 .slot{position:absolute;transform:translate(-50%,-50%);width:19%;display:flex;flex-direction:column;align-items:center;cursor:grab;touch-action:none;transition:outline .1s,transform .1s;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
-.slot .jersey{width:78%;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
-.slot .nametag{margin-top:1px;color:#fff;font-size:.6rem;font-weight:800;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.8)}
-.slot .nametag b{margin-right:2px}
+.slot .jersey{width:82%;display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+.slot .nametag{margin-top:2px;color:#fff;font-size:.62rem;font-weight:700;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.8);display:flex;align-items:center;gap:2px}
+.slot .nametag b{font-family:'Montserrat',sans-serif;font-weight:800;margin-right:2px}
+.slot .nametag svg{width:15px;height:9px;margin-right:2px}
 .slot.me .nametag{color:#FFD84D}
 .slot.dragging{opacity:.3}
 .slot.dropok{outline:2px solid #fff;border-radius:8px;transform:translate(-50%,-50%) scale(1.08)}
-.lineupboard .bench{margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18)}
-.lineupboard .benchhead{color:#fff;font-weight:800;font-size:.74rem;margin:4px 0 6px}
-.lineupboard .chips{gap:2px 10px;min-height:0}
-.lineupboard .chip{background:none;border:none;padding:2px 0;color:#fff;font-weight:700;font-size:.8rem}
-.lineupboard .chip b{opacity:.75;margin-right:3px}
-.lineupboard .emptynote{color:rgba(255,255,255,.6);font-size:.78rem}
+.lineupboard .lineup-foot{display:flex;gap:12px;margin-top:6px;padding:4px 4px 0}
+.lineup-coach{flex:none;min-width:64px;padding-right:12px;border-right:1px solid rgba(255,255,255,.6);font-size:.72rem;font-weight:700}
+.lineup-subs{flex:1;min-width:0}
+.lineupboard .benchhead{color:#fff;font-family:'Montserrat',sans-serif;font-weight:800;font-size:.7rem;margin:0 0 3px}
+.lineupboard .chips{gap:0 7px;min-height:0}
+.lineupboard .chip{background:none;border:none;padding:1px 0;color:#fff;font-weight:700;font-size:.7rem}
+.lineupboard .chip b{font-family:'Montserrat',sans-serif;margin-right:3px}
+.lineupboard .emptynote{color:rgba(255,255,255,.6);font-size:.7rem}
+.lineup-slogan{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;font-weight:900;font-size:.72rem;letter-spacing:.2px}
+.lineup-slogan i{font-style:italic}
+.lineup-slogan img{width:26px;height:26px;object-fit:contain}
 .bench{margin-top:10px}
 .benchhead{font-size:.75rem;color:var(--ink-faint);margin:10px 0 4px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;min-height:30px;border-radius:10px;transition:outline .1s}
@@ -358,17 +382,28 @@ details.collapse[open] summary:before{content:'▾ '}
     <button type="button" class="ghost" id="saveFormBtn" style="flex:1">💾 저장</button>
   </div>
   <div class="lineupboard" id="lineupBoard">
-    <div class="lineup-head">
-      <div class="lineup-title" id="lineupTitle">STARTING XI</div>
+    <img class="lineup-watermark" src="crest.png" alt="">
+    <div class="lineup-league" id="lineupLeague"></div>
+    <div class="lineup-title" id="lineupTitle"></div>
+    <div class="lineup-match">
+      <img class="lineup-crest" src="crest.png" alt="SAVE FC">
+      <div class="lineup-opp" id="lineupOppBadge"></div>
       <div class="lineup-meta" id="lineupMeta"></div>
     </div>
     <div class="pitch" id="pitch"></div>
-    <div class="bench" id="benchBlock">
-      <div class="benchhead" id="benchHead">Subs</div>
-      <div class="chips" id="benchChips"></div>
-      <div class="benchhead" id="subsHead" style="display:none">🔄 교체 투입</div>
-      <div class="chips" id="subsChips" style="display:none"></div>
+    <div class="lineup-foot bench" id="benchBlock">
+      <div class="lineup-coach">
+        <div class="benchhead">Head Coach</div>
+        <div id="lineupCoach"></div>
+      </div>
+      <div class="lineup-subs">
+        <div class="benchhead" id="benchHead">Subs</div>
+        <div class="chips" id="benchChips"></div>
+        <div class="benchhead" id="subsHead" style="display:none">교체 투입</div>
+        <div class="chips" id="subsChips" style="display:none"></div>
+      </div>
     </div>
+    <div class="lineup-slogan"><span><i>NO LIMITS</i> SAVE THE GAME</span><img src="crest.png" alt=""></div>
   </div>
 
   <details class="collapse" id="tacticsGuideBlock" style="margin-top:14px">
@@ -390,6 +425,8 @@ details.collapse[open] summary:before{content:'▾ '}
       <div id="matchInfoEdit" style="display:none">
         <div class="field"><label>구장</label><input id="venueInput" placeholder="예: 효창운동장"></div>
         <div class="field"><label>경기 시작 시각</label><input id="matchTimeInput" type="time"></div>
+        <div class="field"><label>상대팀</label><input id="opponentInput" placeholder="예: PIDA FC"></div>
+        <div class="field"><label>대회 (선택)</label><input id="competitionInput" placeholder="예: 서울시민리그 16강"></div>
         <div class="field"><label>스코어 (우리 : 상대)</label>
           <div class="scorebar">
             <input id="usScore" type="number" min="0">
@@ -710,6 +747,7 @@ function migrateRoster(m){
 // 옮길 수 있고(예: 오른쪽에 공격수 3명 몰아두기), 이 좌표는 프리셋 적용·초기화할 때
 // 출발점으로만 쓰인다.
 const POS_CODES = ['GK','LB','CB','RB','LWB','RWB','CDM','CM','LM','RM','CAM','LAM','RAM','LW','ST','RW'];
+const KIT_BODY = 'M36 5 Q50 12 64 5 L81 11 L97 32 L83 42 L78 36 L78 88 L22 88 L22 36 L17 42 L3 32 L19 11 Z';
 const SHAPES = {
  '4-3-3':[['GK',50,94],['LB',15,76],['CB',35,80],['CB',65,80],['RB',85,76],
           ['CM',28,54],['CM',50,58],['CM',72,54],
@@ -1469,6 +1507,8 @@ function renderMatch(){
   const w=curWeek();
   document.getElementById('venueInput').value = w.venue||'';
   document.getElementById('matchTimeInput').value = w.matchTime||'10:00';
+  document.getElementById('opponentInput').value = w.opponent||'';
+  document.getElementById('competitionInput').value = w.competition||'';
   document.getElementById('usScore').value = w.result.us ?? '';
   document.getElementById('themScore').value = w.result.them ?? '';
   document.getElementById('matchNote').value = w.result.note||'';
@@ -1486,6 +1526,7 @@ function renderMatch(){
   document.getElementById('matchInfoView').innerHTML = `
     <div class="pmeta">구장: ${w.venue? escHtml(w.venue) : '미정'}</div>
     <div class="pmeta">경기 시작: ${w.matchTime||'10:00'}</div>
+    <div class="pmeta">상대팀: ${w.opponent? escHtml(w.opponent) : '미정'}${w.competition? ' · '+escHtml(w.competition) : ''}</div>
     <div class="pmeta">스코어: ${scoreTxt}</div>
     <div class="pmeta">메모: ${w.result.note? escHtml(w.result.note) : '없음'}</div>`;
   document.getElementById('matchInfoView').style.display = matchInfoEditing ? 'none' : '';
@@ -1678,8 +1719,9 @@ function pitchMarkings(){
   const s = 'fill="none" stroke="rgba(255,255,255,.2)" stroke-width="0.5"';
   return `<svg class="markings" viewBox="0 0 100 100" preserveAspectRatio="none">
     <defs>
-      <linearGradient id="kitField" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f8a55"/><stop offset="1" stop-color="#17532f"/></linearGradient>
-      <linearGradient id="kitKeeper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3556d8"/><stop offset="1" stop-color="#1a2f8f"/></linearGradient>
+      <linearGradient id="kitField" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a7a49"/><stop offset=".55" stop-color="#1d5f37"/><stop offset="1" stop-color="#154a2b"/></linearGradient>
+      <linearGradient id="kitKeeper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f5fd0"/><stop offset=".55" stop-color="#2148ae"/><stop offset="1" stop-color="#18378a"/></linearGradient>
+      <clipPath id="kitBodyClip"><path d="${KIT_BODY}"/></clipPath>
     </defs>
     <rect x="1" y="1" width="98" height="98" ${s}/>
     <line x1="1" y1="50" x2="99" y2="50" ${s}/>
@@ -1691,31 +1733,60 @@ function pitchMarkings(){
   </svg>`;
 }
 
+// 실제 구단 유니폼(MOLIKA 스폰서, 세로 핀스트라이프, 흰 V넥·소매 라인, 왼쪽 가슴 브랜드·오른쪽 엠블럼)을 벡터로 옮긴 것.
 function kitSvg(isKeeper){
-  return `<svg class="jersey" viewBox="0 0 40 36" aria-hidden="true">
-    <path d="M13 2 L27 2 L38 9 L34 17 L30 14.5 L30 34 L10 34 L10 14.5 L6 17 L2 9 Z" fill="url(#${isKeeper?'kitKeeper':'kitField'})" stroke="rgba(0,0,0,.25)" stroke-width=".6"/>
-    <path d="M15 2 L20 7 L25 2" fill="none" stroke="#fff" stroke-width="1.6"/>
-    <path d="M3.4 10.5 L7.2 16.3 M36.6 10.5 L32.8 16.3" stroke="#fff" stroke-width="1.1"/>
-    <rect x="14.5" y="15" width="11" height="2.2" rx="1" fill="#fff" opacity=".85"/>
+  const stripes = isKeeper ? '' : `<g clip-path="url(#kitBodyClip)" stroke="rgba(255,255,255,.2)" stroke-width=".7">${
+    [24,30,36,42,48,54,60,66,72,78].map(x=>`<line x1="${x}" y1="0" x2="${x}" y2="90"/>`).join('')}</g>`;
+  return `<svg class="jersey" viewBox="0 0 100 90" aria-hidden="true">
+    <path d="${KIT_BODY}" fill="url(#${isKeeper?'kitKeeper':'kitField'})"/>
+    ${stripes}
+    <path d="M22 35 L22 88 M78 35 L78 88" stroke="rgba(0,0,0,.18)" stroke-width="2"/>
+    <path d="M38 6 Q50 20 62 6 Q50 9 38 6 Z" fill="rgba(0,0,0,.35)"/>
+    <path d="M36 5 Q50 25 64 5" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M4 31 L17 40.5 M96 31 L83 40.5" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+    <circle cx="34" cy="26" r="2.6" fill="none" stroke="#fff" stroke-width="1.1" stroke-dasharray="12 4"/>
+    <path d="M61 21.5 h8 v4 q0 4.2 -4 6.5 q-4 -2.3 -4 -6.5 Z" fill="none" stroke="#fff" stroke-width="1"/>
+    <path d="M27 54 L31.5 46 L34.5 51 L37.5 46 L42 54 Z" fill="#fff"/>
+    <text x="44" y="53.6" fill="#fff" font-family="Montserrat,Arial,sans-serif" font-weight="800" font-size="8.4" letter-spacing=".2">MOLIKA</text>
   </svg>`;
 }
 
-// 구단 인스타 라인업 그래픽처럼 유니폼 아이콘 아래에 "등번호 이름"을 흰 글씨로 표시한다.
-function jerseySlotHtml(person, pid, x, y, isMe){
+const CAPTAIN_BAND = `<svg viewBox="0 0 15 9" aria-hidden="true"><rect x=".5" y=".5" width="14" height="8" rx="2" fill="#d8304a" stroke="#fff" stroke-width=".8"/><path d="M4 1 L2.5 8 M7.5 1 L6 8 M11 1 L9.5 8" stroke="#fff" stroke-width=".9"/></svg>`;
+
+// 구단 인스타 라인업 그래픽처럼 유니폼 아래에 "등번호 이름"을 흰 글씨로, 주장은 완장 표시.
+function jerseySlotHtml(person, pid, x, y, isMe, isCaptain){
   const isKeeper = person.pos==='GK' || y>=88;
   const no = person.no!=null ? `<b>${person.no}</b>` : '';
   return `<div class="slot ${isMe?'me':''}" style="left:${x}%;top:${y}%" data-id="${pid}">
     ${kitSvg(isKeeper)}
-    <div class="nametag">${no}${person.name}</div>
+    <div class="nametag">${isCaptain?CAPTAIN_BAND:''}${no}${person.name}</div>
   </div>`;
 }
 
-function lineupMetaText(w){
+const LEAGUE_MARK = `<svg viewBox="0 0 20 24" aria-hidden="true"><circle cx="13" cy="2.6" r="1.8" fill="#e9a23b"/><path d="M3 11 L9 5 L15 11" fill="none" stroke="#3a78c9" stroke-width="3.2" stroke-linejoin="round"/><path d="M7 12 L13 17 L7 22" fill="none" stroke="#7cc04b" stroke-width="3.2" stroke-linejoin="round"/><circle cx="3.5" cy="18" r="1.8" fill="#e9a23b"/></svg>`;
+
+function renderLineupHeader(w, byId){
+  const comp = w.competition||'';
+  document.getElementById('lineupLeague').innerHTML = !comp ? '' : comp.includes('시민리그')
+    ? `${LEAGUE_MARK}<div><div class="ln">서울시민리그</div><div class="le">Seoul Citizens League</div></div>`
+    : `<div class="ln">${escHtml(comp)}</div>`;
+  document.getElementById('lineupTitle').innerHTML = curQuarterIdx===0
+    ? 'STARTING<span class="xi">XI</span>' : `${curQuarter().n}Q<span class="xi">LINE-UP</span>`;
   const d = new Date(w.date+'T00:00:00');
   const day = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
   const when = `${String(d.getFullYear()).slice(2)}.${d.getMonth()+1}.${d.getDate()}.${day}. ${w.matchTime||''}`;
-  return w.venue ? `${when}<br>${escHtml(w.venue)}` : when;
+  const where = [w.venue, w.opponent ? 'vs '+w.opponent : ''].filter(Boolean).map(escHtml).join(' ');
+  document.getElementById('lineupMeta').innerHTML = `<div>${when}</div>${where?`<div>${where}</div>`:''}`;
+  const initials = (w.opponent||'').replace(/\s*FC$/i,'').trim().slice(0,4).toUpperCase();
+  document.getElementById('lineupOppBadge').textContent = w.opponent ? initials : '';
+  const coach = byId[HEAD_COACH_ID];
+  document.getElementById('lineupCoach').textContent = coach ? coach.name : '-';
 }
+
+// 감독은 항상 김의리, 주장은 그 쿼터에 피치에 있는 사람 중 박준열 → 구승회 → 김재현 순.
+const HEAD_COACH_ID = 'kui';
+const CAPTAIN_ORDER = ['pjy','ksh','kjh1'];
+function captainOf(pos){ return CAPTAIN_ORDER.find(id=>pos[id]) || null; }
 
 function renderPitch(){
   const w = curWeek();
@@ -1730,14 +1801,14 @@ function renderPitch(){
   // 대신 피치의 빈 곳을 아무데나 탭하면 그 위치가 어떤 자리에 가까운지 인식해서 바로
   // 후보 선수 목록을 띄워준다 — nearestRole() 참고.)
   const my = myId();
+  const captain = captainOf(pos);
   Object.entries(pos).forEach(([pid,p])=>{
     const person = byId[pid];
     if(!person) return;
-    html += jerseySlotHtml(person, pid, p.x, p.y, pid===my);
+    html += jerseySlotHtml(person, pid, p.x, p.y, pid===my, pid===captain);
   });
   document.getElementById('pitch').innerHTML = html;
-  document.getElementById('lineupTitle').textContent = curQuarterIdx===0 ? 'STARTING XI' : `${q.n}Q LINEUP`;
-  document.getElementById('lineupMeta').innerHTML = lineupMetaText(w);
+  renderLineupHeader(w, byId);
 
   // 벤치 = "오늘 출전진"(어느 쿼터든 한 번이라도 참석 투표한 사람, 용병 포함) 중 이번
   // 쿼터에는 배치 안 된 사람. 이번 쿼터 votes만 보면 오늘 아예 안 온 사람과 구분이 안 됐다.
@@ -2588,6 +2659,8 @@ function commitField(id, fn){
 }
 commitField('venueInput', ()=>{ curWeek().venue = document.getElementById('venueInput').value; });
 commitField('matchTimeInput', ()=>{ curWeek().matchTime = document.getElementById('matchTimeInput').value || '10:00'; });
+commitField('opponentInput', ()=>{ curWeek().opponent = document.getElementById('opponentInput').value.trim(); });
+commitField('competitionInput', ()=>{ curWeek().competition = document.getElementById('competitionInput').value.trim(); });
 commitField('usScore', ()=>{ const v=document.getElementById('usScore').value; curWeek().result.us = v===''?null:parseInt(v,10); });
 commitField('themScore', ()=>{ const v=document.getElementById('themScore').value; curWeek().result.them = v===''?null:parseInt(v,10); });
 commitField('matchNote', ()=>{ curWeek().result.note = document.getElementById('matchNote').value; });
