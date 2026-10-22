@@ -596,7 +596,7 @@ details.collapse[open] summary:before{content:'▾ '}
   <div class="panel">
     <h2><span class="bar"></span>🏆 선수 기록실</h2>
     <details class="collapse"><summary>숫자가 왜 이렇게 높죠?</summary>
-      <p class="lede" style="margin-top:6px">일부 선수는 이 보드로 넘어오기 전 고알레 앱에 쌓여있던 기록을 시작점으로 반영해뒀어요(닉네임이 실명과 확실히 매칭되는 사람만). 틀린 사람이나 빠진 사람이 있으면 알려주세요, 바로 고칠게요.</p>
+      <p class="lede" style="margin-top:6px">10/17 경기까지는 고알레 선수 기록실 숫자를 그대로 가져왔고(닉네임이 실명과 확실히 매칭되는 사람만), 그 다음 경기부터는 이 보드에 입력한 출전·득점이 더해져요. 틀린 사람이나 빠진 사람이 있으면 알려주세요, 바로 고칠게요.</p>
     </details>
     <div id="scorerChart"></div>
   </div>
@@ -2078,43 +2078,38 @@ function renderInjuryAnalysis(){
 // 선수 기록실: 경기수·쿼터수·득점·도움·공격P·MOM을 한 표로, 득점/도움 TOP3는 카드로.
 // 전체 기간 누적(고알레의 "경기 방식"/기간 필터는 이 앱에 매치 타입 데이터가 없어서 제외).
 let statsSortKey = 'pts', statsSortDir = 'desc';
-// 이 보드로 넘어오기 전, 고알레 앱에 쌓여있던 실제 기록 — 사용자가 공유해준 "선수 기록실"
-// 화면을 보고 닉네임이 실명과 확실히 매칭되는 사람만 옮겨 적었다. 애매한 닉네임(빈디1041,
-// 양평콥, 갱No.1, 양성모 등— 로스터 실명과 정확히 안 맞아서 다른 사람일 수 있음)은 엉뚱한
-// 사람에게 기록을 붙이는 사고를 막기 위해 일부러 뺐다. 이후 SAVE FC 보드에서 새로 쌓이는
-// 기록에 이 숫자가 시작점으로 더해진다.
+// 고알레 "선수 기록실" 누적 기록(LEGACY_THROUGH 경기까지 반영된 화면 기준). 닉네임이 실명과
+// 확실히 매칭되는 사람만 옮겼다. 이 날짜까지의 경기는 고알레 숫자에 이미 들어 있으므로, 보드
+// 자체 집계는 그 다음 경기부터만 더한다(같은 경기를 두 번 세지 않도록).
+const LEGACY_THROUGH = '2026-10-17';
 const LEGACY_STATS = {
-  ksh:  {games:96, quarters:273, goals:88, assists:88, mom:5},  // 구승회
-  kch:  {games:85, quarters:229, goals:7,  assists:19, mom:7},  // 김창희
-  pjy:  {games:71, quarters:188, goals:75, assists:32, mom:13}, // 박준열
-  kui:  {games:68, quarters:175, goals:3,  assists:4,  mom:3},  // 김의리
-  ysb:  {games:67, quarters:181, goals:100,assists:23, mom:8},  // 윤상빈
-  kjh1: {games:66, quarters:192, goals:6,  assists:5,  mom:27}, // 김재현
-  yjy:  {games:66, quarters:149, goals:27, assists:15, mom:8},  // 윤준영
+  ksh:  {games:102,quarters:288, goals:88, assists:88, mom:5},  // 구승회
+  kch:  {games:91, quarters:244, goals:8,  assists:20, mom:7},  // 김창희
+  pjy:  {games:76, quarters:200, goals:79, assists:33, mom:14}, // 박준열
+  kjh1: {games:72, quarters:208, goals:6,  assists:5,  mom:27}, // 김재현
+  kui:  {games:72, quarters:185, goals:3,  assists:4,  mom:3},  // 김의리
+  yjy:  {games:72, quarters:163, goals:29, assists:17, mom:10}, // 윤준영
+  ysb:  {games:71, quarters:191, goals:100,assists:23, mom:8},  // 윤상빈
+  yjm:  {games:66, quarters:156, goals:1,  assists:2,  mom:1},  // 양정모
   yyj:  {games:62, quarters:155, goals:20, assists:9,  mom:1},  // 윤영진
-  yjm:  {games:61, quarters:146, goals:1,  assists:2,  mom:1},  // 양정모
-  kjh2: {games:56, quarters:149, goals:30, assists:11, mom:9},  // 김준형
-  pgh:  {games:53, quarters:125, goals:1,  assists:0,  mom:2},  // 박건희
-  lgh:  {games:42, quarters:122, goals:0,  assists:0,  mom:7},  // 이경현
-  kjh3: {games:41, quarters:109, goals:0,  assists:3,  mom:4},  // 김지후
+  kjh2: {games:59, quarters:155, goals:31, assists:11, mom:9},  // 김준형
+  pgh:  {games:55, quarters:130, goals:1,  assists:0,  mom:2},  // 박건희
+  kjh3: {games:47, quarters:123, goals:0,  assists:3,  mom:5},  // 김지후
+  lgh:  {games:45, quarters:129, goals:0,  assists:0,  mom:9},  // 이경현
+  jjh:  {games:43, quarters:107, goals:36, assists:34, mom:11}, // 장정훈
   obj:  {games:41, quarters:95,  goals:8,  assists:7,  mom:0},  // 오병진
-  jjh:  {games:39, quarters:97,  goals:36, assists:34, mom:11}, // 장정훈
-  cwy:  {games:32, quarters:87,  goals:18, assists:16, mom:9},  // 최원영
-  ies:  {games:21, quarters:56,  goals:17, assists:19, mom:7},  // 임은성
-  ihj:  {games:17, quarters:39,  goals:3,  assists:2,  mom:0},  // 임환주
-  ktw:  {games:17, quarters:39,  goals:4,  assists:2,  mom:2},  // 강태원
-  kyc:  {games:15, quarters:36,  goals:1,  assists:3,  mom:1},  // 김윤철
-  hds:  {games:11, quarters:25,  goals:7,  assists:6,  mom:0},  // 허도선
-  cyb:  {games:9,  quarters:17,  goals:0,  assists:1,  mom:0},  // 최윤범
-  kjk:  {games:7,  quarters:10,  goals:1,  assists:0,  mom:1},  // 구자경
-  ygb:  {games:7,  quarters:15,  goals:2,  assists:2,  mom:2},  // 윤관호
-  kgw:  {games:5,  quarters:13,  goals:0,  assists:0,  mom:1},  // 김기욱
+  cwy:  {games:37, quarters:98,  goals:18, assists:16, mom:9},  // 최원영
+  ies:  {games:25, quarters:65,  goals:18, assists:21, mom:8},  // 임은성
+  csj:  {games:24, quarters:57,  goals:1,  assists:5,  mom:2},  // 최성진
+  ihj:  {games:21, quarters:49,  goals:3,  assists:2,  mom:0},  // 임환주
+  ktw:  {games:18, quarters:42,  goals:4,  assists:2,  mom:2},  // 강태원
+  kyc:  {games:16, quarters:39,  goals:1,  assists:3,  mom:1},  // 김윤철
+  kgw:  {games:8,  quarters:17,  goals:0,  assists:0,  mom:1},  // 김기욱
+  kjk:  {games:8,  quarters:12,  goals:1,  assists:0,  mom:1},  // 구자경
+  ygb:  {games:7,  quarters:15,  goals:2,  assists:2,  mom:4},  // 윤관호
   jsj:  {games:3,  quarters:6,   goals:0,  assists:0,  mom:0},  // 정승주
-  kgb:  {games:2,  quarters:5,   goals:1,  assists:0,  mom:0},  // 고규범
-  lsc:  {games:1,  quarters:2,   goals:1,  assists:0,  mom:0},  // 이성찬
-  // 최성진·이윤재·김시호는 고알레 순위표(39명) 어디에도 안 보여서 그대로 0으로 둠.
-  // 양성모·서기현·김민수·오준협·서한림·송재성·김민찬·최경훈·배경민은 로스터에 없는
-  // (탈퇴했거나 다른) 사람이라 아예 매칭하지 않음.
+  // 이윤재·김시호는 고알레 순위표에 안 보여서 0. 양성모·서기현·김민수·오준협·서한림·송재성·
+  // 김민찬·최경훈은 로스터에 없는 사람이라 매칭하지 않음.
 };
 function computePlayerStats(){
   const stats = {};
@@ -2122,8 +2117,10 @@ function computePlayerStats(){
     const legacy = LEGACY_STATS[m.id] || {games:0,quarters:0,goals:0,assists:0,mom:0};
     stats[m.id] = {m, games:legacy.games, quarters:legacy.quarters, goals:legacy.goals, assists:legacy.assists, mom:legacy.mom};
   });
-  STATE.weeks.forEach(w=>{
+  STATE.weeks.filter(w=>w.date > LEGACY_THROUGH && weekStartMs(w) <= Date.now()).forEach(w=>{
     weekAttendeeIds(w).forEach(id=>{ if(stats[id]) stats[id].games++; });
+    const mom = weekMom(w);
+    if(mom && mom.members.length===1 && stats[mom.members[0].id]) stats[mom.members[0].id].mom++;
     w.quarters.forEach(q=>{
       Object.entries(q.votes).forEach(([id,v])=>{ if(v==='in' && stats[id]) stats[id].quarters++; });
     });
@@ -2132,7 +2129,6 @@ function computePlayerStats(){
       if(g.assistId && stats[g.assistId]) stats[g.assistId].assists++;
     });
   });
-  STATE.roster.forEach(m=>{ stats[m.id].mom += ratingFor(m.id).mom || 0; });
   return Object.values(stats).map(s=>({...s, pts: s.goals+s.assists}));
 }
 
