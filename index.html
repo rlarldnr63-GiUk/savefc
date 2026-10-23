@@ -92,6 +92,36 @@ header.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;just
 .segtabs button{flex:1;border:none;background:none;border-radius:10px;padding:9px 4px;font-family:inherit;font-weight:700;font-size:.84rem;color:var(--ink-faint);cursor:pointer}
 .segtabs button.on{background:var(--accent-deep);color:#fff}
 
+/* 참석 투표 */
+.whoami.compact{padding:8px 10px}
+.whoami.compact select{border:none;background:none;font-weight:700;padding:4px}
+.whoami.compact button{background:var(--surface-2);color:var(--ink-soft);padding:6px 10px;font-size:.78rem}
+.vote-q{font-weight:800;font-size:1.05rem}
+.attendbtns{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.attendbtn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 2px 10px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer}
+.attendbtn span{font-size:1.35rem;line-height:1}
+.attendbtn.on.in,.attendbtn.on.late,.attendbtn.on.early{background:var(--in-soft);border-color:var(--in);color:var(--in)}
+.attendbtn.on.maybe{background:var(--pend-soft);border-color:var(--pend);color:var(--pend)}
+.attendbtn.on.out{background:var(--out-soft);border-color:var(--out);color:var(--out)}
+.attendbtn.disabled{opacity:.45;pointer-events:none}
+.timepick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:.84rem;font-weight:700}
+.timepick select{padding:7px 10px;border-radius:10px;border:1px solid var(--line);font-family:inherit;font-weight:800;font-size:.9rem;background:var(--surface);color:var(--ink)}
+.timepick .qtext{margin-left:auto;color:var(--in);font-size:.78rem}
+.votenote{width:100%;margin-top:10px;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.84rem}
+.qcounts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.qcount{background:var(--surface-2);border-radius:12px;padding:8px 2px;text-align:center}
+.qcount b{display:block;font-size:1.15rem}
+.qcount small{font-size:.6rem;color:var(--ink-faint)}
+.resgroup{padding:10px 0;border-bottom:1px solid var(--line)}
+.resgroup:first-child{padding-top:0}
+.resgroup:last-child{border-bottom:none;padding-bottom:0}
+.reshead{display:flex;justify-content:space-between;font-weight:800;font-size:.88rem;margin-bottom:6px}
+.resgroup .pollbar{margin-bottom:6px}
+.resnames{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.84rem;color:var(--ink-soft)}
+.resname em{font-style:normal;color:var(--pend);font-weight:800;font-size:.74rem;margin-left:3px}
+.resnote{font-size:.8rem;color:var(--ink-soft);padding:2px 0}
+.proxysel{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;margin-bottom:10px}
+
 /* 게시판 */
 .boardgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px}
 .boardcard{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 14px;box-shadow:var(--shadow);font-family:inherit;color:var(--ink);cursor:pointer}
@@ -449,9 +479,10 @@ details.collapse[open] summary:before{content:'▾ '}
     <div class="subhead" style="margin-top:0">＋ 경기 추가 <span class="adminonly">임원진</span></div>
     <div class="addmatch">
       <input type="date" id="addDate">
-      <input type="time" id="addTime" value="18:00">
       <input type="text" id="addVenue" placeholder="구장">
-      <input type="text" id="addOpp" placeholder="상대팀">
+      <input type="time" id="addTime" value="18:00" aria-label="시작 시각">
+      <input type="time" id="addEnd" value="20:00" aria-label="종료 시각">
+      <input type="text" id="addOpp" placeholder="상대팀" style="grid-column:1/-1">
     </div>
     <button type="button" class="primarybtn" id="addMatchBtn">경기 추가</button>
   </div>
@@ -472,44 +503,25 @@ details.collapse[open] summary:before{content:'▾ '}
 </section>
 
 <section class="tab" id="tab-vote">
-  <div class="card whoami">
+  <div class="card whoami" id="whoCard">
     <select id="whoSel"></select>
     <button id="whoSetBtn" type="button">나로 설정</button>
   </div>
-  <p class="lede" style="margin:-4px 0 12px">내 이름을 골라두면 아이디가 이 기기에 저장돼요. 아이디는 이름 옆 <span class="code">SFC00</span> 표시예요.</p>
+  <div class="card votecard" id="myVoteCard"></div>
+  <div class="card" id="voteSummary"></div>
+  <div class="card" id="voteResults"></div>
 
-  <h2><span class="bar"></span>쿼터별 참석 투표 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(고알레 방식)</span></h2>
-  <details class="collapse"><summary>사용법 보기</summary>
-    <p class="lede" style="margin-top:6px">고알레처럼 쿼터마다 따로 투표해요. 1쿼터만 뛰고 가는 사람, 늦게 합류하는 사람 다 반영할 수 있어요. 밴드 투표처럼 눌러서 참석/불참을 표시하고, 명단 보기를 누르면 누가 눌렀는지 볼 수 있어요. 참석은 선착순 16명까지만 받고, 경기 24시간 전에 마감돼요 (임원진은 마감 후에도 수정 가능).</p>
-  </details>
-  <div class="card" id="voteCapCard"></div>
-  <div class="card" id="voteBandAll"></div>
-
-  <details class="collapse" open>
-    <summary>쿼터별로 다르게 투표하기 (늦참·조퇴 등)</summary>
-    <div class="pillbar" id="voteQPills" style="margin-top:8px"></div>
-    <div class="card" id="voteBandMe"></div>
-  </details>
-
-  <div class="card" id="voteBandBars" style="margin-top:12px"></div>
-  <div id="voteNotesCard"></div>
-
-  <div class="card" id="guestVoteCard" style="margin-top:12px">
-    <div class="lede" style="margin:0 0 8px">🧳 이번 주 용병 (정식 회원 아님, 선택된 쿼터 기준)</div>
-    <div class="rows" id="guestVoteRows"></div>
-    <div class="field" style="margin-top:10px">
-      <div style="display:flex;gap:6px">
-        <input type="text" id="guestNameInput" class="traitsInput" style="margin:0;flex:1" placeholder="용병 이름 추가">
-        <button type="button" class="ghost" id="guestAddBtn" style="width:auto;padding:0 14px">추가</button>
-      </div>
+  <div class="card" id="proxyCard">
+    <div class="subhead" style="margin-top:0">대신 투표하기 <span class="adminonly">임원진</span></div>
+    <p class="lede" style="margin:0 0 8px">밴드로만 투표한 사람이나 용병은 여기서 골라서 대신 눌러주세요.</p>
+    <select id="proxySel" class="proxysel"></select>
+    <div id="proxyVote"></div>
+    <div class="subhead">🧳 용병 추가</div>
+    <div style="display:flex;gap:6px">
+      <input type="text" id="guestNameInput" class="traitsInput" style="margin:0;flex:1" placeholder="용병 이름">
+      <button type="button" class="ghost" id="guestAddBtn" style="width:auto;padding:0 14px">추가</button>
     </div>
   </div>
-
-  <details class="collapse">
-    <summary>전체 명단 · 대리투표 (총무용)</summary>
-    <p class="lede" style="margin-top:6px">다른 사람 것도 대신 눌러줄 수 있어요. (선택된 쿼터 기준)</p>
-    <div class="rows" id="voteRows"></div>
-  </details>
 </section>
 
 <section class="tab" id="tab-form">
@@ -566,6 +578,7 @@ details.collapse[open] summary:before{content:'▾ '}
       <div id="matchInfoEdit" style="display:none">
         <div class="field"><label>구장</label><input id="venueInput" placeholder="예: 효창운동장"></div>
         <div class="field"><label>경기 시작 시각</label><input id="matchTimeInput" type="time"></div>
+        <div class="field"><label>경기 종료 시각 (늦참·조퇴 쿼터 계산에 써요)</label><input id="matchEndInput" type="time"></div>
         <div class="field"><label>상대팀</label><input id="opponentInput" placeholder="예: PIDA FC"></div>
         <div class="field"><label>대회 (선택)</label><input id="competitionInput" placeholder="예: 서울시민리그 16강"></div>
         <div class="field"><label>스코어 (우리 : 상대)</label>
@@ -1120,7 +1133,7 @@ let cardEditingId = null;
 
 // 임원진 모드: PIN을 아는 임원진만 켤 수 있고, 켜져 있으면 마감/선착순 제한을 무시하고
 // 투표를 대신 고쳐줄 수 있다. 기기별로 localStorage에 저장(실제 로그인 시스템은 아님).
-const ADMIN_PIN = '2022';
+const ADMIN_PIN = '2023';
 let adminMode = (function(){ try{ return localStorage.getItem('savefc_admin')==='1'; }catch(e){ return false; } })();
 // 임원진 모드(선수 모드)가 아니면 본인 참석투표를 뺀 나머지 팀 공통 데이터(포메이션,
 // 회비, 선수카드, 경기기록 등)를 바꿀 수 없다. 순수 화면 이동(탭/쿼터/공격·수비 전환,
@@ -1430,7 +1443,6 @@ function render(){
   renderPlayerGates();
   renderDetailHead();
   renderWho();
-  renderQuarterPills('voteQPills');
   renderQuarterPills('formQPills');
   renderVote();
   renderFormationReveal();
@@ -1695,124 +1707,131 @@ function renderWho(){
   if(assistSel) assistSel.innerHTML = '<option value="">없음</option>' + STATE.roster.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
 }
 
+/* ---------- 참석 투표: 밴드처럼 한 번 누르기 + 늦참/조퇴는 시간만 고르면 쿼터 자동 계산 ----------
+   w.attend[id] = {type:'in'|'late'|'early'|'maybe'|'out', time?:'HH:MM'} 가 사람이 고른 값이고,
+   포메이션·기록이 쓰는 쿼터별 q.votes 는 거기서 계산해서 같이 채운다. */
+const ATTEND_TYPES = [['in','✅','참석'],['late','⏰','늦참'],['early','🏃','조퇴'],['maybe','🤔','미정'],['out','❌','불참']];
+const PLAYING_TYPES = ['in','late','early'];
+function hm(t){ const [h,m]=(t||'0:0').split(':').map(Number); return h*60+(m||0); }
+function hmStr(min){ min=((Math.round(min)%1440)+1440)%1440; return String(Math.floor(min/60)).padStart(2,'0')+':'+String(min%60).padStart(2,'0'); }
+function matchWindow(w){
+  const s = hm(w.matchTime||'10:00');
+  let e = w.matchEnd ? hm(w.matchEnd) : s+120;
+  if(e<=s) e += 1440;
+  return {s, e, len:(e-s)/4};
+}
+function quarterTimeLabel(w,i){ const {s,len}=matchWindow(w); return `${hmStr(s+i*len)}~${hmStr(s+(i+1)*len)}`; }
+// 늦참: 도착 시각이 쿼터 시작 5분 뒤까지면 그 쿼터부터 참석. 조퇴: 쿼터 끝나기 5분 전 이후에 떠나면 그 쿼터까지 참석.
+function quarterVotesFor(w, type, time){
+  const {s,len} = matchWindow(w);
+  let t = hm(time); if(t < s) t += 1440;
+  return w.quarters.map((q,i)=>{
+    if(type==='late') return t <= s+i*len+5 ? 'in' : 'out';
+    if(type==='early') return t >= s+(i+1)*len-5 ? 'in' : 'out';
+    return type;
+  });
+}
+function defaultAttendTime(w,type){ const {s,e,len}=matchWindow(w); return hmStr(type==='late' ? s+len : e-len); }
+// 예전(쿼터별로만 저장하던) 투표도 같은 보기로 보여주기 위해 q.votes 에서 거꾸로 추정한다.
+function attendOf(w,id){
+  if(w.attend && w.attend[id]) return w.attend[id];
+  const vs = w.quarters.map(q=>q.votes[id]);
+  if(vs.every(v=>!v)) return null;
+  if(vs.every(v=>v===vs[0])) return {type:vs[0]};
+  const first = vs.indexOf('in'), last = vs.lastIndexOf('in');
+  if(first>0 && last===vs.length-1) return {type:'late'};
+  if(first===0 && last<vs.length-1) return {type:'early'};
+  return {type:'in'};
+}
+function setAttend(w, id, type, time){
+  if(!w.attend) w.attend = {};
+  if(!w.attendOrder) w.attendOrder = [];
+  if(!type){
+    delete w.attend[id];
+    w.quarters.forEach(q=>{ delete q.votes[id]; delete q.posAtk[id]; delete q.posDef[id]; });
+  } else {
+    const t = (type==='late'||type==='early') ? (time || defaultAttendTime(w,type)) : null;
+    w.attend[id] = t ? {type, time:t} : {type};
+    const vs = quarterVotesFor(w, type, t);
+    w.quarters.forEach((q,i)=>{ q.votes[id]=vs[i]; if(vs[i]!=='in'){ delete q.posAtk[id]; delete q.posDef[id]; } });
+  }
+  const inWeek = weekAttendeeIds(w).has(id);
+  if(inWeek && !w.attendOrder.includes(id)) w.attendOrder.push(id);
+  if(!inWeek) w.attendOrder = w.attendOrder.filter(x=>x!==id);
+}
+// 경기 시간이 바뀌면 늦참·조퇴한 사람들의 출전 쿼터를 다시 계산한다.
+function recomputeTimedAttend(w){
+  Object.entries(w.attend||{}).forEach(([id,a])=>{ if(a.type==='late'||a.type==='early') setAttend(w, id, a.type, a.time); });
+}
+function attendQuarterText(w,id){
+  const ins = w.quarters.map((q,i)=>q.votes[id]==='in'? i+1 : null).filter(Boolean);
+  return ins.length ? ins.join('·')+'쿼터 출전' : '출전 쿼터 없음';
+}
+function attendTimeOptions(w, cur){
+  const {s,e} = matchWindow(w);
+  let html = '';
+  for(let t=s+10; t<=e-10; t+=10){ const v=hmStr(t); html += `<option value="${v}" ${v===cur?'selected':''}>${v}</option>`; }
+  return html;
+}
+function voteButtonsHtml(w, id, disabled){
+  const a = attendOf(w,id), cur = a && a.type;
+  const timed = cur==='late' || cur==='early';
+  return `<div class="attendbtns">${ATTEND_TYPES.map(([t,ic,l])=>
+      `<button type="button" class="attendbtn ${t} ${cur===t?'on':''} ${disabled?'disabled':''}" data-act="attend" data-id="${id}" data-type="${t}"><span>${ic}</span>${l}</button>`).join('')}</div>
+    ${timed ? `<div class="timepick"><label>${cur==='late'?'도착 예정':'떠나는 시간'}</label>
+      <select data-act="attendtime" data-id="${id}" ${disabled?'disabled':''}>${attendTimeOptions(w, a.time||defaultAttendTime(w,cur))}</select>
+      <span class="qtext">${attendQuarterText(w,id)}</span></div>` : ''}
+    ${cur ? `<input type="text" class="votenote" data-act="votenote" data-id="${id}" value="${escAttr((w.notes||{})[id]||'')}"
+      placeholder="${cur==='maybe' ? '언제 확정할지 적어주세요 (예: 금요일 12시까지)' : '메모 (선택)'}" ${disabled?'disabled':''}>` : ''}`;
+}
+
+let proxyId = '';
 function renderVote(){
   const w = curWeek();
-  const q = curQuarter();
   if(!w.notes) w.notes = {};
   const roster = weekRoster(w);
-  let cin=0,cout=0,cmaybe=0,cpend=0;
-  const inList=[], outList=[], maybeList=[], pendList=[];
-  roster.forEach(m=>{
-    const v=q.votes[m.id];
-    if(v==='in'){cin++;inList.push(m);}
-    else if(v==='out'){cout++;outList.push(m);}
-    else if(v==='maybe'){cmaybe++;maybeList.push(m);}
-    else {cpend++;pendList.push(m);}
-  });
-  const total = roster.length;
-  const pctIn = total? Math.round(cin/total*100):0;
-  const pctOut = total? Math.round(cout/total*100):0;
-  const pctMaybe = total? Math.round(cmaybe/total*100):0;
-
-  const attendOrder = w.attendOrder || [];
-  const capCount = attendOrder.length;
-  const capFull = capCount >= 16;
-  const locked = votingLocked(w);
-  const lockedNonAdmin = locked && !adminMode;
-
-  document.getElementById('voteCapCard').innerHTML = `
-    <div class="capbar">
-      <span>선착순 <b>16명</b> 중 <span class="capnum">${capCount}</span>명 참여</span>
-    </div>
-    <div class="deadlineinfo">${fmtDeadlineInfo(w)}</div>
-    ${locked? `<div class="lockmsg">${adminMode? '경기 24시간 전이 지났지만 임원진 모드라서 계속 수정할 수 있어요.' : '경기 24시간 전이 지나서 참석 투표가 마감됐어요. 변경이 필요하면 임원진에게 연락해주세요.'}</div>`
-      : (capFull? `<div class="lockmsg">선착순 16명이 이미 다 찼어요. 누군가 불참으로 바꾸면 자리가 나요.</div>` : '')}`;
-
   const me = STATE.roster.find(m=>m.id===myId());
-  const myVote = me ? q.votes[me.id] : undefined;
-  const myAlreadyIn = me ? attendOrder.includes(me.id) : false;
-  const myInDisabled = !adminMode && (lockedNonAdmin || (capFull && !myAlreadyIn));
-  const myOutDisabled = lockedNonAdmin;
-  const myMaybeDisabled = lockedNonAdmin;
+  const locked = votingLocked(w) && !adminMode;
 
-  // "전체"가 기본 행동 — 대부분은 4쿼터 다 똑같이 뛰니까 이게 맨 위, 쿼터별로 다르게 하는 건
-  // 늦참/조퇴 같은 예외 상황이라 접어서 아래에 둔다.
-  const myVotesAll = me ? w.quarters.map(qq=>qq.votes[me.id]) : [];
-  const allSameVote = me && myVotesAll.every(v=>v===myVotesAll[0]) ? myVotesAll[0] : undefined;
-  document.getElementById('voteBandAll').innerHTML = me ? `
-    <div class="lede" style="margin:0 0 8px">${me.name}(${me.code})님, 이번 주 전체 참석하시나요?</div>
-    <div class="bandbtns">
-      <button type="button" class="bandbtn in ${allSameVote==='in'?'on':''} ${myInDisabled?'disabled':''}" data-act="voteall" data-v="in">✋ 전체 참석</button>
-      <button type="button" class="bandbtn maybe ${allSameVote==='maybe'?'on':''} ${myMaybeDisabled?'disabled':''}" data-act="voteall" data-v="maybe">🤔 전체 미정</button>
-      <button type="button" class="bandbtn out ${allSameVote==='out'?'on':''} ${myOutDisabled?'disabled':''}" data-act="voteall" data-v="out">🙅 전체 불참</button>
-    </div>
-    <div class="field" style="margin-top:10px">
-      <label>특이사항 메모 (선택 — 예: "3쿼터부터 늦참해요")</label>
-      <input type="text" class="traitsInput" style="margin:4px 0 0" data-act="votenote" data-id="${me.id}" value="${escAttr(w.notes[me.id]||'')}" placeholder="예: 3쿼터부터 늦참해요">
-    </div>` : `<div class="lede" style="margin:0">위에서 내 이름을 먼저 선택해주세요.</div>`;
+  document.getElementById('whoCard').classList.toggle('compact', !!me);
+  document.getElementById('myVoteCard').innerHTML = me ? `
+      <div class="vote-q">${me.name}님, 이번 경기 오시나요?</div>
+      <div class="deadlineinfo" style="margin:2px 0 12px">${fmtDeadlineInfo(w)} · 경기 ${w.matchTime||''}${w.matchEnd? '~'+w.matchEnd : ''}</div>
+      ${voteButtonsHtml(w, me.id, locked)}
+      ${locked ? `<div class="lockmsg">투표가 마감됐어요. 바꾸려면 임원진에게 말해주세요.</div>` : ''}`
+    : `<div class="vote-q">먼저 내 이름을 골라주세요</div>
+      <div class="lede" style="margin:4px 0 0">위에서 한 번만 고르면 이 기기에 저장돼서, 다음부터는 바로 투표할 수 있어요.</div>`;
 
-  document.getElementById('voteBandMe').innerHTML = me ? `
-    <div class="lede" style="margin:0 0 8px">${q.n}쿼터만 다르게 하려면:</div>
-    <div class="bandbtns">
-      <button type="button" class="bandbtn in ${myVote==='in'?'on':''} ${myInDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="in">✋ 참석</button>
-      <button type="button" class="bandbtn maybe ${myVote==='maybe'?'on':''} ${myMaybeDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="maybe">🤔 미정</button>
-      <button type="button" class="bandbtn out ${myVote==='out'?'on':''} ${myOutDisabled?'disabled':''}" data-act="vote" data-id="${me.id}" data-v="out">🙅 불참</button>
-    </div>` : '';
+  const qCounts = w.quarters.map(q=>roster.filter(m=>q.votes[m.id]==='in').length);
+  document.getElementById('voteSummary').innerHTML = `
+    <div class="capbar"><span>선착순 <b>16명</b> 중 <b>${weekAttendeeIds(w).size}</b>명</span><span class="lede" style="margin:0">쿼터별 출전 인원</span></div>
+    <div class="qcounts">${qCounts.map((n,i)=>`<div class="qcount"><b>${n}</b><small>${i+1}Q ${quarterTimeLabel(w,i)}</small></div>`).join('')}</div>`;
 
-  const chipHtml = list => list.length? list.map(m=>`<span class="chip">${m.name}${m.code?`<span class="code">${m.code}</span>`:''}${m.guest?' 🧳':''}</span>`).join('') : '<span class="lede" style="margin:0">없음</span>';
-  document.getElementById('voteBandBars').innerHTML = `
-    <div class="pollopt">
-      <div class="pollopt-head"><span>참석</span><span class="num">${cin}명 · ${pctIn}%</span></div>
-      <div class="pollbar"><div class="pollbar-fill in" style="width:${pctIn}%"></div></div>
-      <details class="pollnames"><summary>명단 보기</summary><div class="chips" style="margin-top:8px">${chipHtml(inList)}</div></details>
-    </div>
-    <div class="pollopt">
-      <div class="pollopt-head"><span>미정</span><span class="num">${cmaybe}명 · ${pctMaybe}%</span></div>
-      <div class="pollbar"><div class="pollbar-fill maybe" style="width:${pctMaybe}%"></div></div>
-      <details class="pollnames"><summary>명단 보기</summary><div class="chips" style="margin-top:8px">${chipHtml(maybeList)}</div></details>
-    </div>
-    <div class="pollopt">
-      <div class="pollopt-head"><span>불참</span><span class="num">${cout}명 · ${pctOut}%</span></div>
-      <div class="pollbar"><div class="pollbar-fill out" style="width:${pctOut}%"></div></div>
-      <details class="pollnames"><summary>명단 보기</summary><div class="chips" style="margin-top:8px">${chipHtml(outList)}</div></details>
-    </div>
-    <div class="pollopt">
-      <div class="pollopt-head"><span>미투표</span><span class="num">${cpend}명</span></div>
-      <details class="pollnames"><summary>명단 보기</summary><div class="chips" style="margin-top:8px">${chipHtml(pendList)}</div></details>
-    </div>`;
-
-  const noteEntries = STATE.roster.map(m=>[m, w.notes[m.id]]).filter(([,n])=>n && n.trim());
-  const notesCard = document.getElementById('voteNotesCard');
-  if(notesCard){
-    notesCard.innerHTML = noteEntries.length? `
-      <details class="collapse" open>
-        <summary>특이사항 메모 (${noteEntries.length}명)</summary>
-        <div class="rows" style="margin-top:8px">
-          ${noteEntries.map(([m,n])=>`<div class="row"><div class="nm">${m.name}<span class="code">${m.code}</span></div><div class="lede" style="margin:0;flex:2;text-align:right">${escAttr(n)}</div></div>`).join('')}
-        </div>
-      </details>` : '';
-  }
-
-  const voteRowHtml = m => {
-    const v = q.votes[m.id];
-    const already = attendOrder.includes(m.id);
-    const inDisabled = !adminMode && (lockedNonAdmin || (capFull && !already));
-    const outDisabled = !adminMode && lockedNonAdmin;
-    const maybeDisabled = !adminMode && lockedNonAdmin;
-    return `<div class="row ${m.id===myId()?'me':''}">
-      <div class="no">${m.no||''}</div>
-      <div class="nm">${m.name}${m.hurt?' <span class="badge">부상</span>':''}${m.guest?' <span class="badge">용병</span>':''}${m.pos?`<span class="pos">${m.pos}</span>`:''}${m.code?`<span class="code">${m.code}</span>`:''}</div>
-      <div class="seg">
-        <button type="button" class="in ${v==='in'?'on':''} ${inDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="in">참석</button>
-        <button type="button" class="maybe ${v==='maybe'?'on':''} ${maybeDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="maybe">미정</button>
-        <button type="button" class="out ${v==='out'?'on':''} ${outDisabled?'disabled':''}" data-act="vote" data-id="${m.id}" data-v="out">불참</button>
-      </div>
+  const groups = {in:[],late:[],early:[],maybe:[],out:[],none:[]};
+  roster.forEach(m=>{ const a = attendOf(w,m.id); groups[a ? a.type : 'none'].push({m,a}); });
+  const total = roster.length || 1;
+  const nameHtml = ({m,a})=> `<span class="resname">${m.name}${m.guest?' 🧳':''}${a&&a.time?`<em>${a.time}</em>`:''}${w.notes[m.id]?' 💬':''}</span>`;
+  const groupHtml = (key, ic, label) => {
+    const list = groups[key];
+    return `<div class="resgroup">
+      <div class="reshead"><span>${ic} ${label}</span><span>${list.length}명</span></div>
+      ${key!=='none' ? `<div class="pollbar"><div class="pollbar-fill ${PLAYING_TYPES.includes(key)?'in':key}" style="width:${Math.round(list.length/total*100)}%"></div></div>` : ''}
+      <div class="resnames">${list.length ? list.map(nameHtml).join('') : '<span class="lede" style="margin:0">없음</span>'}</div>
     </div>`;
   };
-  document.getElementById('voteRows').innerHTML = STATE.roster.map(voteRowHtml).join('');
-  const guests = w.guests||[];
-  document.getElementById('guestVoteRows').innerHTML = guests.length? guests.map(voteRowHtml).join('')
-    : '<div class="lede" style="margin:0">아직 등록된 용병이 없어요.</div>';
+  const notes = roster.filter(m=>w.notes[m.id] && w.notes[m.id].trim());
+  document.getElementById('voteResults').innerHTML =
+    ATTEND_TYPES.map(([t,ic,l])=>groupHtml(t,ic,l)).join('') + groupHtml('none','·','미투표')
+    + (notes.length ? `<div class="resgroup"><div class="reshead"><span>💬 메모</span></div>${notes.map(m=>`<div class="resnote"><b>${m.name}</b> ${escHtml(w.notes[m.id])}</div>`).join('')}</div>` : '');
+
+  const proxyCard = document.getElementById('proxyCard');
+  proxyCard.style.display = adminMode ? '' : 'none';
+  if(adminMode){
+    if(proxyId && !roster.some(m=>m.id===proxyId)) proxyId = '';
+    const label = m => { const a = attendOf(w,m.id); const t = a && ATTEND_TYPES.find(x=>x[0]===a.type); return `${m.name}${m.guest?' (용병)':''} — ${t? t[2]+(a.time?' '+a.time:'') : '미투표'}`; };
+    document.getElementById('proxySel').innerHTML = '<option value="">-- 선수 선택 --</option>' + roster.map(m=>`<option value="${m.id}" ${m.id===proxyId?'selected':''}>${label(m)}</option>`).join('');
+    document.getElementById('proxyVote').innerHTML = proxyId ? voteButtonsHtml(w, proxyId, false) : '';
+  }
 }
 
 // 임원진 모드 on/off. PIN을 아는 사람만 켤 수 있고, 켜져 있으면 마감/선착순
@@ -1858,6 +1877,7 @@ function renderMatch(){
   const w=curWeek();
   document.getElementById('venueInput').value = w.venue||'';
   document.getElementById('matchTimeInput').value = w.matchTime||'10:00';
+  document.getElementById('matchEndInput').value = w.matchEnd || hmStr(matchWindow(w).e);
   document.getElementById('opponentInput').value = w.opponent||'';
   document.getElementById('competitionInput').value = w.competition||'';
   document.getElementById('usScore').value = w.result.us ?? '';
@@ -2514,56 +2534,21 @@ document.addEventListener('click', (e)=>{
   if(ADMIN_GATED_ACTS.has(kind) && !requireAdmin()) return;
   const w = curWeek();
 
-  if(kind==='vote'){
-    const id=act.dataset.id, v=act.dataset.v;
-    // 본인 참석투표는 선수 모드에서도 누구나 할 수 있다 — 남 대신 눌러주는 대리투표만 임원진 전용.
+  if(kind==='attend'){
+    const id = act.dataset.id, type = act.dataset.type;
+    // 본인 투표는 누구나, 남 대신 누르는 건 임원진만.
     if(id!==myId() && !requireAdmin()) return;
-    const q = curQuarter();
-    if(!w.attendOrder) w.attendOrder = [];
-    if(votingLocked(w) && !adminMode){
-      toast('경기 24시간 전 마감이라 투표를 수정할 수 없어요 — 임원진에게 문의해주세요');
-      return;
+    if(votingLocked(w) && !adminMode){ toast('투표가 마감됐어요 — 임원진에게 문의해주세요'); return; }
+    const cur = attendOf(w,id);
+    const next = (cur && cur.type===type) ? null : type;   // 같은 걸 다시 누르면 취소(밴드와 같음)
+    const wasIn = weekAttendeeIds(w).has(id);
+    if(next && PLAYING_TYPES.includes(next) && !wasIn && weekAttendeeIds(w).size>=16 && !adminMode){
+      toast('선착순 16명이 마감됐어요 — 임원진에게 문의해주세요'); return;
     }
-    const wasInWeek = weekAttendeeIds(w).has(id);
-    const nextVal = (q.votes[id]===v) ? undefined : v;
-    if(nextVal==='in' && !wasInWeek && !w.attendOrder.includes(id) && w.attendOrder.length>=16 && !adminMode){
-      toast('선착순 16명이 마감됐어요 — 총무/임원진에게 문의해주세요');
-      return;
-    }
-    q.votes[id] = nextVal;
-    if(q.votes[id]===undefined) delete q.votes[id];
-    if(q.votes[id]!=='in'){
-      delete q.posAtk[id];
-      delete q.posDef[id];
-    }
-    const nowInWeek = weekAttendeeIds(w).has(id);
-    if(nowInWeek && !w.attendOrder.includes(id)) w.attendOrder.push(id);
-    if(!nowInWeek) w.attendOrder = w.attendOrder.filter(x=>x!==id);
+    setAttend(w, id, next);
     save();
-  }
-  else if(kind==='voteall'){
-    // 이번 주 4쿼터 전체를 한 번에 같은 값으로 — 본인만 가능(대리투표는 위 'vote' 쪽에서 처리).
-    const id = myId();
-    const v = act.dataset.v;
-    if(!id){ toast('먼저 위에서 내 이름을 설정해주세요'); return; }
-    if(votingLocked(w) && !adminMode){
-      toast('경기 24시간 전 마감이라 투표를 수정할 수 없어요 — 임원진에게 문의해주세요');
-      return;
-    }
-    const wasInWeek = weekAttendeeIds(w).has(id);
-    if(v==='in' && !wasInWeek && !w.attendOrder.includes(id) && w.attendOrder.length>=16 && !adminMode){
-      toast('선착순 16명이 마감됐어요 — 총무/임원진에게 문의해주세요');
-      return;
-    }
-    w.quarters.forEach(qq=>{
-      qq.votes[id] = v;
-      if(v!=='in'){ delete qq.posAtk[id]; delete qq.posDef[id]; }
-    });
-    const nowInWeek = weekAttendeeIds(w).has(id);
-    if(nowInWeek && !w.attendOrder.includes(id)) w.attendOrder.push(id);
-    if(!nowInWeek) w.attendOrder = w.attendOrder.filter(x=>x!==id);
-    save();
-    toast(v==='in'? '4쿼터 전체 참석으로 표시했어요' : v==='out'? '4쿼터 전체 불참으로 표시했어요' : '4쿼터 전체 미정으로 표시했어요');
+    const label = next ? ATTEND_TYPES.find(x=>x[0]===next)[2] : null;
+    toast(label ? `${label}(으)로 투표했어요` : '투표를 취소했어요');
   }
   else if(kind==='adminmode'){
     toggleAdminMode();
@@ -2658,6 +2643,16 @@ document.addEventListener('click', (e)=>{
 // 카드/구장 목록처럼 매번 다시 그려지는 input·select는 change 이벤트를 위임 처리한다
 // (고정 id에 리스너를 다는 commitField 패턴은 재생성되는 엘리먼트엔 쓸 수 없어서).
 document.addEventListener('change', (e)=>{
+  if(e.target.id==='proxySel'){ proxyId = e.target.value; renderVote(); return; }
+  const timeSel = e.target.closest('[data-act="attendtime"]');
+  if(timeSel){
+    const id = timeSel.dataset.id, w = curWeek();
+    if(id!==myId() && !requireAdmin()) return;
+    if(votingLocked(w) && !adminMode){ toast('투표가 마감됐어요 — 임원진에게 문의해주세요'); render(); return; }
+    const cur = attendOf(w,id);
+    if(cur && (cur.type==='late' || cur.type==='early')){ setAttend(w, id, cur.type, timeSel.value); save(); }
+    return;
+  }
   const noteEl = e.target.closest('[data-act="votenote"]');
   if(noteEl){
     const id = noteEl.dataset.id;
@@ -2964,6 +2959,7 @@ document.getElementById('addMatchBtn').addEventListener('click',()=>{
   if(STATE.weeks.some(w=>w.date===date)){ toast('그 날짜에는 이미 경기가 있어요'); return; }
   const w = newWeek(date);
   w.matchTime = document.getElementById('addTime').value || '18:00';
+  w.matchEnd = document.getElementById('addEnd').value || '';
   w.venue = document.getElementById('addVenue').value.trim();
   w.opponent = document.getElementById('addOpp').value.trim();
   STATE.weeks.push(w);
@@ -3031,7 +3027,8 @@ function commitField(id, fn){
   });
 }
 commitField('venueInput', ()=>{ curWeek().venue = document.getElementById('venueInput').value; });
-commitField('matchTimeInput', ()=>{ curWeek().matchTime = document.getElementById('matchTimeInput').value || '10:00'; });
+commitField('matchTimeInput', ()=>{ curWeek().matchTime = document.getElementById('matchTimeInput').value || '10:00'; recomputeTimedAttend(curWeek()); });
+commitField('matchEndInput', ()=>{ curWeek().matchEnd = document.getElementById('matchEndInput').value || ''; recomputeTimedAttend(curWeek()); });
 commitField('opponentInput', ()=>{ curWeek().opponent = document.getElementById('opponentInput').value.trim(); });
 commitField('competitionInput', ()=>{ curWeek().competition = document.getElementById('competitionInput').value.trim(); });
 commitField('usScore', ()=>{ const v=document.getElementById('usScore').value; curWeek().result.us = v===''?null:parseInt(v,10); });
