@@ -52,13 +52,75 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans KR','Malgun Gothic',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
 .num{font-family:'Oswald','IBM Plex Sans KR',sans-serif;font-variant-numeric:tabular-nums}
 .wrap{max-width:900px;margin:0 auto;padding-bottom:90px}
-header.top{background:linear-gradient(160deg,var(--accent-deep),var(--accent) 140%);color:#F4F6F1;padding:18px 16px 14px}
-.wordmark{font-family:'Black Han Sans','IBM Plex Sans KR',sans-serif;font-size:1.3rem;display:flex;align-items:center;gap:8px}
-.wordmark img{width:30px;height:30px;object-fit:contain}
-.weeksel{margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.weeksel select{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:7px;padding:6px 8px;font-family:inherit;font-size:.85rem}
-.weeksel button{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:7px;padding:6px 10px;font-family:inherit;font-size:.8rem;cursor:pointer}
-.weeksel .lbl{font-family:'Oswald',sans-serif;font-size:.78rem;letter-spacing:.06em;color:#CFE4D7;text-transform:uppercase}
+header.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:8px;background:linear-gradient(160deg,var(--accent-deep),var(--accent) 140%);color:#F4F6F1;padding:12px 16px}
+.wordmark{font-size:1.15rem;font-weight:800;display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+.wordmark img{width:34px;height:34px;object-fit:contain;background:rgba(0,0,0,.25);border-radius:50%;padding:3px}
+
+/* 페이지 공통 */
+.pagetitle{font-size:1.35rem;font-weight:800;margin:4px 2px 14px}
+.subhead{font-size:.92rem;font-weight:800;color:var(--ink-soft);margin:18px 2px 8px}
+.adminonly{font-size:.62rem;font-weight:700;color:var(--pend);background:var(--pend-soft);border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:2px}
+.primarybtn{width:100%;border:none;border-radius:14px;padding:12px;background:var(--accent);color:#fff;font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;margin-top:10px}
+.homerow.clickable{cursor:pointer}
+.homerow .badge{font-size:.66rem;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--accent-soft);color:var(--accent);margin-left:6px;vertical-align:1px}
+.homerow .r.win{color:var(--in)} .homerow .r.loss{color:var(--out)}
+
+/* 일정: 캘린더 */
+.cal{padding:16px 14px 10px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-head b{font-size:1rem;font-weight:800}
+.cal-head button{background:none;border:none;font-size:1.1rem;color:var(--ink-soft);cursor:pointer;padding:4px 10px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:6px;text-align:center}
+.cal-grid .wd{font-size:.72rem;font-weight:700;color:var(--ink-faint);padding-bottom:4px}
+.cal-grid .wd.sun,.cal-grid .day.sun{color:var(--out)} .cal-grid .wd.sat,.cal-grid .day.sat{color:#2f6fd0}
+.cal-grid .day{position:relative;height:38px;display:flex;align-items:center;justify-content:center;font-size:.86rem;color:var(--ink)}
+.cal-grid .day span{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.cal-grid .day.today span{border:2px solid var(--accent);color:var(--accent);font-weight:800}
+.cal-grid .day.match{cursor:pointer}
+.cal-grid .day.match span{background:var(--accent);color:#fff;font-weight:800}
+.cal-grid .day.match.past span{background:var(--accent-soft);color:var(--accent)}
+.addmatch{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.addmatch input{padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.85rem;min-width:0}
+
+/* 경기 상세 머리말 */
+.detailhead{margin-bottom:14px}
+.detailhead .dh-card{background:linear-gradient(150deg,var(--accent) 0%,var(--accent-deep) 100%);color:#fff;border-radius:20px;padding:16px 16px 14px;box-shadow:0 8px 20px rgba(15,58,36,.2)}
+.detailhead .dh-eyebrow{font-size:.72rem;font-weight:700;opacity:.8}
+.detailhead .dh-title{font-size:1.2rem;font-weight:800;margin:2px 0}
+.detailhead .dh-sub{font-size:.84rem;opacity:.9}
+.segtabs{display:flex;gap:4px;background:var(--surface-2);border-radius:14px;padding:4px;margin:12px 0 4px}
+.segtabs button{flex:1;border:none;background:none;border-radius:10px;padding:9px 4px;font-family:inherit;font-weight:700;font-size:.84rem;color:var(--ink-faint);cursor:pointer}
+.segtabs button.on{background:var(--accent-deep);color:#fff}
+
+/* 게시판 */
+.boardgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px}
+.boardcard{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 14px;box-shadow:var(--shadow);font-family:inherit;color:var(--ink);cursor:pointer}
+.boardcard .ic{font-size:1.6rem;margin-bottom:4px}
+.boardcard b{font-size:.92rem}
+.boardcard small{font-size:.72rem;color:var(--ink-faint)}
+
+/* 랭킹 */
+.seasonbar{background:var(--accent);color:#fff;text-align:center;font-weight:800;border-radius:14px;padding:11px;margin-bottom:12px}
+.chipseg{display:flex;gap:4px;background:var(--surface-2);border-radius:14px;padding:4px;margin-bottom:12px}
+.chipseg button{flex:1;border:none;background:none;border-radius:10px;padding:8px 2px;font-family:inherit;font-weight:700;font-size:.8rem;color:var(--ink-faint);cursor:pointer}
+.chipseg button.on{background:var(--ink);color:var(--surface)}
+.tablecard{padding:0;overflow:hidden}
+.tablescroll{overflow-x:auto}
+.ranktable{width:100%;border-collapse:collapse;font-size:.78rem;white-space:nowrap}
+.ranktable th{font-size:.66rem;color:var(--ink-faint);font-weight:700;padding:9px 3px;border-bottom:1px solid var(--line);text-align:center;cursor:pointer;background:var(--surface-2)}
+.ranktable th.nm,.ranktable td.nm{text-align:left}
+.ranktable td{padding:10px 3px;border-bottom:1px solid var(--line);text-align:center}
+.ranktable td:first-child,.ranktable th:first-child{padding-left:10px}
+.ranktable td:last-child,.ranktable th:last-child{padding-right:10px}
+.ranktable tr:last-child td{border-bottom:none}
+.ranktable td.rk{font-weight:800;color:var(--accent)}
+.ranktable td.tot{font-weight:800}
+.footnote{font-size:.72rem;color:var(--ink-faint);line-height:1.6;margin:4px 4px 0}
+.hallhead{text-align:center;padding:10px 0 18px}
+.hallhead img{width:64px;height:64px;object-fit:contain;background:var(--accent-deep);border-radius:50%;padding:6px}
+.hallteam{font-weight:900;font-size:1.05rem;margin-top:6px}
+.halltitle{font-weight:800;font-size:1.2rem;margin-top:10px}
+.hallhead p{font-size:.8rem;color:var(--ink-faint);margin:4px 0 0}
 
 /* 하단 탭바 — 홈·투표·포메이션·기록·더보기 */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;max-width:900px;margin:0 auto;display:flex;gap:4px;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(15,58,36,.06)}
@@ -327,7 +389,7 @@ details.collapse[open] summary:before{content:'▾ '}
 .lockmsg{margin-top:8px;font-size:.78rem;color:var(--out);line-height:1.4}
 /* 헤더 맨 위 임원진 모드 배지 — 지금 보기 전용인지 편집 가능한지 어느 탭에서든 바로 보이게 */
 .topline{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.adminbadge{padding:5px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;font-family:inherit;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.adminbadge{padding:7px 14px;border-radius:999px;border:none;background:#fff;color:var(--accent-deep);font-family:inherit;font-size:.78rem;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .adminbadge.on{background:var(--pend-soft);color:var(--pend);border-color:var(--pend)}
 .seg button.disabled,.bandbtn.disabled{opacity:.4;pointer-events:none}
 .picker[hidden]{display:none}
@@ -342,50 +404,71 @@ details.collapse[open] summary:before{content:'▾ '}
 
 <div class="wrap">
 <header class="top">
-  <div class="topline">
-    <div class="wordmark"><img src="crest.png" alt="">SAVE&nbsp;FC 스쿼드보드</div>
-    <button type="button" id="adminBadge" class="adminbadge" data-act="adminmode"></button>
-  </div>
-  <div class="weeksel">
-    <span class="lbl">이번 주</span>
-    <select id="weekSel"></select>
-    <button id="newWeekBtn" type="button">다음 주 추가</button>
-    <button id="settingsBtn" type="button" title="동기화 설정" style="padding:6px 9px">⚙</button>
-  </div>
+  <a class="wordmark" href="#" data-goto="home"><img src="crest.png" alt="">SAVE FC</a>
+  <button type="button" id="adminBadge" class="adminbadge" data-act="opsmenu"></button>
 </header>
 
 <nav class="tabs">
   <button data-tab="home" class="on"><span class="ic">🏠</span>홈</button>
+  <button data-tab="schedule"><span class="ic">📅</span>일정</button>
+  <button data-tab="board"><span class="ic">📢</span>게시판</button>
   <button data-tab="vote"><span class="ic">🗳️</span>투표</button>
-  <button data-tab="form"><span class="ic">⚽</span>포메이션</button>
-  <button data-tab="analysis"><span class="ic">📊</span>기록</button>
-  <button data-tab="more"><span class="ic">☰</span>더보기</button>
+  <button data-tab="ranking"><span class="ic">🏆</span>랭킹</button>
 </nav>
+
+<div class="picker" id="opsMenu" hidden>
+  <div class="sheet">
+    <h3>운영 메뉴</h3>
+    <div class="menu">
+      <button type="button" class="menurow" data-goto="stats"><span class="ic">💰</span>회비 현황<span class="chev">›</span></button>
+      <button type="button" class="menurow" id="lateFeeTabBtn" data-goto="latefees"><span class="ic">🕒</span>지각비 · 노쇼비<span class="chev">›</span></button>
+      <button type="button" class="menurow" id="cardsTabBtn" data-goto="cards"><span class="ic">🃏</span>선수카드<span class="chev">›</span></button>
+      <button type="button" class="menurow" data-act="adminmode"><span class="ic">🔑</span><span id="opsAdminLabel">임원진 모드 켜기</span><span class="chev">›</span></button>
+      <button type="button" class="menurow" id="settingsBtn"><span class="ic">⚙️</span>동기화 설정<span class="chev">›</span></button>
+    </div>
+    <button class="close" type="button">닫기</button>
+  </div>
+</div>
 
 <main>
 
+<div class="detailhead" id="detailHead" style="display:none"></div>
+
 <section class="tab on" id="tab-home">
   <div class="hero" id="homeHero"></div>
-  <div class="sechead"><h2>다가오는 일정</h2><button type="button" class="linkbtn" data-goto="vote">전체 보기</button></div>
+  <div class="sechead"><h2>다가오는 일정</h2><button type="button" class="linkbtn" data-goto="schedule">전체 보기</button></div>
   <div class="card homelist" id="homeUpcoming"></div>
-  <div class="sechead"><h2>지난 경기</h2></div>
-  <div class="card homelist" id="homeRecent"></div>
-  <div class="sechead"><h2>이번 시즌 TOP 5</h2><button type="button" class="linkbtn" data-goto="analysis">전체 보기</button></div>
+  <div class="sechead"><h2>이번 시즌 TOP 5</h2><button type="button" class="linkbtn" data-goto="ranking">전체 보기</button></div>
   <div class="card homelist" id="homeTop5"></div>
 </section>
 
-<section class="tab" id="tab-more">
-  <div class="sechead"><h2>더보기</h2></div>
-  <div class="card menu">
-    <button type="button" class="menurow" data-goto="stats"><span class="ic">📋</span>회비 · 현황<span class="chev">›</span></button>
-    <button type="button" class="menurow" data-goto="tactics"><span class="ic">📖</span>팀 전술<span class="chev">›</span></button>
+<section class="tab" id="tab-schedule">
+  <h1 class="pagetitle">일정</h1>
+  <div class="card cal" id="calendar"></div>
+  <div class="card" id="addMatchCard">
+    <div class="subhead" style="margin-top:0">＋ 경기 추가 <span class="adminonly">임원진</span></div>
+    <div class="addmatch">
+      <input type="date" id="addDate">
+      <input type="time" id="addTime" value="18:00">
+      <input type="text" id="addVenue" placeholder="구장">
+      <input type="text" id="addOpp" placeholder="상대팀">
+    </div>
+    <button type="button" class="primarybtn" id="addMatchBtn">경기 추가</button>
   </div>
-  <div class="sechead" id="moreAdminHead"><h2>임원진 전용</h2></div>
-  <div class="card menu" id="moreAdminMenu">
-    <button type="button" class="menurow" id="matchTabBtn" data-goto="match"><span class="ic">🏟️</span>구장 · 결과<span class="chev">›</span></button>
-    <button type="button" class="menurow" id="lateFeeTabBtn" data-goto="latefees"><span class="ic">🕒</span>지각비<span class="chev">›</span></button>
-    <button type="button" class="menurow" id="cardsTabBtn" data-goto="cards"><span class="ic">🃏</span>선수카드<span class="chev">›</span></button>
+  <div class="subhead">다가오는 일정</div>
+  <div class="card homelist" id="schedUpcoming"></div>
+  <div class="subhead">지난 일정</div>
+  <div class="card homelist" id="schedPast"></div>
+</section>
+
+<section class="tab" id="tab-board">
+  <h1 class="pagetitle">게시판</h1>
+  <div class="boardgrid">
+    <button type="button" class="boardcard" data-goto="tactics"><span class="ic">🧠</span><b>코치 피드백</b><small>기초 원칙·압박 모아보기</small></button>
+    <button type="button" class="boardcard" data-goto="tactics" data-anchor="tacticsVideos"><span class="ic">🏋️</span><b>훈련 세션</b><small>포지션별 영상·세트피스</small></button>
   </div>
+  <div class="subhead">📢 공지사항</div>
+  <div class="card homelist" id="boardNotices"></div>
 </section>
 
 <section class="tab" id="tab-vote">
@@ -475,7 +558,6 @@ details.collapse[open] summary:before{content:'▾ '}
 </section>
 
 <section class="tab" id="tab-match">
-  <button type="button" class="backbtn" data-goto="more">‹ 더보기</button>
   <div class="panel">
     <h2><span class="bar"></span>구장 · 경기 결과</h2>
     <div class="card">
@@ -544,7 +626,7 @@ details.collapse[open] summary:before{content:'▾ '}
 </section>
 
 <section class="tab" id="tab-latefees">
-  <button type="button" class="backbtn" data-goto="more">‹ 더보기</button>
+  <button type="button" class="backbtn" data-goto="back">‹ 뒤로</button>
   <div class="panel">
     <h2><span class="bar"></span>🕒 지각비 · 노쇼비</h2>
     <p class="lede">지각 20분 전 미도착 3천원 / 경기 지각 5천원 / 노쇼 2만원 — 담당자 판단으로 눌러주세요. 같은 값을 다시 누르면 정상으로 되돌아가요.</p>
@@ -560,7 +642,7 @@ details.collapse[open] summary:before{content:'▾ '}
 </section>
 
 <section class="tab" id="tab-cards">
-  <button type="button" class="backbtn" data-goto="more">‹ 더보기</button>
+  <button type="button" class="backbtn" data-goto="back">‹ 뒤로</button>
   <h2><span class="bar"></span>선수카드 <span style="font-weight:400;font-size:.72rem;color:var(--ink-faint)">(고알레 스타일)</span></h2>
   <details class="collapse"><summary>사용법 보기</summary>
     <p class="lede" style="margin-top:6px">능력치(OVR)와 등급은 그동안 쌓인 매치 평점 기록을 바탕으로 매겨져요. "선호 포지션" 칸에 가능한 자리를 우선순위대로 적어두면(예: ST, CAM, LW), 포메이션 탭에서 그 자리를 배치할 때 우선순위 순으로 후보에 떠요. 쓸 수 있는 자리 코드: GK, LB·CB·RB, LWB·RWB, CDM·CM·LM·RM, CAM·LAM·RAM, LW·ST·RW</p>
@@ -568,7 +650,35 @@ details.collapse[open] summary:before{content:'▾ '}
   <div class="cards-grid" id="playerCards"></div>
 </section>
 
-<section class="tab" id="tab-analysis">
+<section class="tab" id="tab-ranking">
+  <div class="segtabs" id="rankSegs">
+    <button type="button" data-rank="season" class="on">시즌 랭킹</button>
+    <button type="button" data-rank="hall">명예의 전당</button>
+  </div>
+
+  <div id="rankSeason">
+    <h1 class="pagetitle">시즌 랭킹</h1>
+    <div class="seasonbar">2026 시즌</div>
+    <div class="chipseg" id="rankPosFilter">
+      <button type="button" data-pos="all" class="on">전체</button>
+      <button type="button" data-pos="FW">공격</button>
+      <button type="button" data-pos="MF">미드필더</button>
+      <button type="button" data-pos="DF">수비</button>
+    </div>
+    <div class="card tablecard"><div class="tablescroll"><table class="ranktable" id="rankTable"></table></div></div>
+    <p class="footnote">점수 기준: 출전 1.5점 · 골 1.4점 · 어시스트 1.25점. 10/17 경기까지는 고알레 기록, 이후는 보드에 입력한 기록이 더해져요. 클린시트는 쿼터별 실점 기록이 없어서 아직 집계하지 않아요.</p>
+  </div>
+
+  <div id="rankHall" style="display:none">
+  <div class="hallhead">
+    <img src="crest.png" alt="">
+    <div class="hallteam">SAVE FC</div>
+    <div class="halltitle">🏆 명예의 전당</div>
+    <p>역대 주장단과 매 시즌 최고의 기록을 새겨둡니다.</p>
+  </div>
+  <div class="card homelist" id="hallLeaders"></div>
+  <div class="card homelist" id="hallSeason"></div>
+
   <div class="panel">
     <h2><span class="bar"></span>구장별 분석</h2>
     <p class="lede">승률 · 참석률 · 부상 건수에 가격, 선호 시간대, 선호도까지 한 카드에서 볼 수 있어요. 선호도는 각자 별점으로 투표해요 — 집에서 거리, 편의성 등 각자 사정을 반영해서 눌러주세요.</p>
@@ -600,10 +710,11 @@ details.collapse[open] summary:before{content:'▾ '}
     </details>
     <div id="scorerChart"></div>
   </div>
+  </div>
 </section>
 
 <section class="tab" id="tab-stats">
-  <button type="button" class="backbtn" data-goto="more">‹ 더보기</button>
+  <button type="button" class="backbtn" data-goto="back">‹ 뒤로</button>
   <div class="panel">
     <h2><span class="bar"></span>분기별 회비 관리</h2>
     <p class="lede">구분(정상·50%·25%할인·키퍼·장기부상·면제)을 바꾸면 금액이 자동으로 다시 계산돼요. 달을 누르면 납부 체크가 토글되고, "이번 분기 제외"는 내년 입단 예정자나 활동 중단자처럼 이번 분기 청구에서 빼야 할 사람에게 체크해주세요.</p>
@@ -649,7 +760,7 @@ details.collapse[open] summary:before{content:'▾ '}
 </section>
 
 <section class="tab" id="tab-tactics">
-  <button type="button" class="backbtn" data-goto="more">‹ 더보기</button>
+  <button type="button" class="backbtn" data-goto="board">‹ 게시판</button>
   <h2><span class="bar"></span>📖 팀 전술</h2>
   <p class="lede">우리 팀 전술노트·피드백 문서를 정리한 참고 자료예요. 다 같이 숙지해두면 좋아요.</p>
 
@@ -672,7 +783,7 @@ details.collapse[open] summary:before{content:'▾ '}
   </div>
 
   <div class="panel">
-    <h3 style="margin:14px 0 6px">3. 포지션별 참고 영상</h3>
+    <h3 style="margin:14px 0 6px" id="tacticsVideos">3. 포지션별 참고 영상</h3>
     <div class="card">
       <p class="lede" style="margin:0 0 6px">윙어 — 이것만 봐도 어느 정도 숙지 가능해요, 특히 마지막 수비하는 법</p>
       <p class="lede" style="margin:0 0 4px"><a href="https://www.instagram.com/p/DOhmPRaAb_w/?img_index=1" target="_blank" rel="noopener">▶ 참고 영상 1</a></p>
@@ -836,10 +947,6 @@ const SHAPES = {
 };
 
 function uid(){return Math.random().toString(36).slice(2,9)}
-function nextSunday(from){
-  const d=new Date(from); const add=(7-d.getDay())%7 || 7; d.setDate(d.getDate()+add);
-  return d.toISOString().slice(0,10);
-}
 function fmtLabel(iso){
   const d=new Date(iso+'T00:00:00');
   return (d.getMonth()+1)+'/'+d.getDate()+'('+'일월화수목금토'[d.getDay()]+')';
@@ -1024,7 +1131,14 @@ function requireAdmin(){
   return false;
 }
 
-function curWeek(){ return STATE.weeks.find(w=>w.id===STATE.currentWeek) || STATE.weeks[0]; }
+// 일정에서 고른 경기(viewWeekId)가 있으면 그 경기, 아니면 "다음 경기"(시작 후 3시간까지 포함),
+// 그것도 없으면 가장 최근 경기. 보는 경기는 기기마다 따로라 다른 사람 화면을 바꾸지 않는다.
+let viewWeekId = null;
+function defaultWeek(){
+  const weeks = STATE.weeks.slice().sort((a,b)=>weekStartMs(a)-weekStartMs(b));
+  return weeks.find(w=>weekStartMs(w) + 3*3600*1000 >= Date.now()) || weeks[weeks.length-1];
+}
+function curWeek(){ return STATE.weeks.find(w=>w.id===viewWeekId) || defaultWeek(); }
 function curQuarter(){ return curWeek().quarters[curQuarterIdx]; }
 function curShapeKey(){ return curMode==='atk' ? 'shapeAtk' : 'shapeDef'; }
 function curPosKey(){ return curMode==='atk' ? 'posAtk' : 'posDef'; }
@@ -1065,6 +1179,8 @@ function saveFormationTemplate(){
 
 /* ---------- FM 스타일 포지션 적성: 선수마다 "이 포지션들 가능해요"를 우선순위 순으로
    기록해두고, 자리를 고를 때 그 순서대로 후보를 정렬해서 보여준다. ---------- */
+const POS_GROUP = {GK:'GK', LB:'DF',CB:'DF',RB:'DF',LWB:'DF',RWB:'DF',
+  CDM:'MF',CM:'MF',LM:'MF',RM:'MF',CAM:'MF',LAM:'MF',RAM:'MF', LW:'FW',ST:'FW',RW:'FW',CF:'FW'};
 function memberPosRoles(m){
   return (m.posRoles||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
 }
@@ -1312,7 +1428,7 @@ function setMyId(id){ try{localStorage.setItem('savefc_who',id)}catch(e){} }
 function render(){
   renderAdminBadge();
   renderPlayerGates();
-  renderWeekSel();
+  renderDetailHead();
   renderWho();
   renderQuarterPills('voteQPills');
   renderQuarterPills('formQPills');
@@ -1331,6 +1447,9 @@ function render(){
   renderLateFees();
   renderAnalysis();
   renderHome();
+  renderSchedule();
+  renderBoard();
+  renderRanking();
 }
 
 function renderQuarterPills(containerId){
@@ -1345,7 +1464,8 @@ function renderAdminBadge(){
   const b = document.getElementById('adminBadge');
   if(!b) return;
   b.classList.toggle('on', adminMode);
-  b.textContent = adminMode ? '임원진 모드' : '선수 모드';
+  b.textContent = adminMode ? '임원진' : '선수 모드';
+  document.getElementById('opsAdminLabel').textContent = adminMode ? '임원진 모드 끄기' : '임원진 모드 켜기';
 }
 
 // 선수 모드(비임원진)에서는 선수카드 탭과 BEST 11(비공식 미리보기)을 아예 숨긴다 —
@@ -1358,7 +1478,7 @@ function gateTab(btnId, sectionId, hide){
   if(btn) btn.style.display = hide ? 'none' : '';
   if(section){
     section.style.display = hide ? 'none' : '';
-    if(hide && section.classList.contains('on')) showTab('more');
+    if(hide && section.classList.contains('on')) showTab('home');
   }
 }
 
@@ -1368,13 +1488,25 @@ function dateBox(w){
   const d = new Date(w.date+'T00:00:00');
   return `<div class="datebox"><div class="m">${d.getMonth()+1}월</div><div class="d">${d.getDate()}</div></div>`;
 }
+function sortedWeeks(){ return STATE.weeks.slice().sort((a,b)=>weekStartMs(a)-weekStartMs(b)); }
+// 경기 시작 후 3시간까지는 "지금 경기"로 보고 다가오는 일정에 남겨둔다.
+function isUpcoming(w){ return weekStartMs(w) + 3*3600*1000 >= Date.now(); }
+function scoreText(w){ const r=w.result||{}; return (r.us!=null && r.them!=null) ? `${r.us} : ${r.them}` : '-'; }
+function scoreClass(w){ const r=w.result||{}; if(r.us==null||r.them==null) return ''; return r.us>r.them?'win':r.us<r.them?'loss':''; }
+function weekRowHtml(w, right){
+  return `<div class="homerow clickable" data-openweek="${w.id}">${dateBox(w)}<div class="t"><div class="t1">${escHtml(weekTitle(w))}</div><div class="t2">${w.label} ${w.matchTime||''}${w.competition? ' · '+escHtml(w.competition):''}</div></div>${right}</div>`;
+}
+
+// 시즌 랭킹 점수: 출전 1.5 · 골 1.4 · 어시스트 1.25 (참고 앱과 같은 배율, 클린시트는 데이터가 없어 제외)
+function rankScore(s){ return Math.round((s.games*1.5 + s.goals*1.4 + s.assists*1.25)*100)/100; }
+function rankedStats(){
+  return computePlayerStats().map(s=>({...s, score: rankScore(s)}))
+    .sort((a,b)=> b.score-a.score || b.goals-a.goals);
+}
 
 function renderHome(){
-  const weeks = STATE.weeks.slice().sort((a,b)=>weekStartMs(a)-weekStartMs(b));
-  const now = Date.now();
-  // 경기 시작 후 3시간까지는 "지금 경기"로 보고 다가오는 일정에 남겨둔다.
-  const upcoming = weeks.filter(w=>weekStartMs(w) + 3*3600*1000 >= now);
-  const past = weeks.filter(w=>weekStartMs(w) + 3*3600*1000 < now).reverse();
+  const weeks = sortedWeeks();
+  const upcoming = weeks.filter(isUpcoming);
   const next = upcoming[0];
 
   const hero = document.getElementById('homeHero');
@@ -1388,49 +1520,148 @@ function renderHome(){
       <div class="big">${next.label} ${next.matchTime||''}</div>
       <div class="sub">${escHtml(weekTitle(next))}</div>
       <div class="counts"><span><b>${attend}</b>명 참석</span>${myText?`<span>${myText}</span>`:''}<span>${votingLocked(next)? '투표 마감' : fmtDeadlineInfo(next).replace(/^마감: /,'마감 ')}</span></div>
-      <div class="actions"><button type="button" class="primary" data-goto="vote">투표하기</button><button type="button" data-goto="form">포메이션</button></div>`;
+      <div class="actions"><button type="button" class="primary" data-goto="vote">투표하기</button><button type="button" data-openweek="${next.id}" data-seg="form">스쿼드 보기</button></div>`;
   } else {
     hero.innerHTML = `
-      <div class="eyebrow">다음 경기</div>
-      <div class="big">예정된 경기가 없어요</div>
-      <div class="sub">상대가 잡히면 임원진이 "다음 주 추가"로 일정을 올려요.</div>
-      <div class="actions"><button type="button" class="primary" data-goto="analysis">기록 보기</button></div>`;
+      <div class="eyebrow">SAVE FC</div>
+      <div class="big">우리 팀 일정, 한 곳에서 ⚽</div>
+      <div class="sub">아직 다음 경기가 없어요. 매칭이 잡히면 일정에 올라와요.</div>
+      <div class="actions"><button type="button" class="primary" data-goto="schedule">일정 보기</button><button type="button" data-goto="ranking">랭킹 보기</button></div>`;
   }
 
   document.getElementById('homeUpcoming').innerHTML = upcoming.length
-    ? upcoming.map(w=>`<div class="homerow">${dateBox(w)}<div class="t"><div class="t1">${escHtml(weekTitle(w))}</div><div class="t2">${w.label} ${w.matchTime||''}${w.competition? ' · '+escHtml(w.competition):''}</div></div><div class="r">${weekAttendeeIds(w).size}명</div></div>`).join('')
-    : '<div class="emptystate"><span class="ic">🗓️</span>예정된 일정이 없어요</div>';
+    ? upcoming.map(w=>weekRowHtml(w, `<div class="r">${weekAttendeeIds(w).size}명</div>`)).join('')
+    : '<div class="emptystate"><span class="ic">🗓️</span><b>예정된 일정이 없어요</b><br>일정 탭에서 다음 경기를 확인해 보세요.</div>';
 
-  document.getElementById('homeRecent').innerHTML = past.length
-    ? past.slice(0,3).map(w=>{
-        const r = w.result||{};
-        const score = (r.us!=null && r.them!=null) ? `${r.us} : ${r.them}` : '-';
-        return `<div class="homerow">${dateBox(w)}<div class="t"><div class="t1">${escHtml(weekTitle(w))}</div><div class="t2">${weekAttendeeIds(w).size}명 출전</div></div><div class="r">${score}</div></div>`;
-      }).join('')
-    : '<div class="emptystate">아직 지난 경기가 없어요</div>';
-
-  const top = computePlayerStats().filter(s=>s.pts>0)
-    .sort((a,b)=> b.pts-a.pts || b.goals-a.goals || b.games-a.games).slice(0,5);
+  const top = rankedStats().filter(s=>s.score>0).slice(0,5);
   document.getElementById('homeTop5').innerHTML = top.length
-    ? top.map((s,i)=>`<div class="homerow"><div class="rank">${i+1}</div><div class="t"><div class="t1">${s.m.name}</div><div class="t2">${s.goals}골 · ${s.assists}도움 · ${s.games}경기</div></div><div class="r">${s.pts}P</div></div>`).join('')
-    : '<div class="emptystate">아직 기록이 없어요</div>';
+    ? top.map((s,i)=>`<div class="homerow"><div class="rank">${i+1}</div><div class="t"><div class="t1">${s.m.name}</div><div class="t2">${s.games}경기 · ${s.goals}골 · ${s.assists}도움</div></div><div class="r">${s.score}점</div></div>`).join('')
+    : '<div class="emptystate">아직 기록이 없어요.</div>';
 }
 
-// 하단 탭바에 없는 화면(회비·전술·임원 전용)은 "더보기"에서 들어가므로 탭바는 더보기를 켜둔다.
-const NAV_TABS = ['home','vote','form','analysis','more'];
+/* ---------- 일정 ---------- */
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
+function renderSchedule(){
+  const byDate = {};
+  STATE.weeks.forEach(w=>{ byDate[w.date] = w; });
+  const first = new Date(calYear, calMonth, 1);
+  const days = new Date(calYear, calMonth+1, 0).getDate();
+  const today = new Date(); const todayIso = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  let cells = '';
+  for(let i=0;i<first.getDay();i++) cells += '<div></div>';
+  for(let d=1; d<=days; d++){
+    const iso = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = (first.getDay()+d-1)%7;
+    const w = byDate[iso];
+    const cls = ['day', dow===0?'sun':'', dow===6?'sat':'', iso===todayIso?'today':'', w?'match':'', w&&!isUpcoming(w)?'past':''].filter(Boolean).join(' ');
+    cells += `<div class="${cls}" ${w?`data-openweek="${w.id}"`:''}><span>${d}</span></div>`;
+  }
+  document.getElementById('calendar').innerHTML = `
+    <div class="cal-head"><button type="button" data-act="calprev">‹</button><b>${calYear}년 ${calMonth+1}월</b><button type="button" data-act="calnext">›</button></div>
+    <div class="cal-grid">${['일','월','화','수','목','금','토'].map((x,i)=>`<div class="wd ${i===0?'sun':i===6?'sat':''}">${x}</div>`).join('')}${cells}</div>`;
+
+  document.getElementById('addMatchCard').style.display = adminMode ? '' : 'none';
+  const weeks = sortedWeeks();
+  const upcoming = weeks.filter(isUpcoming);
+  const past = weeks.filter(w=>!isUpcoming(w)).reverse();
+  document.getElementById('schedUpcoming').innerHTML = upcoming.length
+    ? upcoming.map(w=>weekRowHtml(w, `<div class="r">${weekAttendeeIds(w).size}명</div>`)).join('')
+    : '<div class="emptystate">예정된 일정이 없어요.</div>';
+  document.getElementById('schedPast').innerHTML = past.length
+    ? past.map(w=>weekRowHtml(w, `<div class="r ${scoreClass(w)}">${scoreText(w)}</div>`)).join('')
+    : '<div class="emptystate">지난 일정이 없어요.</div>';
+}
+
+/* ---------- 게시판: 공지사항 = 다가오는 경기마다 적어둔 안내(유니폼·도착 시간 등) ---------- */
+function renderBoard(){
+  const items = sortedWeeks().filter(w=>isUpcoming(w) && w.result && w.result.note);
+  document.getElementById('boardNotices').innerHTML = items.length
+    ? items.map(w=>`<div class="homerow clickable" data-openweek="${w.id}">${dateBox(w)}<div class="t"><div class="t1">${escHtml(weekTitle(w))}</div><div class="t2" style="white-space:normal">${escHtml(w.result.note)}</div></div></div>`).join('')
+    : '<div class="emptystate">아직 공지사항이 없어요.</div>';
+}
+
+/* ---------- 랭킹 ---------- */
+let rankPos = 'all', rankSortKey = 'score', rankSortDir = 'desc', rankSeg = 'season';
+function playerGroup(m){
+  const role = memberPosRoles(m)[0] || (m.pos||'').toUpperCase();
+  const g = POS_GROUP[role];
+  return g==='GK' ? 'DF' : g;
+}
+function renderRanking(){
+  document.querySelectorAll('#rankSegs button').forEach(b=>b.classList.toggle('on', b.dataset.rank===rankSeg));
+  document.getElementById('rankSeason').style.display = rankSeg==='season' ? '' : 'none';
+  document.getElementById('rankHall').style.display = rankSeg==='hall' ? '' : 'none';
+  document.querySelectorAll('#rankPosFilter button').forEach(b=>b.classList.toggle('on', b.dataset.pos===rankPos));
+
+  const all = rankedStats();
+  all.forEach((s,i)=>{ s.rank = i+1; });
+  const rows = all.filter(s=> rankPos==='all' || playerGroup(s.m)===rankPos)
+    .sort((a,b)=> rankSortKey==='score' && rankSortDir==='desc' ? a.rank-b.rank
+      : (rankSortDir==='asc'? a[rankSortKey]-b[rankSortKey] : b[rankSortKey]-a[rankSortKey]));
+  const cols = [['games','출전'],['goals','골'],['assists','어시'],['mom','MVP'],['score','총점']];
+  const head = `<tr><th>순위</th><th class="nm">이름</th>${cols.map(([k,l])=>`<th data-act="ranksort" data-key="${k}">${l} ${rankSortKey===k? (rankSortDir==='desc'?'▼':'▲') : '↕'}</th>`).join('')}</tr>`;
+  document.getElementById('rankTable').innerHTML = head + (rows.length
+    ? rows.map((s,i)=>`<tr><td class="rk">${i+1}</td><td class="nm">${s.m.name}</td><td>${s.games}</td><td>${s.goals}</td><td>${s.assists}</td><td>${s.mom}</td><td class="tot">${s.score}</td></tr>`).join('')
+    : `<tr><td colspan="7" style="color:var(--ink-faint);padding:22px">아직 기록이 없어요.</td></tr>`);
+
+  const byId = Object.fromEntries(STATE.roster.map(m=>[m.id,m]));
+  const leaders = CAPTAIN_ORDER.map((id,i)=> byId[id] ? `<div class="homerow"><div class="rank">${i+1}</div><div class="t"><div class="t1">${byId[id].name}</div><div class="t2">주장 ${i+1}순위</div></div></div>` : '').join('');
+  const coach = byId[HEAD_COACH_ID];
+  document.getElementById('hallLeaders').innerHTML = `<div class="subhead" style="margin:10px 0 2px">2026 주장단</div>${leaders}${coach? `<div class="homerow"><div class="rank">HC</div><div class="t"><div class="t1">${coach.name}</div><div class="t2">감독</div></div></div>`:''}`;
+  const best = (key)=> all.slice().sort((a,b)=>b[key]-a[key])[0];
+  const awards = [['⚽ 득점왕','goals','골'],['🅰️ 도움왕','assists','도움'],['🏃 최다 출전','games','경기'],['⭐ MVP 최다','mom','회'],['🏆 시즌 1위','score','점']]
+    .map(([t,k,u])=>{ const s = best(k); return s && s[k]>0 ? `<div class="homerow"><div class="t"><div class="t2">${t}</div><div class="t1">${s.m.name}</div></div><div class="r">${s[k]}${u}</div></div>` : ''; }).join('');
+  document.getElementById('hallSeason').innerHTML = `<div class="subhead" style="margin:10px 0 2px">2026 시즌 기록</div>${awards || '<div class="emptystate">아직 기록이 없어요.</div>'}`;
+}
+
+/* ---------- 라우팅: 하단 탭 5개 + 경기 상세(참석·스쿼드·결과) + 운영 메뉴 화면 ---------- */
+const NAV_TABS = ['home','schedule','board','vote','ranking'];
+const DETAIL_SEGS = ['vote','form','match'];
+let detailMode = false, lastNavTab = 'home';
 function showTab(name){
-  const navName = NAV_TABS.includes(name) ? name : 'more';
+  if(name==='back') name = lastNavTab;
+  if(name==='vote' || NAV_TABS.includes(name)){ detailMode = false; viewWeekId = null; }
+  if(NAV_TABS.includes(name)) lastNavTab = name;
+  const navName = detailMode ? 'schedule' : NAV_TABS.includes(name) ? name : (name==='tactics' ? 'board' : lastNavTab);
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab===navName));
   document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on', s.id==='tab-'+name));
+  render();
   window.scrollTo(0,0);
+}
+function openWeek(id, seg){
+  viewWeekId = id;
+  detailMode = true;
+  lastNavTab = 'schedule';
+  const target = DETAIL_SEGS.includes(seg) ? seg : 'vote';
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab==='schedule'));
+  document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on', s.id==='tab-'+target));
+  render();
+  window.scrollTo(0,0);
+}
+function currentSection(){ const s = document.querySelector('section.tab.on'); return s ? s.id.replace('tab-','') : ''; }
+
+function renderDetailHead(){
+  const el = document.getElementById('detailHead');
+  const sec = currentSection();
+  const show = (detailMode && DETAIL_SEGS.includes(sec)) || (!detailMode && sec==='vote');
+  el.style.display = show ? '' : 'none';
+  if(!show) return;
+  const w = curWeek();
+  const segs = [['vote','참석'],['form','스쿼드']].concat(adminMode ? [['match','결과']] : []);
+  el.innerHTML = `
+    ${detailMode ? '<button type="button" class="backbtn" data-goto="schedule">‹ 일정</button>' : '<h1 class="pagetitle">참석 투표</h1>'}
+    <div class="dh-card">
+      <div class="dh-eyebrow">${w.competition? escHtml(w.competition) : (isUpcoming(w)? '다음 경기' : '지난 경기')}</div>
+      <div class="dh-title">${w.label} ${w.matchTime||''}${!isUpcoming(w)&&scoreText(w)!=='-'? ' · '+scoreText(w) : ''}</div>
+      <div class="dh-sub">${escHtml(weekTitle(w))}</div>
+    </div>
+    ${detailMode ? `<div class="segtabs">${segs.map(([k,l])=>`<button type="button" data-seg="${k}" class="${k===sec?'on':''}">${l}</button>`).join('')}</div>` : ''}`;
 }
 
 function renderPlayerGates(){
   const hide = !adminMode;
-  document.getElementById('moreAdminHead').style.display = hide ? 'none' : '';
-  document.getElementById('moreAdminMenu').style.display = hide ? 'none' : '';
   gateTab('cardsTabBtn', 'tab-cards', hide);
-  gateTab('matchTabBtn', 'tab-match', hide);
+  gateTab(null, 'tab-match', hide);
   const formEditBtns = document.getElementById('formEditBtns');
   if(formEditBtns) formEditBtns.style.display = hide ? 'none' : '';
   const tacticsGuideBlock = document.getElementById('tacticsGuideBlock');
@@ -1452,10 +1683,6 @@ function renderFormationReveal(){
   document.getElementById('lineupBoard').style.display = hidden ? 'none' : '';
 }
 
-function renderWeekSel(){
-  const sel=document.getElementById('weekSel');
-  sel.innerHTML = STATE.weeks.map(w=>`<option value="${w.id}" ${w.id===STATE.currentWeek?'selected':''}>${w.label}</option>`).join('');
-}
 
 function renderWho(){
   const sel=document.getElementById('whoSel');
@@ -2252,9 +2479,20 @@ document.addEventListener('click', (e)=>{
   // 배치 직후에 선수 선택 창이 또 뜨는 문제가 생긴다.
   if(suppressNextClick){ suppressNextClick = false; return; }
 
+  const openEl = e.target.closest('[data-openweek]');
+  if(openEl){ e.preventDefault(); openWeek(openEl.dataset.openweek, openEl.dataset.seg); return; }
+  const segEl = e.target.closest('#detailHead [data-seg]');
+  if(segEl){ openWeek(curWeek().id, segEl.dataset.seg); return; }
+  const rankEl = e.target.closest('#rankSegs [data-rank]');
+  if(rankEl){ rankSeg = rankEl.dataset.rank; renderRanking(); return; }
+  const posEl = e.target.closest('#rankPosFilter [data-pos]');
+  if(posEl){ rankPos = posEl.dataset.pos; renderRanking(); return; }
   const tabBtn = e.target.closest('nav.tabs button, [data-goto]');
   if(tabBtn){
+    e.preventDefault();
     showTab(tabBtn.dataset.tab || tabBtn.dataset.goto);
+    const anchor = tabBtn.dataset.anchor && document.getElementById(tabBtn.dataset.anchor);
+    if(anchor) anchor.scrollIntoView();
     return;
   }
 
@@ -2329,6 +2567,20 @@ document.addEventListener('click', (e)=>{
   }
   else if(kind==='adminmode'){
     toggleAdminMode();
+  }
+  else if(kind==='opsmenu'){
+    document.getElementById('opsMenu').hidden = false;
+  }
+  else if(kind==='calprev' || kind==='calnext'){
+    const d = new Date(calYear, calMonth + (kind==='calnext'?1:-1), 1);
+    calYear = d.getFullYear(); calMonth = d.getMonth();
+    renderSchedule();
+  }
+  else if(kind==='ranksort'){
+    const key = act.dataset.key;
+    if(rankSortKey===key) rankSortDir = rankSortDir==='asc'?'desc':'asc';
+    else { rankSortKey = key; rankSortDir = 'desc'; }
+    renderRanking();
   }
   else if(kind==='qpick'){
     curQuarterIdx = parseInt(act.dataset.idx,10);
@@ -2705,23 +2957,20 @@ document.addEventListener('pointercancel', ()=>{
   dragState = null;
 });
 
-document.getElementById('weekSel').addEventListener('change',(e)=>{
-  if(!adminMode){
-    toast('임원진 모드에서만 변경할 수 있어요');
-    e.target.value = STATE.currentWeek; // 방금 고른 값을 원래 주로 되돌린다
-    return;
-  }
-  STATE.currentWeek = e.target.value;
-  save();
-});
-document.getElementById('newWeekBtn').addEventListener('click',()=>{
+document.getElementById('addMatchBtn').addEventListener('click',()=>{
   if(!requireAdmin()) return;
-  const last = STATE.weeks[STATE.weeks.length-1];
-  const nd = nextSunday(last.date);
-  const w = newWeek(nd);
+  const date = document.getElementById('addDate').value;
+  if(!date){ toast('경기 날짜를 골라주세요'); return; }
+  if(STATE.weeks.some(w=>w.date===date)){ toast('그 날짜에는 이미 경기가 있어요'); return; }
+  const w = newWeek(date);
+  w.matchTime = document.getElementById('addTime').value || '18:00';
+  w.venue = document.getElementById('addVenue').value.trim();
+  w.opponent = document.getElementById('addOpp').value.trim();
   STATE.weeks.push(w);
-  STATE.currentWeek = w.id;
+  STATE.weeks.sort((a,b)=>a.date.localeCompare(b.date));
+  ['addDate','addVenue','addOpp'].forEach(id=>{ document.getElementById(id).value=''; });
   save();
+  toast(`${w.label} 경기를 추가했어요`);
 });
 document.getElementById('guestAddBtn').addEventListener('click',()=>{
   if(!requireAdmin()) return;
@@ -2736,7 +2985,12 @@ document.getElementById('guestAddBtn').addEventListener('click',()=>{
   toast(`${name} 용병으로 추가했어요`);
 });
 
-document.getElementById('settingsBtn').addEventListener('click', openSettings);
+document.getElementById('settingsBtn').addEventListener('click', ()=>{ document.getElementById('opsMenu').hidden = true; openSettings(); });
+document.getElementById('opsMenu').addEventListener('click',(e)=>{
+  if(e.target.id==='opsMenu' || e.target.classList.contains('close') || e.target.closest('[data-goto],[data-act="adminmode"]')){
+    document.getElementById('opsMenu').hidden = true;
+  }
+});
 document.getElementById('settingsModal').addEventListener('click',(e)=>{
   if(e.target.id==='settingsModal' || e.target.classList.contains('close')) closeSettings();
 });
