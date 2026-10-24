@@ -1698,7 +1698,7 @@ function renderFormationReveal(){
 
 function renderWho(){
   const sel=document.getElementById('whoSel');
-  sel.innerHTML = '<option value="">-- 이름 선택 --</option>' + STATE.roster.map(m=>`<option value="${m.id}" ${myId()===m.id?'selected':''}>${m.name} (${m.code})</option>`).join('');
+  sel.innerHTML = '<option value="">-- 이름 선택 --</option>' + STATE.roster.map(m=>`<option value="${m.id}" ${myId()===m.id?'selected':''}>${m.name}${(m.pos||'').toUpperCase()==='GK'?' (GK)':''}</option>`).join('');
   const injSel=document.getElementById('injMember');
   if(injSel) injSel.innerHTML = STATE.roster.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
   const goalSel=document.getElementById('goalMember');
