@@ -517,6 +517,7 @@ details.collapse[open] summary:before{content:'▾ '}
     <select id="proxySel" class="proxysel"></select>
     <div id="proxyVote"></div>
     <div class="subhead">🧳 용병 추가</div>
+    <p class="lede" style="margin:0 0 8px">이름을 넣고 추가하면 이 경기에 참석으로 들어가요. 늦참·조퇴는 위 목록에서 골라 바꿔주세요.</p>
     <div style="display:flex;gap:6px">
       <input type="text" id="guestNameInput" class="traitsInput" style="margin:0;flex:1" placeholder="용병 이름">
       <button type="button" class="ghost" id="guestAddBtn" style="width:auto;padding:0 14px">추가</button>
@@ -1945,7 +1946,7 @@ function renderRatings(){
     const stars = [1,2,3,4,5].map(v=>
       `<span class="star ${v<=myVote?'on':''} ${me?'':'off'}" data-act="star" data-id="${m.id}" data-v="${v}">★</span>`).join('');
     return `<div class="row" style="align-items:flex-start;flex-wrap:wrap;gap:4px 8px">
-      <div class="nm" style="flex:1;min-width:120px">${m.name}<span class="code">${m.code}</span>
+      <div class="nm" style="flex:1;min-width:120px">${m.name}
         <div class="lede" style="margin:2px 0 0">${r? '팀 평균 '+r.avg.toFixed(1)+'★ ('+r.n+'명 평가)' : '아직 평가 없음'}</div>
       </div>
       <div class="stars">${stars}</div>
@@ -1987,7 +1988,7 @@ function renderPlayerCards(){
         <div class="tier ${tier.cls}">${tier.label}</div>
       </div>
       <div class="pname">${m.name}${m.hurt?' <span class="badge">부상</span>':''}</div>
-      <div class="pcode">${m.code} · ${m.pos}${m.no?' · #'+m.no:''}</div>
+      <div class="pcode">${m.pos}${m.no?' · #'+m.no:''}</div>
       ${infoBlock}
       <div class="pmeta"><span>평점 ${r.n}회${r.avg!=null?' (평균 '+r.avg.toFixed(1)+'★)':''}</span>${r.mom? ` <span class="mombadge">MOM ${r.mom}회</span>`:''}</div>
       <div class="pmeta">부상률 ${inj.rate.toFixed(0)}% (${inj.cnt}건 / 참석 ${inj.weeksAttended}회)</div>
@@ -2025,7 +2026,7 @@ function renderDuesQuarter(){
     const amtText = excluded? '이번 분기 제외' : (unpaidAmt>0? unpaidAmt.toLocaleString()+'원 미납' : '완납');
 
     return `<div class="row" style="flex-wrap:wrap;align-items:center;gap:6px 10px;${excluded?'opacity:.55':''}">
-      <div class="nm" style="min-width:64px">${m.name}<span class="code">${m.code||''}</span></div>
+      <div class="nm" style="min-width:64px">${m.name}</div>
       ${catSelect}
       <div class="chips" style="gap:4px">${monthChips}</div>
       <div class="num" style="margin-left:auto;font-size:.76rem;text-align:right;min-width:78px">${amtText}</div>
@@ -2313,7 +2314,7 @@ function renderInjuryAnalysis(){
   const injured = STATE.roster.filter(m=>m.hurt);
   document.getElementById('currentInjuredList').innerHTML = injured.length? injured.map(m=>{
     const s = playerInjuryStats(m.id);
-    return `<div class="injrow"><span>${m.name} (${m.code})${s.lastNote? ' — '+s.lastNote+(s.lastWeekLabel?' · '+s.lastWeekLabel:''):''}</span></div>`;
+    return `<div class="injrow"><span>${m.name}${s.lastNote? ' — '+s.lastNote+(s.lastWeekLabel?' · '+s.lastWeekLabel:''):''}</span></div>`;
   }).join('') : '<div style="color:var(--ink-faint);font-size:.82rem">현재 부상자 없음</div>';
 
   const withInj = STATE.roster.map(m=>({m, s:playerInjuryStats(m.id)})).filter(x=>x.s.cnt>0).sort((a,b)=>b.s.rate-a.s.rate);
@@ -2384,7 +2385,7 @@ function renderScorerChart(){
   const top3Card = (title, list, key, unit) => `
     <div class="card">
       <div class="benchhead" style="margin-top:0">${title}</div>
-      ${list.length? list.map((s,i)=>`<div class="row"><div class="no">${i+1}</div><div class="nm">${s.m.name}<span class="code">${s.m.code}</span></div><div class="num" style="font-weight:700">${s[key]}${unit}</div></div>`).join('')
+      ${list.length? list.map((s,i)=>`<div class="row"><div class="no">${i+1}</div><div class="nm">${s.m.name}</div><div class="num" style="font-weight:700">${s[key]}${unit}</div></div>`).join('')
         : '<div style="color:var(--ink-faint);font-size:.82rem">기록 없음</div>'}
     </div>`;
   const byGoals = stats.filter(s=>s.goals>0).sort((a,b)=>b.goals-a.goals).slice(0,3);
@@ -2406,7 +2407,7 @@ function renderScorerChart(){
   });
   const theadHtml = `<tr>${cols.map(c=>`<th data-act="statssort" data-key="${c.key}" style="cursor:pointer;white-space:nowrap">${c.label}${statsSortKey===c.key? (statsSortDir==='asc'?' ▲':' ▼'):''}</th>`).join('')}</tr>`;
   const rowsHtml = sorted.map(s=>`<tr>
-    <td>${s.m.name}<span class="code">${s.m.code}</span></td>
+    <td>${s.m.name}</td>
     <td class="n">${s.games}</td><td class="n">${s.quarters}</td><td class="n">${s.goals}</td>
     <td class="n">${s.assists}</td><td class="n">${s.pts}</td><td class="n">${s.mom}</td>
   </tr>`).join('');
@@ -2430,7 +2431,7 @@ function renderLateFees(){
     const confirmed = STATE.roster.filter(m=>confirmedIds.has(m.id));
     quickEl.innerHTML = confirmed.length? confirmed.map(m=>`
       <div class="row">
-        <div class="nm">${m.name}<span class="code">${m.code}</span></div>
+        <div class="nm">${m.name}</div>
         <div class="seg">${feeBtn(m,'late3','late')}${feeBtn(m,'late5','late')}${feeBtn(m,'noshow','noshow')}</div>
       </div>`).join('') : '<div class="lede" style="margin:0">아직 확정된 참석자가 없어요.</div>';
   }
@@ -2975,10 +2976,13 @@ document.getElementById('guestAddBtn').addEventListener('click',()=>{
   if(!name){ toast('용병 이름을 입력해주세요'); return; }
   const w = curWeek();
   if(!w.guests) w.guests = [];
-  w.guests.push({id:uid(), name, guest:true, pos:'', no:null, code:''});
+  const guest = {id:uid(), name, guest:true, pos:'', no:null, code:''};
+  w.guests.push(guest);
+  setAttend(w, guest.id, 'in');
+  proxyId = guest.id;
   input.value = '';
   save();
-  toast(`${name} 용병으로 추가했어요`);
+  toast(`${name} 용병을 참석으로 추가했어요`);
 });
 
 document.getElementById('settingsBtn').addEventListener('click', ()=>{ document.getElementById('opsMenu').hidden = true; openSettings(); });
