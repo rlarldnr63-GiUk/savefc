@@ -379,6 +379,28 @@ details.collapse[open] summary:before{content:'▾ '}
 .duesbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .duesbar .navbtn{background:none;border:1px solid var(--line);border-radius:7px;padding:4px 10px;font-family:inherit;cursor:pointer;color:var(--ink-soft)}
 .duesbar .lbl{font-weight:700;font-size:.88rem}
+.duestable-wrap{overflow-x:auto;margin:0 -4px}
+.duestable{width:100%;border-collapse:collapse;font-size:.76rem;text-align:center;white-space:nowrap}
+.duestable th{background:var(--accent-deep);color:#fff;font-weight:700;padding:7px 3px;font-size:.7rem;line-height:1.15}
+.duestable td{padding:7px 3px;border-bottom:1px solid var(--line)}
+.duestable tbody tr:nth-child(even) td{background:var(--surface-2)}
+.duestable td.no{color:var(--ink-faint);font-size:.7rem}
+.duestable td.nm{font-weight:700;text-align:left}
+.duestable td.cat{color:var(--ink-soft);font-size:.7rem}
+.duestable td.cat select{font:inherit;padding:2px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--ink);max-width:68px}
+.duestable td.dm{font-weight:800;width:34px}
+.duestable .ok{color:var(--in)}
+.duestable .no{color:var(--out)}
+.duestable td.na,.duestable td.later{color:var(--ink-faint)}
+.duestable td.fine{font-size:.72rem;font-weight:700}
+.duestable td.due{font-weight:800;text-align:right;padding-right:6px}
+.duestable tfoot td{font-weight:800;border-top:2px solid var(--accent-deep);border-bottom:0;padding-top:8px}
+.duestable tfoot td:last-child{text-align:right;padding-right:6px;color:var(--out)}
+.duestable td[data-act]{cursor:pointer}
+.duesnote{font-size:.7rem;color:var(--ink-faint);margin-top:8px}
+.duesexcl{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);font-size:.78rem}
+.duesexcl span{color:var(--ink-faint);font-size:.7rem}
+.duesexcl .chips{margin-top:6px;gap:4px}
 .duechip{cursor:pointer}
 .duechip.paid{background:var(--in-soft);border-color:var(--in);color:var(--in)}
 
@@ -731,7 +753,7 @@ details.collapse[open] summary:before{content:'▾ '}
   <button type="button" class="backbtn" data-goto="back">‹ 뒤로</button>
   <div class="panel">
     <h2><span class="bar"></span>분기별 회비 관리</h2>
-    <p class="lede">구분(정상·50%·25%할인·키퍼·장기부상·면제)을 바꾸면 금액이 자동으로 다시 계산돼요. 달을 누르면 납부 체크가 토글되고, "이번 분기 제외"는 내년 입단 예정자나 활동 중단자처럼 이번 분기 청구에서 빼야 할 사람에게 체크해주세요.</p>
+    <p class="lede">맨 오른쪽 '납부할 금액'은 이번 분기에 아직 안 낸 회비와 벌금을 더한 금액이에요.</p>
     <div class="card">
       <div class="duesbar">
         <button class="navbtn" id="duesQPrevBtn" type="button">‹</button>
@@ -1094,8 +1116,16 @@ function ensureStateDefaults(){
   if(!STATE.dues) STATE.dues = {};
   if(!STATE.venueInfo) STATE.venueInfo = {};
   if(!STATE.lateFeesPaid) STATE.lateFeesPaid = {};
-  if(!STATE.duesCategory) STATE.duesCategory = {};      // memberId -> '정상'|'50%'|'25%할인'|'키퍼'|'장기부상'|'면제'
-  if(!STATE.duesRates) STATE.duesRates = {'정상':25000,'50%':12500,'25%할인':18750,'키퍼':10000,'장기부상':10000,'면제':0};
+  if(!STATE.duesCategory) STATE.duesCategory = {};      // memberId -> '정상'|'50%'|'25%할인'|'키퍼'|'장기이탈'|'면제'
+  if(!STATE.duesRates) STATE.duesRates = {'정상':25000,'50%':12500,'25%할인':18750,'키퍼':10000,'장기이탈':10000,'면제':0};
+  // '장기부상' 구분 이름이 '장기이탈'로 바뀌었다 (단가 그대로 옮김)
+  if(STATE.duesRates['장기부상']!=null){
+    if(STATE.duesRates['장기이탈']==null) STATE.duesRates['장기이탈'] = STATE.duesRates['장기부상'];
+    delete STATE.duesRates['장기부상'];
+  }
+  Object.keys(STATE.duesCategory).forEach(id=>{ if(STATE.duesCategory[id]==='장기부상') STATE.duesCategory[id]='장기이탈'; });
+  if(!STATE.duesFines) STATE.duesFines = {};            // '2026-Q4' -> memberId -> {amt, paid}
+  if(!STATE.duesFineAmt) STATE.duesFineAmt = 2000;
   if(!STATE.duesExcluded) STATE.duesExcluded = {};       // memberId -> true면 이번 분기 청구 대상에서 제외
   if(STATE.bankBalance==null) STATE.bankBalance = 0;
   // 2026-10-11 통장 내역 기준 4분기 실제 현황을 한 번만 반영 — 이후로는 이 플래그가
@@ -1104,7 +1134,7 @@ function ensureStateDefaults(){
     Object.assign(STATE.duesCategory, {
       kgw:'면제', kjh1:'면제', ksh:'면제', kui:'면제',   // 김기욱·김재현·구승회·김의리 (운영진 면제)
       lgh:'키퍼', lyj:'키퍼',                            // 이경현·이윤재
-      kjk:'장기부상', yyj:'장기부상',                    // 구자경·윤영진
+      kjk:'장기이탈', yyj:'장기이탈',                    // 구자경·윤영진
       pjy:'50%', kch:'50%',                              // 박준열·김창희
       yjy:'25%할인',                                     // 윤준영
     });
@@ -1119,6 +1149,15 @@ function ensureStateDefaults(){
     STATE.dues['2026-12'] = Object.assign(STATE.dues['2026-12']||{}, {yyj:'2026-09-28', jjh:'2026-09-28'});
     STATE.bankBalance = 779802;
     STATE.duesSetupDone = true;
+  }
+  // 2026-10-27 통장 내역 기준: 10월분 마감(10/10) 지나서 낸 4명은 벌금 2,000원까지 같이 냄,
+  // 강태원 10/27 입금은 11월분.
+  if(!STATE.duesSetup1027){
+    const f = STATE.duesFines['2026-Q4'] = STATE.duesFines['2026-Q4'] || {};
+    ['lgh','ygb','csj','jsj'].forEach(id=>{ f[id] = {amt:2000, paid:true}; });
+    STATE.dues['2026-11'] = Object.assign(STATE.dues['2026-11']||{}, {ktw:true});
+    STATE.bankBalance = 249321;
+    STATE.duesSetup1027 = true;
   }
   STATE.weeks.forEach(migrateWeek);
   STATE.roster.forEach(migrateRoster);
@@ -1309,16 +1348,12 @@ function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart
 function monthLabel(key){ const [y,m]=key.split('-'); return y+'년 '+parseInt(m,10)+'월'; }
 function shiftMonth(key,delta){ const [y,m]=key.split('-').map(Number); const d=new Date(y,m-1+delta,1); return monthKey(d); }
 function todayIso(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-// 회비 납부값은 원래 그냥 true/false였는데, 이제 납부한 날짜(YYYY-MM-DD) 문자열을 넣어서
-// "언제 냈는지"도 같이 보여준다. 예전에 이미 true로 저장된 것도 있으니(날짜 정보 없음)
-// 문자열일 때만 날짜로 포맷하고, 그냥 true면 날짜 없이 체크 표시만 보여준다.
-function shortMD(iso){ const d=new Date(iso+'T00:00:00'); return (d.getMonth()+1)+'/'+d.getDate(); }
-function duesDateLabel(v){ return (typeof v==='string')? ' '+shortMD(v) : ''; }
 
 /* ---------- 회비 (분기별 관리: 구분별 단가 · 월별 체크 · 통장 잔액) ----------
-   사람마다 구분(정상/50%/25%할인/키퍼/장기부상/면제)이 다르고 단가도 바뀔 수 있어서,
+   사람마다 구분(정상/50%/25%할인/키퍼/장기이탈/면제)이 다르고 단가도 바뀔 수 있어서,
    분기 단위로 3개월을 한번에 보면서 구분·단가·제외 여부를 직접 관리할 수 있게 했다. */
-const DUES_CATS = ['정상','50%','25%할인','키퍼','장기부상','면제'];
+const DUES_CATS = ['정상','50%','25%할인','키퍼','장기이탈','면제'];
+function duesQKey(year,q){ return year+'-Q'+q; }
 function duesCategoryOf(id){ return STATE.duesCategory[id] || '정상'; }
 function duesRateOf(cat){ return STATE.duesRates[cat]!=null ? STATE.duesRates[cat] : 25000; }
 function isDuesExcluded(id){ return !!STATE.duesExcluded[id]; }
@@ -2004,42 +2039,58 @@ function renderDuesQuarter(){
     quarterLabel(duesViewYear, duesViewQ) + ' (' + months.map(mk=>parseInt(mk.split('-')[1],10)+'월').join('·') + ')';
   months.forEach(mk=>{ STATE.dues[mk] = STATE.dues[mk] || {}; });
 
-  let targetSum=0, paidSum=0;
-  document.getElementById('duesQRows').innerHTML = STATE.roster.map(m=>{
-    const excluded = isDuesExcluded(m.id);
+  // 엑셀 회비현황처럼 한 분기를 표 하나로: 번호·이름·구분·월별 O/X·벌금·남은 납부액
+  const qk = duesQKey(duesViewYear, duesViewQ);
+  const fines = STATE.duesFines[qk] || {};
+  const thisMonth = monthKey(new Date());
+  const people = STATE.roster.filter(m=>!m.guest && !isDuesExcluded(m.id))
+    .sort((a,b)=>(a.no==null?999:a.no)-(b.no==null?999:b.no));
+  let targetSum=0, paidSum=0, fineSum=0, dueSum=0;
+  const rows = people.map(m=>{
     const cat = duesCategoryOf(m.id);
     const rate = duesRateOf(cat);
-    const quarterAmt = rate*3;
     const paidMonths = months.filter(mk=>STATE.dues[mk][m.id]).length;
-    const paidAmt = rate*paidMonths;
-    const unpaidAmt = quarterAmt - paidAmt;
-    if(!excluded){ targetSum += quarterAmt; paidSum += paidAmt; }
+    const f = fines[m.id];
+    const fineDue = f && !f.paid ? f.amt : 0;
+    const due = rate*(3-paidMonths) + fineDue;
+    targetSum += rate*3; paidSum += rate*paidMonths; dueSum += due;
+    if(f) fineSum += f.amt;
 
-    const monthChips = months.map(mk=>{
-      const v = STATE.dues[mk][m.id];
-      const paid = !!v;
-      const mLabel = parseInt(mk.split('-')[1],10)+'월';
-      return `<span class="chip duechip ${paid?'paid':''}" data-act="duesqtoggle" data-id="${m.id}" data-mk="${mk}">${mLabel}${paid?' ✓'+duesDateLabel(v):''}</span>`;
+    const cells = months.map(mk=>{
+      const paid = !!STATE.dues[mk][m.id];
+      let mark, cls;
+      if(rate===0 && !paid){ mark='–'; cls='na'; }
+      else if(paid){ mark='O'; cls='ok'; }
+      else if(mk<=thisMonth){ mark='X'; cls='no'; }
+      else { mark=''; cls='later'; }
+      return `<td class="dm ${cls}" data-act="duesqtoggle" data-id="${m.id}" data-mk="${mk}">${mark}</td>`;
     }).join('');
-    const catSelect = `<select data-act="duescat" data-id="${m.id}" style="padding:4px 6px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:.74rem">
-      ${DUES_CATS.map(c=>`<option value="${c}" ${c===cat?'selected':''}>${c}</option>`).join('')}</select>`;
-    const amtText = excluded? '이번 분기 제외' : (unpaidAmt>0? unpaidAmt.toLocaleString()+'원 미납' : '완납');
-
-    return `<div class="row" style="flex-wrap:wrap;align-items:center;gap:6px 10px;${excluded?'opacity:.55':''}">
-      <div class="nm" style="min-width:64px">${m.name}</div>
-      ${catSelect}
-      <div class="chips" style="gap:4px">${monthChips}</div>
-      <div class="num" style="margin-left:auto;font-size:.76rem;text-align:right;min-width:78px">${amtText}</div>
-      <label style="font-size:.68rem;color:var(--ink-faint);display:flex;align-items:center;gap:3px;white-space:nowrap;width:100%;justify-content:flex-end">
-        <input type="checkbox" data-act="duesexclude" data-id="${m.id}" ${excluded?'checked':''}> 이번 분기 제외
-      </label>
-    </div>`;
+    const catCell = adminMode
+      ? `<select data-act="duescat" data-id="${m.id}">${DUES_CATS.map(c=>`<option value="${c}" ${c===cat?'selected':''}>${c}</option>`).join('')}</select>`
+      : cat;
+    const fineCell = f ? `<span class="${f.paid?'ok':'no'}">${f.amt.toLocaleString()}${f.paid?' ✓':''}</span>` : '';
+    return `<tr>
+      <td class="no">${m.no==null?'-':m.no}</td>
+      <td class="nm">${m.name}</td>
+      <td class="cat">${catCell}</td>
+      ${cells}
+      <td class="fine" data-act="duesfine" data-id="${m.id}" data-qk="${qk}">${fineCell}</td>
+      <td class="due ${due>0?'no':'ok'}">${rate===0&&!fineDue ? '–' : due>0 ? due.toLocaleString() : '완납'}</td>
+    </tr>`;
   }).join('');
+  document.getElementById('duesQRows').innerHTML = `<div class="duestable-wrap"><table class="duestable">
+    <thead><tr><th>번호</th><th>이름</th><th>구분</th>${months.map(mk=>`<th>${parseInt(mk.split('-')[1],10)}월</th>`).join('')}<th>벌금</th><th>납부할<br>금액</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr><td colspan="${3+months.length}">합계</td><td>${fineSum? fineSum.toLocaleString():''}</td><td>${dueSum.toLocaleString()}</td></tr></tfoot>
+  </table></div>
+  <div class="duesnote">O 납부 · X 미납 · – 해당 없음 · 마감(매달 10일) 지나면 벌금 ${(STATE.duesFineAmt||2000).toLocaleString()}원${adminMode?' · 칸을 누르면 바뀌어요 (벌금: 없음→미납→납부)':''}</div>
+  ${adminMode ? `<div class="duesexcl"><b>청구 대상</b> <span>누르면 이번 표에서 빼거나 다시 넣어요</span><div class="chips">${STATE.roster.filter(m=>!m.guest).map(m=>
+      `<span class="chip ${isDuesExcluded(m.id)?'':'paid'}" data-act="duesexcl" data-id="${m.id}">${m.name}</span>`).join('')}</div></div>` : ''}`;
   document.getElementById('duesQSummary').innerHTML =
-    `분기 목표 <b>${targetSum.toLocaleString()}원</b> · 납부 <b>${paidSum.toLocaleString()}원</b> · 미납 <b>${(targetSum-paidSum).toLocaleString()}원</b>`;
+    `분기 목표 <b>${targetSum.toLocaleString()}원</b> · 납부 <b>${paidSum.toLocaleString()}원</b> · 남은 금액 <b>${dueSum.toLocaleString()}원</b>`;
 
   renderDuesRateCard();
-  renderDuesBankCard(targetSum, paidSum);
+  renderDuesBankCard(dueSum);
 }
 
 function renderDuesRateCard(){
@@ -2051,8 +2102,7 @@ function renderDuesRateCard(){
     </div>`).join('');
 }
 
-function renderDuesBankCard(targetSum, paidSum){
-  const unpaid = targetSum - paidSum;
+function renderDuesBankCard(unpaid){
   const balance = STATE.bankBalance || 0;
   const projected = balance + unpaid;
   document.getElementById('duesBankCard').innerHTML = `
@@ -2492,7 +2542,7 @@ function renderStats(){
 }
 
 /* ---------- events ---------- */
-const ADMIN_GATED_ACTS = new Set(['duesqtoggle','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid','latefeeclear']);
+const ADMIN_GATED_ACTS = new Set(['duesqtoggle','duesfine','duesexcl','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid','latefeeclear']);
 
 document.addEventListener('click', (e)=>{
   // 방금 실제 드래그(탭이 아니라 진짜 이동)로 배치를 끝낸 직후에 뒤따라오는 네이티브
@@ -2605,7 +2655,23 @@ document.addEventListener('click', (e)=>{
   else if(kind==='duesqtoggle'){
     const id=act.dataset.id, mk=act.dataset.mk;
     STATE.dues[mk] = STATE.dues[mk] || {};
-    STATE.dues[mk][id] = STATE.dues[mk][id] ? false : todayIso();
+    STATE.dues[mk][id] = !STATE.dues[mk][id];
+    save();
+  }
+  else if(kind==='duesfine'){
+    // 없음 → 미납 → 납부 → (한 번 더 늦은 경우) 2배 미납 → 2배 납부 → 없음
+    const id=act.dataset.id, qk=act.dataset.qk, unit=STATE.duesFineAmt||2000;
+    const f = (STATE.duesFines[qk] = STATE.duesFines[qk] || {});
+    const cur = f[id];
+    if(!cur) f[id] = {amt:unit, paid:false};
+    else if(!cur.paid) cur.paid = true;
+    else if(cur.amt < unit*2) f[id] = {amt:cur.amt+unit, paid:false};
+    else delete f[id];
+    save();
+  }
+  else if(kind==='duesexcl'){
+    const id=act.dataset.id;
+    STATE.duesExcluded[id] = !STATE.duesExcluded[id];
     save();
   }
   else if(kind==='latefeepaid'){
