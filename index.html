@@ -380,9 +380,9 @@ details.collapse[open] summary:before{content:'▾ '}
 .duesbar .navbtn{background:none;border:1px solid var(--line);border-radius:7px;padding:4px 10px;font-family:inherit;cursor:pointer;color:var(--ink-soft)}
 .duesbar .lbl{font-weight:700;font-size:.88rem}
 .duestable-wrap{overflow-x:auto;margin:0 -4px}
-.duestable{width:100%;border-collapse:collapse;font-size:.76rem;text-align:center;white-space:nowrap}
-.duestable th{background:var(--accent-deep);color:#fff;font-weight:700;padding:7px 3px;font-size:.7rem;line-height:1.15}
-.duestable td{padding:7px 3px;border-bottom:1px solid var(--line)}
+.duestable{width:100%;border-collapse:collapse;border:1px solid var(--ink-faint);font-size:.76rem;text-align:center;white-space:nowrap}
+.duestable th{background:var(--accent-deep);color:#fff;font-weight:700;padding:7px 3px;border:1px solid var(--ink-faint);font-size:.7rem;line-height:1.15}
+.duestable td{padding:7px 3px;border:1px solid var(--ink-faint)}
 .duestable tbody tr:nth-child(even) td{background:var(--surface-2)}
 .duestable td.no{color:var(--ink-faint);font-size:.7rem}
 .duestable td.nm{font-weight:700;text-align:left}
@@ -394,7 +394,7 @@ details.collapse[open] summary:before{content:'▾ '}
 .duestable td.na,.duestable td.later{color:var(--ink-faint)}
 .duestable td.fine{font-size:.72rem;font-weight:700}
 .duestable td.due{font-weight:800;text-align:right;padding-right:6px}
-.duestable tfoot td{font-weight:800;border-top:2px solid var(--accent-deep);border-bottom:0;padding-top:8px}
+.duestable tfoot td{font-weight:800;border-top:2px solid var(--accent-deep);padding-top:8px}
 .duestable tfoot td:last-child{text-align:right;padding-right:6px;color:var(--out)}
 .duestable td[data-act]{cursor:pointer}
 .duesnote{font-size:.7rem;color:var(--ink-faint);margin-top:8px}
@@ -2042,7 +2042,8 @@ function renderDuesQuarter(){
   // 엑셀 회비현황처럼 한 분기를 표 하나로: 번호·이름·구분·월별 O/X·벌금·남은 납부액
   const qk = duesQKey(duesViewYear, duesViewQ);
   const fines = STATE.duesFines[qk] || {};
-  const thisMonth = monthKey(new Date());
+  // 엑셀처럼 이번 달과 다음 달까지는 안 냈으면 X, 그 뒤 달은 빈칸
+  const xUntil = shiftMonth(monthKey(new Date()), 1);
   const people = STATE.roster.filter(m=>!m.guest && !isDuesExcluded(m.id))
     .sort((a,b)=>(a.no==null?999:a.no)-(b.no==null?999:b.no));
   let targetSum=0, paidSum=0, fineSum=0, dueSum=0;
@@ -2061,7 +2062,7 @@ function renderDuesQuarter(){
       let mark, cls;
       if(rate===0 && !paid){ mark='–'; cls='na'; }
       else if(paid){ mark='O'; cls='ok'; }
-      else if(mk<=thisMonth){ mark='X'; cls='no'; }
+      else if(mk<=xUntil){ mark='X'; cls='no'; }
       else { mark=''; cls='later'; }
       return `<td class="dm ${cls}" data-act="duesqtoggle" data-id="${m.id}" data-mk="${mk}">${mark}</td>`;
     }).join('');
