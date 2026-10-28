@@ -398,12 +398,25 @@ details.collapse[open] summary:before{content:'▾ '}
 .duestable tfoot td:last-child{text-align:right;padding-right:6px;color:var(--out)}
 .duestable td[data-act]{cursor:pointer}
 .duestable td.fine{white-space:nowrap}
-.duestable .fineinput{width:38px;font:inherit;font-weight:700;text-align:right;padding:2px 3px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink)}
-.duestable .fineinput.no{color:var(--out)}
-.duestable .fineinput.ok{color:var(--in)}
-.duestable .fineinput::-webkit-inner-spin-button{display:none}
-.duestable .finepaid{margin-left:2px;width:18px;height:18px;padding:0;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-faint);font-size:.7rem;cursor:pointer}
-.duestable .finepaid.on{background:var(--in);border-color:var(--in);color:#fff}
+.fineformrow{display:flex;gap:8px;align-items:center}
+.fineformrow select,.fineformrow input[type=number],.finereason{flex:1;min-width:0;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.fineformrow input[type=number]{max-width:110px;text-align:right}
+.finequick{margin:8px 0;gap:4px}
+.finequick .chip{cursor:pointer;font-size:.72rem}
+.finereason{width:100%;box-sizing:border-box;margin-bottom:8px}
+.finepaidnow{font-size:.8rem;color:var(--ink-soft);display:flex;align-items:center;gap:4px;margin-right:auto}
+#fineForm{margin-bottom:10px}
+.fineitem{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem}
+.fineitem:last-child{border-bottom:0}
+.fineitem .fn{font-weight:700;min-width:52px}
+.fineitem .fr{flex:1;min-width:0;color:var(--ink-faint);font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fineitem .fa{font-weight:800}
+.fineitem .ok{color:var(--in)}
+.fineitem .no{color:var(--out)}
+.fineitem .fs{font-size:.7rem;font-weight:700}
+.finetoggle{font:inherit;font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid var(--out);background:var(--out-soft);color:var(--out);cursor:pointer}
+.finetoggle.on{border-color:var(--in);background:var(--in-soft);color:var(--in)}
+.finedel{border:0;background:none;color:var(--ink-faint);cursor:pointer;font-size:.8rem;padding:2px 4px}
 .finehelp{position:relative;margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--line);color:var(--ink-faint);font-size:.66rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;cursor:help;opacity:.6}
 .finehelp:hover,.finehelp:focus{opacity:1;outline:none}
 .finehelp-pop{display:none;position:absolute;right:0;top:22px;z-index:20;width:230px;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);color:var(--ink-soft);font-size:.74rem;font-weight:400;line-height:1.6;text-align:left}
@@ -788,6 +801,28 @@ details.collapse[open] summary:before{content:'▾ '}
   </div>
 
   <div class="panel">
+    <h2><span class="bar"></span>벌금 내역</h2>
+    <div class="card" id="fineForm">
+      <div class="fineformrow">
+        <select id="fineWho"></select>
+        <input type="number" id="fineAmt" inputmode="numeric" min="0" step="1000" placeholder="금액">
+      </div>
+      <div class="chips finequick">
+        <span class="chip" data-act="fineamt" data-v="2000" data-r="회비 연체">회비 연체 2천</span>
+        <span class="chip" data-act="fineamt" data-v="3000" data-r="지각 (20분 전 미도착)">지각 3천</span>
+        <span class="chip" data-act="fineamt" data-v="5000" data-r="경기 지각">경기 지각 5천</span>
+        <span class="chip" data-act="fineamt" data-v="20000" data-r="노쇼">노쇼 2만</span>
+      </div>
+      <input type="text" id="fineReason" placeholder="사유 (선택)" class="finereason">
+      <div class="fineformrow">
+        <label class="finepaidnow"><input type="checkbox" id="finePaidNow"> 이미 냄</label>
+        <button type="button" class="primarybtn" data-act="fineadd" style="width:auto;padding:10px 18px;margin-top:0">벌금 추가</button>
+      </div>
+    </div>
+    <div class="card" id="fineList"></div>
+  </div>
+
+  <div class="panel">
     <h2><span class="bar"></span>회비 단가표</h2>
     <p class="lede">구분별 월 회비 금액이에요. 수정하면 위 분기 회비 계산에 바로 반영돼요.</p>
     <div class="card" id="duesRateCard"></div>
@@ -1146,7 +1181,7 @@ function ensureStateDefaults(){
     delete STATE.duesRates['장기부상'];
   }
   Object.keys(STATE.duesCategory).forEach(id=>{ if(STATE.duesCategory[id]==='장기부상') STATE.duesCategory[id]='장기이탈'; });
-  if(!STATE.duesFines) STATE.duesFines = {};            // '2026-Q4' -> memberId -> {amt, paid}
+  if(!STATE.duesFines) STATE.duesFines = {};            // '2026-Q4' -> memberId -> [{id, amt, reason, date, paid}]
   if(!STATE.duesFineAmt) STATE.duesFineAmt = 2000;
   if(!STATE.duesExcluded) STATE.duesExcluded = {};       // memberId -> true면 이번 분기 청구 대상에서 제외
   if(STATE.bankBalance==null) STATE.bankBalance = 0;
@@ -1176,11 +1211,15 @@ function ensureStateDefaults(){
   // 강태원 10/27 입금은 11월분.
   if(!STATE.duesSetup1027){
     const f = STATE.duesFines['2026-Q4'] = STATE.duesFines['2026-Q4'] || {};
-    ['lgh','ygb','csj','jsj'].forEach(id=>{ f[id] = {amt:2000, paid:true}; });
+    ['lgh','ygb','csj','jsj'].forEach(id=>{ f[id] = [{id:uid(), amt:2000, reason:'회비 연체', date:'2026-10-27', paid:true}]; });
     STATE.dues['2026-11'] = Object.assign(STATE.dues['2026-11']||{}, {ktw:true});
     STATE.bankBalance = 249321;
     STATE.duesSetup1027 = true;
   }
+  // 벌금은 처음에 1인당 하나({amt,paid})였다가, 한 분기에 여러 번 받을 수 있게 목록으로 바뀌었다
+  Object.values(STATE.duesFines).forEach(q=>Object.keys(q).forEach(id=>{
+    if(!Array.isArray(q[id])) q[id] = [{id:uid(), amt:q[id].amt, reason:'회비 연체', date:'2026-10-27', paid:!!q[id].paid}];
+  }));
   STATE.weeks.forEach(migrateWeek);
   STATE.roster.forEach(migrateRoster);
 }
@@ -2073,11 +2112,12 @@ function renderDuesQuarter(){
     const cat = duesCategoryOf(m.id);
     const rate = duesRateOf(cat);
     const paidMonths = months.filter(mk=>STATE.dues[mk][m.id]).length;
-    const f = fines[m.id];
-    const fineDue = f && !f.paid ? f.amt : 0;
+    const list = fines[m.id] || [];
+    const fineTotal = list.reduce((a,x)=>a+x.amt,0);
+    const fineDue = list.filter(x=>!x.paid).reduce((a,x)=>a+x.amt,0);
     const due = rate*(3-paidMonths) + fineDue;
     targetSum += rate*3; paidSum += rate*paidMonths; dueSum += due;
-    if(f) fineSum += f.amt;
+    fineSum += fineTotal;
 
     const cells = months.map(mk=>{
       const paid = !!STATE.dues[mk][m.id];
@@ -2091,9 +2131,8 @@ function renderDuesQuarter(){
     const catCell = adminMode
       ? `<select data-act="duescat" data-id="${m.id}">${DUES_CATS.map(c=>`<option value="${c}" ${c===cat?'selected':''}>${c}</option>`).join('')}</select>`
       : cat;
-    const fineCell = adminMode
-      ? `<input type="number" inputmode="numeric" step="1000" min="0" class="fineinput ${f?(f.paid?'ok':'no'):''}" data-act="duesfineamt" data-id="${m.id}" data-qk="${qk}" value="${f?f.amt:''}">${f ? `<button type="button" class="finepaid ${f.paid?'on':''}" data-act="duesfine" data-id="${m.id}" data-qk="${qk}" title="납부 체크">✓</button>` : ''}`
-      : f ? `<span class="${f.paid?'ok':'no'}">${f.amt.toLocaleString()}${f.paid?' ✓':''}</span>` : '';
+    // 벌금 칸은 이번 분기 누적 합계만 보여준다 (다 냈으면 ✓, 아직 낼 게 있으면 빨강)
+    const fineCell = fineTotal ? `<span class="${fineDue?'no':'ok'}">${fineTotal.toLocaleString()}${fineDue?'':' ✓'}</span>` : '';
     return `<tr>
       <td class="no">${m.no==null?'-':m.no}</td>
       <td class="nm">${m.name}</td>
@@ -2108,14 +2147,38 @@ function renderDuesQuarter(){
     <tbody>${rows}</tbody>
     <tfoot><tr><td colspan="${3+months.length}">합계</td><td>${fineSum? fineSum.toLocaleString():''}</td><td>${dueSum.toLocaleString()}</td></tr></tfoot>
   </table></div>
-  <div class="duesnote">O 납부 · X 미납 · – 해당 없음 · 마감(매달 10일) 지나면 벌금 ${(STATE.duesFineAmt||2000).toLocaleString()}원${adminMode?' · 월 칸을 누르면 O/X가 바뀌고, 벌금은 금액을 적은 뒤 ✓를 누르면 납부 처리돼요':''}</div>
+  <div class="duesnote">O 납부 · X 미납 · – 해당 없음 · 마감(매달 10일) 지나면 벌금 ${(STATE.duesFineAmt||2000).toLocaleString()}원${adminMode?' · 월 칸을 누르면 O/X가 바뀌어요':''}</div>
   ${adminMode ? `<div class="duesexcl"><b>청구 대상</b> <span>누르면 이번 표에서 빼거나 다시 넣어요</span><div class="chips">${STATE.roster.filter(m=>!m.guest).map(m=>
       `<span class="chip ${isDuesExcluded(m.id)?'':'paid'}" data-act="duesexcl" data-id="${m.id}">${m.name}</span>`).join('')}</div></div>` : ''}`;
   document.getElementById('duesQSummary').innerHTML =
     `분기 목표 <b>${targetSum.toLocaleString()}원</b> · 납부 <b>${paidSum.toLocaleString()}원</b> · 남은 금액 <b>${dueSum.toLocaleString()}원</b>`;
 
+  renderDuesFines(qk, people);
   renderDuesRateCard();
   renderDuesBankCard(dueSum);
+}
+
+// 벌금 내역: 표에는 합계만, 건별 기록은 여기서 입력·납부 체크·삭제
+function renderDuesFines(qk, people){
+  document.getElementById('fineForm').style.display = adminMode ? '' : 'none';
+  const sel = document.getElementById('fineWho'), keep = sel.value;
+  sel.innerHTML = '<option value="">-- 선수 선택 --</option>' + people.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  sel.value = keep;
+  const fines = STATE.duesFines[qk] || {};
+  const nameOf = id => (STATE.roster.find(m=>m.id===id)||{}).name || '?';
+  const entries = [];
+  Object.keys(fines).forEach(pid=>fines[pid].forEach(x=>entries.push({pid, ...x})));
+  entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  document.getElementById('fineList').innerHTML = entries.length ? entries.map(x=>`
+    <div class="fineitem">
+      <span class="fn">${nameOf(x.pid)}</span>
+      <span class="fr">${escHtml(x.reason||'')}${x.date?` · ${parseInt(x.date.slice(5,7),10)}/${parseInt(x.date.slice(8),10)}`:''}</span>
+      <span class="fa ${x.paid?'ok':'no'}">${x.amt.toLocaleString()}원</span>
+      ${adminMode
+        ? `<button type="button" class="finetoggle ${x.paid?'on':''}" data-act="duesfine" data-qk="${qk}" data-id="${x.pid}" data-fid="${x.id}">${x.paid?'납부':'미납'}</button>
+           <button type="button" class="finedel" data-act="duesfinedel" data-qk="${qk}" data-id="${x.pid}" data-fid="${x.id}" aria-label="삭제">✕</button>`
+        : `<span class="fs ${x.paid?'ok':'no'}">${x.paid?'납부':'미납'}</span>`}
+    </div>`).join('') : '<div class="lede" style="margin:0">이번 분기 벌금 기록이 없어요.</div>';
 }
 
 function renderDuesRateCard(){
@@ -2567,7 +2630,7 @@ function renderStats(){
 }
 
 /* ---------- events ---------- */
-const ADMIN_GATED_ACTS = new Set(['duesqtoggle','duesfine','duesexcl','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid','latefeeclear']);
+const ADMIN_GATED_ACTS = new Set(['duesqtoggle','duesfine','duesfinedel','fineadd','duesexcl','hurttoggle','venuepref','delinj','delgoal','star','latefee','latefeepaid','latefeeclear']);
 
 document.addEventListener('click', (e)=>{
   // 방금 실제 드래그(탭이 아니라 진짜 이동)로 배치를 끝낸 직후에 뒤따라오는 네이티브
@@ -2684,11 +2747,36 @@ document.addEventListener('click', (e)=>{
     save();
   }
   else if(kind==='duesfine'){
-    // 금액은 칸에 직접 입력하고, 옆 ✓ 버튼으로 납부 여부만 토글
-    const f = (STATE.duesFines[act.dataset.qk] || {})[act.dataset.id];
+    const f = ((STATE.duesFines[act.dataset.qk] || {})[act.dataset.id] || []).find(x=>x.id===act.dataset.fid);
     if(!f) return;
     f.paid = !f.paid;
     save();
+  }
+  else if(kind==='duesfinedel'){
+    const q = STATE.duesFines[act.dataset.qk] || {}, id = act.dataset.id;
+    if(!q[id] || !confirm('이 벌금 기록을 지울까요?')) return;
+    q[id] = q[id].filter(x=>x.id!==act.dataset.fid);
+    if(!q[id].length) delete q[id];
+    save();
+  }
+  else if(kind==='fineamt'){
+    document.getElementById('fineAmt').value = act.dataset.v;
+    document.getElementById('fineReason').value = act.dataset.r;
+  }
+  else if(kind==='fineadd'){
+    const id = document.getElementById('fineWho').value;
+    const amt = parseInt(document.getElementById('fineAmt').value,10);
+    if(!id){ toast('선수를 골라주세요'); return; }
+    if(!amt || amt<0){ toast('금액을 적어주세요'); return; }
+    const qk = duesQKey(duesViewYear, duesViewQ);
+    const q = (STATE.duesFines[qk] = STATE.duesFines[qk] || {});
+    (q[id] = q[id] || []).push({id:uid(), amt, reason:document.getElementById('fineReason').value.trim(), date:todayIso(),
+      paid:document.getElementById('finePaidNow').checked});
+    document.getElementById('fineAmt').value = '';
+    document.getElementById('fineReason').value = '';
+    document.getElementById('finePaidNow').checked = false;
+    save();
+    toast('벌금을 추가했어요');
   }
   else if(kind==='duesexcl'){
     const id=act.dataset.id;
@@ -2751,7 +2839,7 @@ document.addEventListener('change', (e)=>{
     save();
     return;
   }
-  const gatedEl = e.target.closest('[data-act="strong"],[data-act="weak"],[data-act="posrole"],[data-act="foot"],[data-act="venueprice"],[data-act="venuetime"],[data-act="duescat"],[data-act="duesrate"],[data-act="duesexclude"],[data-act="bankbalance"],[data-act="duesfineamt"]');
+  const gatedEl = e.target.closest('[data-act="strong"],[data-act="weak"],[data-act="posrole"],[data-act="foot"],[data-act="venueprice"],[data-act="venuetime"],[data-act="duescat"],[data-act="duesrate"],[data-act="duesexclude"],[data-act="bankbalance"]');
   if(gatedEl && !adminMode){
     toast('임원진 모드에서만 변경할 수 있어요');
     render(); // 방금 타이핑한 내용을 저장된 값으로 되돌려서 보여준다
@@ -2807,15 +2895,6 @@ document.addEventListener('change', (e)=>{
   const duesCatEl = e.target.closest('[data-act="duescat"]');
   if(duesCatEl){
     STATE.duesCategory[duesCatEl.dataset.id] = duesCatEl.value;
-    save();
-    return;
-  }
-  const fineAmtEl = e.target.closest('[data-act="duesfineamt"]');
-  if(fineAmtEl){
-    const id=fineAmtEl.dataset.id, qk=fineAmtEl.dataset.qk, v=parseInt(fineAmtEl.value,10);
-    const f = (STATE.duesFines[qk] = STATE.duesFines[qk] || {});
-    if(!v || v<0) delete f[id];
-    else f[id] = {amt:v, paid: f[id] ? f[id].paid : false};
     save();
     return;
   }
