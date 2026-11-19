@@ -1,0 +1,601 @@
+<title>오천만분의 일</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 레이아웃: 위에 시계(연·월·배속), 그 아래 갈림길 카드, 능력치와 올해 계획, 맨 아래로 흘러가는 인생 기록 */
+:root{
+  --paper:#f3f5f8; --sheet:#ffffff; --ink:#1a2132; --muted:#5f687a; --line:#dde2ea; --soft:#eef1f6;
+  --blue:#2d4f9e; --blue-soft:#e6ecf8; --seal:#c3342b; --seal-soft:#fbe9e7; --news:#7a6428; --news-soft:#f6f1e4;
+  --display:"Gowun Batang", "Nanum Myeongjo", serif; --body:"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; --mono:"IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0f131a; --sheet:#171c26; --ink:#e7ebf3; --muted:#9aa4b6; --line:#2a3242; --soft:#1e2531;
+  --blue:#86a6f2; --blue-soft:#1f2a42; --seal:#ec6a5e; --seal-soft:#3a1f1e; --news:#d9c48f; --news-soft:#2a2618; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --paper:#0f131a; --sheet:#171c26; --ink:#e7ebf3; --muted:#9aa4b6; --line:#2a3242; --soft:#1e2531;
+  --blue:#86a6f2; --blue-soft:#1f2a42; --seal:#ec6a5e; --seal-soft:#3a1f1e; --news:#d9c48f; --news-soft:#2a2618; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--paper); color:var(--ink); font-family:var(--body); font-size:15px; line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); padding-block:0 48px}
+body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); z-index:10; background:var(--paper)}
+.wrap{max-width:920px; margin:0 auto; display:flex; flex-direction:column; gap:12px}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0}
+button{font:inherit; color:inherit; cursor:pointer}
+button:focus-visible, input:focus-visible, textarea:focus-visible{outline:2px solid var(--blue); outline-offset:2px}
+.num{font-family:var(--mono); font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--line); background:var(--sheet); border-radius:8px; padding:10px 14px}
+.btn.primary{background:var(--ink); color:var(--sheet); border-color:var(--ink); font-weight:700}
+.btn.ghost{background:transparent}
+.sheet{background:var(--sheet); border:1px solid var(--line); border-radius:10px; padding:14px}
+.note{font-size:12px; color:var(--muted); text-align:center; margin:0}
+
+/* 시작 */
+.start{padding-top:36px; display:flex; flex-direction:column; gap:18px}
+.eyebrow{font-size:12px; letter-spacing:.14em; color:var(--seal); font-weight:700}
+.start h1{font-size:40px; line-height:1.15}
+.start p{color:var(--muted); margin:0}
+.form{display:flex; flex-direction:column; gap:12px}
+.form label{font-size:13px; color:var(--muted)}
+.form input{font:inherit; font-size:17px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); width:100%}
+.funeral{position:fixed; inset:0; z-index:200; background:#1d1b18; opacity:1; transition:opacity .5s}
+.funeral.out{opacity:0}
+.funeral canvas{display:block}
+.f-cap{position:absolute; left:50%; bottom:5%; transform:translateX(-50%); text-align:center; color:#efe9dc; display:grid; gap:3px; animation:fcap 1.2s 1.4s both; text-shadow:0 1px 3px #000; white-space:nowrap}
+.f-cap b{font-family:var(--display); font-size:22px; letter-spacing:.1em} .f-cap span{font-size:13px; opacity:.85}
+.f-skip{position:absolute; top:14px; right:14px; color:#efe9dc; border-color:rgba(255,255,255,.35); background:rgba(0,0,0,.3)}
+@keyframes fcap{from{opacity:0; transform:translate(-50%,8px)} to{opacity:1; transform:translate(-50%,0)}}
+.end1{margin-top:12px; background:var(--sheet); border:2px solid var(--ink); border-radius:6px; padding:14px; display:grid; gap:10px; position:relative}
+.e-ob{text-align:center; display:grid; gap:2px} .e-ob .seal{top:6px; right:8px; width:38px; height:38px; font-size:15px}
+.e-ob .lbl{font-size:11px; letter-spacing:.3em; color:var(--muted)} .e-ob h2{font-size:24px}
+.e-ob .years{font-family:var(--mono); font-size:12.5px; color:var(--muted)} .e-ob .cause{font-size:12px; color:var(--muted)}
+.e-v{display:flex; justify-content:space-between; align-items:center; gap:10px; border-top:1px dashed var(--line); border-bottom:1px dashed var(--line); padding:8px 0}
+.e-v .t{font-family:var(--display); font-size:20px} .e-v .rank{font-family:var(--mono); font-size:12.5px; color:var(--seal)}
+.e-sc{text-align:right; display:grid} .e-sc b{font-size:34px; color:var(--seal); line-height:1} .e-sc small{font-size:11px; color:var(--muted)} .e-sc span{font-size:11.5px; color:var(--blue); font-family:var(--display)}
+.e-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px}
+.e-grid div{background:var(--soft); border-radius:8px; padding:7px 8px; display:grid; min-width:0}
+.e-grid span{font-size:11px; color:var(--muted)} .e-grid b{font-family:var(--display); font-size:16px; line-height:1.25; overflow-wrap:anywhere} .e-grid i{font-style:normal; font-size:10.5px; color:var(--muted)}
+.end1 .quote{font-size:14.5px; margin:0}
+.detail{display:grid; gap:10px; margin-top:12px} .detail[hidden]{display:none}
+.end1 .row .btn{white-space:nowrap; padding:10px 6px; font-size:13.5px} .dh{font-size:15px; margin-bottom:8px}
+.score{display:grid; gap:6px}
+.sc-h{display:flex; justify-content:space-between; align-items:baseline; font-family:var(--display); font-size:17px}
+.sc-h b{font-size:30px; color:var(--seal)} .sc-h small{font-size:13px; color:var(--muted)}
+.sc-g{font-family:var(--display); font-size:15px; color:var(--blue); margin-top:-4px}
+.sc-r{display:grid; grid-template-columns:80px 1fr 46px; gap:8px; align-items:center; font-size:12.5px}
+.sc-r .num{font-size:11.5px; color:var(--muted); text-align:right}
+.src summary{cursor:pointer; font-size:13.5px; font-weight:700}
+.src ul{margin:8px 0 0; padding-left:16px; display:flex; flex-direction:column; gap:6px; font-size:12.5px}
+.src small{display:block; color:var(--muted); font-size:11px}
+.facts{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; font-size:12.5px; color:var(--muted)}
+.facts div{background:var(--soft); border-radius:8px; padding:10px; min-width:0}
+.facts b{display:block; color:var(--ink); font-size:15px; font-family:var(--display)}
+
+/* 시계 */
+.clock{position:sticky; top:env(safe-area-inset-top,0px); z-index:5; background:var(--paper); padding-top:12px; padding-bottom:6px; display:flex; flex-direction:column; gap:8px; border-bottom:1px solid var(--line)}
+.idline{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap}
+.idline h2{font-size:21px}
+.idline .when{font-family:var(--display); font-size:17px}
+.idline .when b{color:var(--seal)}
+.months{display:grid; grid-template-columns:repeat(12,1fr); gap:2px; position:relative}
+.months span{height:18px; background:var(--soft); border-radius:3px; position:relative; overflow:hidden; font-size:9.5px; color:var(--muted); text-align:center; line-height:18px}
+.months span i{position:absolute; inset:0 auto 0 0; background:var(--blue-soft); z-index:0}
+.months span em{position:relative; z-index:1; font-style:normal}
+.months span.ev::after{content:""; position:absolute; top:2px; right:2px; width:4px; height:4px; border-radius:50%; background:var(--seal); z-index:1}
+.ctl{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
+.ctl button{border:1px solid var(--line); background:var(--sheet); border-radius:6px; padding:3px 9px; font-size:12.5px; font-family:var(--mono)}
+.ctl button.on{background:var(--ink); color:var(--sheet); border-color:var(--ink)}
+.ctl .sp{flex:1}
+.ctl label{font-size:12.5px; color:var(--muted); display:flex; gap:4px; align-items:center}
+.stagebar{display:grid; grid-template-columns:repeat(8,1fr); gap:3px}
+.stagebar span{height:4px; border-radius:2px; background:var(--line)}
+.stagebar span.done{background:var(--blue)} .stagebar span.now{background:var(--seal)}
+
+/* 갈림길 카드 */
+.decide{background:var(--sheet); border:2px solid var(--ink); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px; animation:pop .25s ease}
+.decide.news{border-color:var(--news)}
+.tiplink{cursor:help; text-decoration:underline dotted var(--muted); text-underline-offset:3px}
+.tip{position:fixed; z-index:50; background:var(--ink); color:var(--sheet); border-radius:8px; padding:9px 11px; font-size:12px; line-height:1.5; box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.tip ul{margin:4px 0 0; padding-left:16px} .tip li{margin:1px 0} .tip b{color:inherit}
+.scene{display:block; width:100%; height:160px; border-radius:8px; margin-bottom:2px; background:var(--soft)}
+.decide .k{font-size:12px; color:var(--seal); font-weight:700; letter-spacing:.06em}
+.decide.news .k{color:var(--news)}
+.decide .headline{font-size:13px; font-weight:700; color:var(--news); border-left:3px solid var(--news); padding-left:9px}
+.decide p{font-family:var(--display); font-size:18.5px; line-height:1.6; margin:0; white-space:pre-line}
+.decide .ctx{font-size:13px; color:var(--muted); font-family:var(--body); line-height:1.5}
+.choices{display:flex; flex-direction:column; gap:7px}
+.choice{text-align:left; border:1px solid var(--line); background:var(--paper); border-radius:9px; padding:11px 13px; display:flex; gap:10px; align-items:baseline}
+.choice .n{font-family:var(--mono); font-size:12px; color:var(--muted)}
+.choice:hover:not(:disabled){border-color:var(--blue)}
+.choice:disabled{opacity:.45; cursor:not-allowed}
+.choice small{display:block; color:var(--muted); font-size:11.5px}
+.decide textarea{font:inherit; font-size:14px; border:1px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); padding:8px 10px; resize:vertical; min-height:56px}
+@keyframes pop{from{transform:translateY(6px); opacity:.5} to{transform:none; opacity:1}}
+
+/* 능력치 · 계획 */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.cols{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:12px; align-items:start}
+.lcol{display:flex; flex-direction:column; gap:12px; min-width:0}
+.rcol{position:sticky; top:calc(var(--clockH,150px) + env(safe-area-inset-top,0px) + 8px); max-height:calc(100vh - var(--clockH,150px) - 24px); overflow-y:auto; min-width:0}
+.fh{font-size:15px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:-14px; background:var(--sheet); padding:4px 0; z-index:1}
+.fh .btn{padding:2px 8px; font-size:12px}
+.dn{display:none; font-family:var(--mono); font-size:12px; min-width:18px; text-align:center}
+.stats{display:grid; gap:6px 14px; grid-template-columns:repeat(3,minmax(0,1fr))}
+.topstats .money{margin-top:8px}
+.more2{margin-top:8px; border-top:1px dashed var(--line); padding-top:6px}
+.more2 summary{cursor:pointer; font-size:12.5px; color:var(--muted); list-style:none}
+.more2 summary::before{content:'▸ '}
+.more2[open] summary::before{content:'▾ '}
+.more2 summary b{color:var(--blue)}
+.more2 .tal{display:grid; gap:4px}
+.stat{display:grid; grid-template-columns:36px 1fr 26px; gap:6px; align-items:center; font-size:12.5px}
+.bar{height:6px; background:var(--soft); border-radius:3px; overflow:hidden}
+.bar i{display:block; height:100%; background:var(--blue); border-radius:3px; transition:width .4s}
+.bar i.low{background:var(--seal)}
+.stat .num{font-size:11.5px; text-align:right; color:var(--muted)}
+.money{display:flex; justify-content:space-between; font-size:12.5px; border-top:1px dashed var(--line); padding-top:8px; margin-top:4px}
+.money b{font-family:var(--mono)}
+.chips{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px}
+.chip{font-size:11px; padding:1px 7px; border-radius:20px; background:var(--soft); color:var(--muted)}
+.chip.warn{background:var(--seal-soft); color:var(--seal)}
+.plan h3{font-size:14px; display:flex; justify-content:space-between; align-items:baseline}
+.plan h3 small{font-family:var(--mono); font-size:11.5px; color:var(--muted); font-weight:400}
+.prow{display:grid; grid-template-columns:1fr auto; gap:2px 6px; align-items:center; padding:5px 0; border-bottom:1px dashed var(--line)}
+.prow:last-child{border-bottom:none}
+.prow .lb{font-size:13px}
+.prow .lb small{display:block; font-size:10.5px; color:var(--muted); line-height:1.3}
+.pctl{display:flex; align-items:center; gap:4px}
+.pctl button{width:26px; height:26px; border:1px solid var(--line); background:var(--paper); border-radius:6px; padding:0; line-height:1}
+.pctl button:disabled{opacity:.35; cursor:not-allowed}
+.dots{font-family:var(--mono); font-size:11px; letter-spacing:-1px; color:var(--blue); min-width:62px; text-align:center}
+.dots .lk{color:var(--muted)}
+.plan .hint{font-size:11.5px; color:var(--muted); margin:6px 0 0}
+.ptline{display:flex; flex-wrap:wrap; gap:4px; margin:4px 0 4px}
+.chip.good{background:var(--blue-soft); color:var(--blue)}
+.ftag{font-size:10px; color:var(--seal); border:1px solid var(--seal); border-radius:3px; padding:0 4px; margin-right:5px; vertical-align:1px}
+.prow select{margin-top:3px; font:inherit; font-size:12px; padding:2px 4px; border:1px solid var(--line); border-radius:5px; background:var(--paper); color:var(--ink)}
+.tal{margin-top:10px; padding-top:8px; border-top:1px dashed var(--line); display:grid; gap:4px}
+.tal-h{font-size:12.5px; font-weight:700}
+.tal-k{font-size:10.5px; color:var(--muted)}
+.mbchip{font-family:var(--mono); font-size:12px; border:1px solid var(--blue); color:var(--blue); border-radius:4px; padding:0 5px; margin-left:4px; vertical-align:2px}
+.mbbig{font-family:var(--mono); color:var(--blue); margin-left:4px}
+.mbrow{display:grid; grid-template-columns:62px 1fr 62px; gap:6px; align-items:center; font-size:11px; color:var(--muted)}
+.mbrow span:last-child{text-align:right}
+.mbrow span.on{color:var(--ink); font-weight:700}
+.mbbar{position:relative; height:6px; background:var(--soft); border-radius:3px}
+.mbbar i{position:absolute; top:0; bottom:0; background:var(--blue); border-radius:3px}
+.mbbar s{position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:var(--line)}
+.feed li.mb .x{color:var(--blue); font-weight:500}
+.trow{display:grid; grid-template-columns:62px 1fr 92px; gap:6px; align-items:center; font-size:11.5px}
+.trow .tw{font-size:11px; color:var(--muted); text-align:right; white-space:nowrap}
+.trow.focus .tw{color:var(--seal)}
+.feed li.settle{grid-template-columns:62px 1fr; background:var(--soft); border-radius:8px; padding:8px; margin:4px 0}
+.stitle{font-family:var(--display); font-weight:700; font-size:14px; margin-bottom:4px}
+.srow{display:grid; grid-template-columns:auto 1fr; gap:6px; align-items:baseline; font-size:12.5px; padding:2px 0}
+.srow .d{margin-left:0}
+.srow .why{color:var(--muted)}
+.trow.focus span:first-child{color:var(--seal); font-weight:700}
+.trow .bar{position:relative}
+.trow .bar i{background:var(--blue-soft); position:absolute; inset:0 auto 0 0}
+.trow .bar b{display:block; height:100%; background:var(--blue); opacity:.85; position:relative; border-radius:3px}
+.trow.lock span:first-child{color:var(--muted)}
+.tal-h .tal-k{font-weight:400; margin-left:4px}
+.tal-h{margin-top:4px}
+.trow .num{font-size:10.5px; color:var(--muted); text-align:right}
+
+/* 인생 기록 피드 */
+.feed{list-style:none; margin:0; padding:0; display:flex; flex-direction:column}
+.feed li{display:grid; grid-template-columns:62px 1fr; gap:8px; padding:6px 0; border-bottom:1px solid var(--soft); font-size:14px}
+.feed li .t{font-family:var(--mono); font-size:11.5px; color:var(--muted); padding-top:2px; white-space:nowrap}
+.feed li.m{color:var(--muted); font-size:13px}
+.feed li.news .x{color:var(--news)}
+.feed li.news .x b{display:block; font-size:12px}
+.feed li.dec .x{font-weight:500}
+.feed li.dec .x small{display:block; color:var(--muted); font-weight:400; font-size:12px}
+.feed li.yr{grid-template-columns:1fr; border-bottom:none; padding-top:14px}
+.feed li.yr .x{font-family:var(--display); font-size:16px; font-weight:700}
+.feed li.big .x{font-weight:700}
+.feed li.think .x{font-family:var(--display); color:var(--blue)}
+.d{font-family:var(--mono); font-size:11px; padding:0 6px; border-radius:3px; margin-left:4px; white-space:nowrap}
+.d.up{background:var(--blue-soft); color:var(--blue)} .d.down{background:var(--seal-soft); color:var(--seal)}
+.feed li.fresh{animation:fresh .6s ease}
+@keyframes fresh{from{background:var(--blue-soft)} to{background:transparent}}
+
+/* 엔딩 */
+.obit{background:var(--sheet); border:2px solid var(--ink); border-radius:4px; padding:22px 20px; position:relative; display:flex; flex-direction:column; gap:6px; text-align:center}
+.obit .lbl{font-size:12px; letter-spacing:.3em; color:var(--muted)}
+.obit h2{font-size:30px}
+.obit .years{font-family:var(--mono); color:var(--muted)}
+.obit .cause{font-size:13.5px; color:var(--muted)}
+.seal{position:absolute; right:14px; top:14px; width:46px; height:46px; border:2.5px solid var(--seal); color:var(--seal); border-radius:50%; display:grid; place-items:center; font-family:var(--display); font-weight:700; font-size:18px; transform:rotate(-8deg)}
+.verdict{text-align:center; display:flex; flex-direction:column; gap:4px}
+.verdict .t{font-family:var(--display); font-size:26px}
+.verdict .rank{font-family:var(--mono); font-size:15px; color:var(--seal)}
+.verdict .s{color:var(--muted); font-size:14px}
+.metrics{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+.metric{background:var(--sheet); border:1px solid var(--line); border-radius:10px; padding:12px 14px; min-width:0}
+.metric .k{font-size:12px; color:var(--muted)} .metric .v{font-family:var(--display); font-size:21px; line-height:1.3} .metric .x{font-size:12px; color:var(--muted); margin-top:4px}
+.metric.wide{grid-column:1/-1}
+.quote{font-family:var(--display); font-size:17px; text-align:center; margin:0}
+.hl{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:7px}
+.hl li{display:grid; grid-template-columns:48px 1fr; gap:8px; font-size:14px}
+.hl li .num{color:var(--blue); font-size:12.5px; padding-top:2px}
+.titles{display:flex; flex-wrap:wrap; gap:6px}
+.titles span{border:1px solid var(--seal); color:var(--seal); border-radius:4px; padding:2px 10px; font-size:13px; font-family:var(--display)}
+.row{display:flex; gap:8px; flex-wrap:wrap}
+@media (max-width:460px){ .grid2{grid-template-columns:1fr} .start h1{font-size:34px} .decide p{font-size:17px} .months span em{font-size:8px} }
+@media (max-width:620px){
+  .cols{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr); gap:6px}
+  .lcol{gap:6px}
+  .cols .sheet{padding:9px}
+  .plan h3, .fh{font-size:13px}
+  .prow{grid-template-columns:minmax(0,1fr) auto; gap:4px; padding:3px 0}
+  .prow .lb{font-size:11.5px; line-height:1.3} .prow .lb small{display:none}
+  .prow select{font-size:10.5px; max-width:100%; margin-top:2px}
+  .pctl{gap:2px} .pctl button{width:22px; height:22px; font-size:12px}
+  .plan .hint{display:none}
+  #rec{font-size:11.5px; padding:4px !important}
+  .dots{display:none} .dn{display:inline-block}
+  .ftag{font-size:9px; padding:0 3px}
+  .ptline .chip{font-size:10px}
+  .stat{grid-template-columns:28px 1fr 18px; font-size:11px; gap:3px}
+  .stats{gap:5px 8px}
+  .topstats{padding:9px}
+  .stat .num{font-size:10px}
+  .money{font-size:11px} .money b{font-size:12px}
+  .chips .chip{font-size:10px}
+  .trow{grid-template-columns:48px 1fr; font-size:10.5px}
+  .trow .tw{grid-column:1/-1; text-align:left; font-size:10px; margin-top:-2px}
+  .trow .bar{display:none}
+  .mbrow{grid-template-columns:42px 1fr 42px; font-size:9.5px}
+  .tal-h{font-size:11.5px} .tal-k{font-size:9.5px}
+  .feed li{grid-template-columns:28px 1fr; gap:5px; font-size:12px; padding:5px 0}
+  .feed li .t{font-size:10px}
+  .feed li.m{font-size:11.5px}
+  .feed li.yr .x{font-size:14px}
+  .feed li.settle{grid-template-columns:1fr; padding:6px}
+  .feed li.settle .t{display:none}
+  .srow{font-size:11px; grid-template-columns:1fr}
+  .d{font-size:10px}
+}
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+/*GAME*/
+</script>
+<script>
+const app=document.getElementById('app');
+const STAGES=[['영유아',0],['초등',7],['중등',13],['고등',16],['청년',19],['장년',30],['중년',50],['노년',65]];
+const SPEEDS=[0,1,2,4,8,16];
+let speed=1, auto=false, pending=null, timer=null, lastSpeed=1, ended=false;
+try{ const v=+localStorage.getItem('k50m-speed'); if(SPEEDS.includes(v)&&v>0) speed=v; }catch(e){}
+function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function save(){ try{ if(S&&!S.dead) localStorage.setItem('k50m-rt', serializeRT(S)); else localStorage.removeItem('k50m-rt'); }catch(e){} }
+function loadSave(){ try{ const s=localStorage.getItem('k50m-rt'); return s?deserialize(s):null; }catch(e){ return null; } }
+
+/* ---------- 시작 ---------- */
+function startScreen(){
+  stop(); ended=false; pending=null;
+  const sv=loadSave();
+  app.innerHTML=`<section class="start">
+    <div class="eyebrow">대한민국 인생 시뮬레이션</div>
+    <h1>오천만분의 일</h1>
+    <p>1990~2010년 사이, 대한민국 어딘가에서 태어납니다. 지역도, 집안도, 성별도 고를 수 없습니다. 시간은 저절로 흐르고, 인생의 갈림길에서만 멈춥니다.</p>
+    <form class="form sheet" id="sf">
+      <label for="nm">이름 (비워두면 그 시절 흔한 이름으로)</label>
+      <input id="nm" maxlength="8" autocomplete="off" placeholder="예: 김지훈">
+      <button class="btn primary" type="submit">태어나기</button>
+      ${sv?`<button class="btn ghost" type="button" id="resume">이어하기: ${esc(sv.name)}, ${sv.age}세 (${sv.year}년)</button>`:''}
+    </form>
+    <div class="facts">
+      <div><b>1년 ≈ 2분</b>1배속 기준. 최대 16배속</div>
+      <div><b>시간 총량</b>학생 때 14칸이 최대. 미래 투자와 재능 연습</div>
+      <div><b>갈림길</b>진학·입대·취업·결혼·집에서 멈춤</div>
+    </div>
+    <details class="sheet src"><summary>이 게임의 통계 근거</summary><ul>${DATA_SRC.map(d=>`<li><b>${esc(d[0])}</b> · ${esc(d[1])}<small>${esc(d[2])}</small></li>`).join('')}</ul><p class="note" style="text-align:left">일부 수치는 공식 원자료가 아닌 보도·연구 인용이며, 게임에서는 단순화해 반영했습니다. 등장하는 회사·대학·단체 이름은 모두 가상입니다. 실제 뉴스는 매주 업데이트됩니다 (마지막 확인: ${LIVE_UPDATED}).</p></details>
+    <p class="note">15세 이상 · 질병, 사고, 일탈 묘사가 포함되어 있습니다. 단축키: 스페이스(정지/재생), 1~5(배속), 숫자(선택)</p>
+  </section>`;
+  document.getElementById('sf').addEventListener('submit',e=>{ e.preventDefault(); newGame(document.getElementById('nm').value.trim()||null); S.alloc=recommendAlloc(S); S.feed=[]; scheduleYear(S); S.lastPt=ptTotal(S); feedYear(); begin(); });
+  const r=document.getElementById('resume'); if(r) r.addEventListener('click',()=>{ S=sv; S.feed=S.feed||[]; begin(); });
+}
+
+/* ---------- 피드 ---------- */
+function pushFeed(kind, html, plain){ S.feed.push({k:kind, h:html, m:Math.min(12,S.monthDone||1), y:S.year, a:S.age}); if(S.feed.length>400) S.feed.splice(0,S.feed.length-400); renderFeedTop(); }
+function feedYear(){ const st=stageOf(S.age); pushFeed('yr', `${S.year}년 · ${S.age}세 <span style="font-weight:400;font-size:13px;color:var(--muted)">${esc(st)}</span>`); }
+function dHtml(a,b){ let o=''; for(const k of Object.keys(SK)){ const d=Math.round(b[k]-a[k]); if(Math.abs(d)>=2) o+=`<span class="d ${d>0?'up':'down'}">${SK[k]}${d>0?'+':''}${d}</span>`;} const dm=Math.round(b.돈-a.돈); if(Math.abs(dm)>=10) o+=`<span class="d ${dm>0?'up':'down'}">${dm>0?'+':''}${won(dm)}</span>`; return o; }
+function snap(){ return {...S.s, 돈:S.money}; }
+
+/* ---------- 진행 ---------- */
+function begin(){ renderAll(); start(); }
+function start(){ stop(); timer=setInterval(tick,100); }
+function stop(){ if(timer) clearInterval(timer); timer=null; }
+function tick(){
+  if(ended||pending||!speed) return;
+  S.month += .01*speed;            // 1배속: 한 달 10초, 1년 2분
+  while(!pending && !ended && Math.floor(S.month) > S.monthDone){
+    S.monthDone++;
+    const m=S.monthDone;
+    monthTick(S);
+    if(m%2===1 || speed<=2){ const l=monthLine(S,m); if(l) pushFeed('m', esc(l)); }
+    processMonth(m);
+    if(S.monthDone>=12 && !pending && !ended){ yearEnd(); }
+    save();
+  }
+  updateClock(); updateStats();
+}
+function processMonth(m){
+  while(!pending && !ended){
+    let d=null;
+    if(S.queue.length) d=S.queue.shift();
+    else if(S.sched.length && S.sched[0].m<=m) d=S.sched.shift().d;
+    else break;
+    handle(d);
+  }
+}
+function handle(d){
+  if(d.kind==='death' || S.dead){ return finish(); }
+  if(!stillValid(S,d)) return;
+  if(d.kind==='think'){ pending={d, think:true}; renderDecide(); if(auto) setTimeout(autoPick, Math.max(300, 1500/speed)); return; }
+  const before=snap();
+  S._src = d.kind==='news'? NEWS[d.idx].h.replace(/^\[[^\]]+\]\s*/,'').slice(0,18) : '사건';
+  const card=buildCard(S,d);
+  S._src = srcLabel(d,card);
+  if(isDecision(d,card)){ pending={d, card, before, src:S._src}; S._src=null; renderDecide(); if(auto) setTimeout(autoPick, Math.max(300, 1500/speed)); return; }
+  // 흘러가는 사건: 캐릭터가 알아서
+  const idx = card.choices.length ? autoIndex(S,d,card) : -1;
+  if(d.kind==='ev' && idx<0){ S.seen.add(d.id); S._src=null; return; }
+  const txt = resolveCard(S,d,idx);
+  S._src=null;
+  const delta = dHtml(before, snap());
+  if(d.kind==='news') pushFeed('news', `<b>${esc(card.headline)}</b>${esc(firstPara(card.text))}${txt&&card.choices.length?' '+esc(txt):''}${delta}`);
+  else if(d.kind==='ms'||d.kind==='info') pushFeed('big', `${esc(card.title||'')}${card.title?' · ':''}${esc(firstPara(card.text))}${delta}`);
+  else pushFeed('e', `${esc(shortQ(card.text))} <span style="color:var(--muted)">→</span> ${esc(txt||card.choices[idx]?.l||'')}${delta}`);
+  if(S.dead) finish();
+}
+function srcLabel(d,card){ if(d.kind==='news') return (card.headline||'뉴스').replace(/^\[[^\]]+\]\s*/,'').slice(0,18); if(d.kind==='ms'||d.kind==='info') return card.title||'인생 사건'; let t=String(card.text).split(/[.?!…\n]/)[0].replace(/[“”"]/g,'').trim(); return t.length>18?t.slice(0,17)+'…':t; }
+function firstPara(t){ return String(t).split('\n\n')[0]; }
+function shortQ(t){ t=String(t); return t.length>60? t.slice(0,58)+'…' : t; }
+function choose(i, note){
+  if(!pending) return;
+  const p=pending; pending=null;
+  if(p.think){
+    const ts=thinkSpec(p.d); S.thoughts=S.thoughts||[]; S.thoughts.push({age:S.age, mood:ts.o[i], note:note||'', q:ts.q});
+    pushFeed('think', `“${esc(note||ts.o[i])}” <span style="color:var(--muted);font-family:var(--body);font-size:12px">— ${S.age}세의 생각</span>`);
+  } else {
+    S._src=p.src; S._decide=true; const txt=resolveCard(S,p.d,i); S._src=null; S._decide=false;
+    const lab=p.card.choices[i]?.l||'';
+    const head = p.d.kind==='news' ? `<b style="color:var(--news)">${esc(p.card.headline)}</b> ` : '';
+    pushFeed('dec', `${head}${esc(lab)}<small>${esc(txt||'')}</small>${dHtml(p.before, snap())}`);
+  }
+  renderDecide();
+  save();
+  if(S.dead) return finish();
+  processMonth(S.monthDone);
+  if(!pending && S.monthDone>=12 && !ended) yearEnd();
+  updateStats(); renderPlan();
+}
+function autoPick(){ if(!pending||!auto) return; if(pending.think) return choose(1); const idx=pending.card.choices.map((c,i)=>c.ok?i:-1).filter(i=>i>=0); choose(pick(idx)); }
+function yearEnd(){
+  const ys=S.yearStart;
+  const sh=settlementHtml(S);
+  if(sh) pushFeed('settle', `<div class="stitle">${S.year}년 결산</div>${sh}`);
+  advance(S);
+  const oldPlan=JSON.stringify(S.alloc);
+  S.alloc = S.customPlan ? fixAlloc(S, S.alloc||{}) : recommendAlloc(S);
+  scheduleYear(S);
+  feedYear();
+  if(S.mbNews){ pushFeed('mb', esc(S.mbNews)); S.mbNews=null; }
+  const nt=ptTotal(S); if(nt!==S.lastPt){ pushFeed('m', `올해 쓸 수 있는 시간: ${nt}칸${S.lastPt!=null?` (${nt>S.lastPt?'+':''}${nt-S.lastPt})`:''}`); S.lastPt=nt; }
+  else if(JSON.stringify(S.alloc)!==oldPlan) pushFeed('m','상황이 바뀌어 올해 시간 계획이 조정됐다.');
+  renderPlan(); renderClockMarks();
+}
+function finish(){ ended=true; stop(); save(); setTimeout(showEnding, 900); }
+
+/* ---------- 그리기 ---------- */
+function renderAll(){
+  app.innerHTML=`
+  <header class="clock" id="clock"></header>
+  <div id="decide"></div>
+  <div class="sheet topstats" id="stats"></div>
+  <div class="cols">
+    <div class="lcol">
+      <div class="sheet plan" id="plan"></div>
+    </div>
+    <section class="sheet feedbox rcol"><h3 class="fh">지금 내 인생 <button class="btn ghost" id="more">전체</button></h3><ul class="feed" id="feed"></ul></section>
+  </div>`;
+  const ck=document.getElementById('clock');
+  const setH=()=>document.documentElement.style.setProperty('--clockH', ck.offsetHeight+'px');
+  setH(); try{ new ResizeObserver(setH).observe(ck); }catch(e){}
+  document.getElementById('more').addEventListener('click',e=>{ feedAll=!feedAll; e.target.textContent=feedAll?'최근':'전체'; renderFeedAll(); });
+  renderClock(); renderDecide(); updateStats(); renderPlan(); renderFeedAll();
+}
+function renderClock(){
+  const c=document.getElementById('clock'); if(!c) return;
+  c.innerHTML=`<div class="idline"><h2>${esc(S.name)}</h2><span class="when" id="when"></span></div>
+    <div class="months" id="months">${Array.from({length:12},(_,i)=>`<span data-m="${i+1}"><i></i><em>${i+1}월</em></span>`).join('')}</div>
+    <div class="ctl">${SPEEDS.map(v=>`<button data-sp="${v}" aria-label="${v?v+'배속':'일시정지'}">${v?v+'x':'❚❚'}</button>`).join('')}
+      <span class="sp"></span><label><input type="checkbox" id="auto" ${auto?'checked':''}> 알아서 살기</label></div>
+    <div class="stagebar" id="stagebar"></div>`;
+  c.querySelectorAll('[data-sp]').forEach(b=>b.addEventListener('click',()=>setSpeed(+b.dataset.sp)));
+  document.getElementById('auto').addEventListener('change',e=>{ auto=e.target.checked; if(auto&&pending) setTimeout(autoPick,600); });
+  renderClockMarks(); updateClock();
+}
+function renderClockMarks(){ document.querySelectorAll('#months span').forEach(s=>{ const m=+s.dataset.m; s.classList.toggle('ev', (S.sched||[]).some(x=>x.m===m && x.d.kind!=='death')); }); }
+function setSpeed(v){ if(v) lastSpeed=v; speed=v; try{ if(v) localStorage.setItem('k50m-speed', v); }catch(e){} updateClock(); }
+function updateClock(){
+  const w=document.getElementById('when'); if(!w) return;
+  const mon=Math.min(12, Math.floor(S.month)+1);
+  w.innerHTML=`${S.year}년 <b>${mon}월</b> · ${S.age}세 · ${esc(S.region.name)} <span class="mbchip" title="${S.mbLast?esc(MBTI_NAME[S.mbLast]):'아직 성격이 만들어지는 중'}">${S.mbLast||'성격 형성 중'}</span>`;
+  document.querySelectorAll('#months span').forEach(s=>{ const m=+s.dataset.m; const f=clamp(S.month-(m-1),0,1); s.querySelector('i').style.width=(f*100)+'%'; });
+  document.querySelectorAll('[data-sp]').forEach(b=>b.classList.toggle('on', +b.dataset.sp===speed));
+  const si=STAGES.findIndex((s,i)=>S.age>=s[1]&&(i===STAGES.length-1||S.age<STAGES[i+1][1]));
+  const sb=document.getElementById('stagebar'); if(sb) sb.innerHTML=STAGES.map((s,i)=>`<span class="${i<si?'done':i===si?'now':''}" title="${s[0]}"></span>`).join('');
+}
+function mbPanel(){
+  if(!S.mb) return '';
+  if(S.age<7) return '<div class="tal"><div class="tal-h">성격</div><div class="tal-k">아직 만들어지는 중. 7살 무렵부터 보입니다.</div></div>';
+  const t=S.mbLast||mbType(S);
+  return `<div class="tal"><div class="tal-h">성격 <span class="mbbig">${t}</span> <span class="tal-k">${esc(MBTI_NAME[t]||'')}</span></div>`+
+    MB_AX.map(([hi,lo],k)=>{ const v=Math.round(S.mb[hi]), isHi=t[k]===hi; return `<div class="mbrow"><span class="${!isHi?'on':''}">${MB_LABEL[lo]} ${lo}</span><div class="mbbar"><i style="left:${Math.min(v,50)}%;width:${Math.abs(v-50)}%"></i><s></s></div><span class="${isHi?'on':''}">${hi} ${MB_LABEL[hi]}</span></div>`; }).join('')+
+    '<div class="tal-k">고른 선택과 시간 쓰는 방식에 따라 조금씩 바뀝니다.</div></div>';
+}
+function talPanel(){
+  const grp=[['선천','타고남 · 연습해도 한계가 있음'],['혼합','타고남 반 · 노력 반'],['후천','노력한 만큼 오름']];
+  return grp.map(([ty,desc])=>{ const ts=TRAITS.filter(t=>t.type===ty); return `<div class="tal-h">${ty} <span class="tal-k">${desc}</span></div>`+ts.map(t=>{ const k=t.k;
+    if(!traitVisible(S,k)) return `<div class="trow lock"><span>${k}</span><div class="tal-k">${t.type==='후천'?`${t.unlock}세부터`:'아직 모른다'}</div><span></span></div>`;
+    const ab=Math.round(ability(S,k)), base=0;
+    return `<div class="trow ${k===S.focus&&S.f.has('재능발견')?'focus':''}"><span>${k}</span><div class="bar"><i style="width:${base}%"></i><b style="width:${ab}%"></b></div><span class="tw">${tierWord(k)}</span></div>`; }).join(''); }).join('')
+   +'<div class="tal-k">해보면서 알게 된 나</div>';
+}
+function updateStats(){
+  const el=document.getElementById('stats'); if(!el) return;
+  const net=S.money+(S.inv||0)+(S.house?S.house.val-S.house.loan:0);
+  const chips=[];
+  if(S.uni) chips.push(`${S.uni}${S.major?' '+S.major:''}`); else if(S.tier) chips.push(`${TIERNAME[S.tier]}${S.major?' '+S.major:''}`);
+  if(S.armyLeft>0) chips.push('군 복무 중');
+  if(S.job) chips.push(`${S.job.co?S.job.co+' · ':''}${S.job.name} · ${won(S.job.sal)}`); else if(S.retired) chips.push('은퇴'); else if(S.track) chips.push(`${S.track} 준비`);
+  if(S.f.has('기혼')) chips.push('기혼'); else if(S.f.has('연애중')) chips.push('연애 중');
+  if(S.kids) chips.push(`자녀 ${S.kids}`); if(S.house) chips.push('자가');
+  const warn=['오토바이','과로','지병','자퇴'].filter(x=>S.f.has(x));
+  el.innerHTML=`<div class="stats">${Object.keys(SK).map(k=>`<div class="stat"><span class="tiplink" data-tip-stat="${k}" tabindex="0">${SK[k]}</span><div class="bar"><i class="${S.s[k]<25?'low':''}" style="width:${Math.round(S.s[k])}%"></i></div><span class="num">${Math.round(S.s[k])}</span></div>`).join('')}</div>
+    <div class="money"><span>순자산</span><b>${won(net)}</b></div>
+    ${S.job&&S.job.sal>0?`<div class="money" style="border:none;padding-top:0;margin-top:2px"><span>연봉</span><b>${won(S.job.sal)} <small style="font-weight:400;color:var(--muted)">월 실수령 약 ${won(netMonthly(S.job.sal))}</small></b></div>`:S.retired&&S.pension?`<div class="money" style="border:none;padding-top:0;margin-top:2px"><span>연금</span><b>연 ${won(S.age>=65?S.pension:S.pension*.5)}</b></div>`:''}
+    ${S.incYears>=2?`<div class="money" style="border:none;padding-top:0;margin-top:0"><span>└ 평생 연평균 소득</span><b>${won(avgIncome(S))} <small style="font-weight:400;color:var(--muted)">${S.incYears}년 근무</small></b></div>`:''}
+    ${S.htBase!=null?`<div class="money" style="border:none;padding-top:0;margin-top:2px"><span class="tiplink" data-tip-body="1" tabindex="0">키 · 몸무게</span><b>${heightNow(S).toFixed(1)}cm · ${weightNow(S).toFixed(1)}kg <small style="font-weight:400;color:var(--muted)">${bmiWord(S.bmi,S.age)}</small></b></div>`:''}
+    ${S.age>=19&&S.year>=1990?`<div class="money" style="border:none;padding-top:0;margin-top:2px"><span>코스피</span><b>${Math.round(kospiLevel(S)).toLocaleString('ko-KR')} <small style="font-weight:400;color:${mktYear(S,S.year)>=0?'var(--blue)':'var(--seal)'}">올해 ${mktYear(S,S.year)>=0?'+':''}${Math.round(mktYear(S,S.year))}%</small></b></div>`:''}
+    ${S.inv>1?`<div class="money" style="border:none;padding-top:0;margin-top:0"><span>└ 투자 계좌</span><b>${won(S.inv)}</b></div>`:''}
+    <div class="chips">${chips.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}${warn.map(c=>`<span class="chip warn">${c}</span>`).join('')}</div>
+    <details class="more2" ${detOpen?'open':''}><summary>성격 ${S.mbLast?`<b class="num">${S.mbLast}</b>`:''} · 재능 자세히</summary>${mbPanel()}<div class="tal">${talPanel()}</div></details>`;
+  const dt=el.querySelector('details'); if(dt) dt.addEventListener('toggle',()=>{ detOpen=dt.open; });
+}
+let detOpen=false;
+const EFFNAME={학:'학력',체:'체력',멘:'멘탈',행:'행복',인:'인맥',매:'매력',spec:'스펙',par:'부모님',kid:'자녀'};
+function effHint(x){ const ks=Object.keys(x.eff).filter(k=>EFFNAME[k]||k==='돈'); return ks.map(k=>{ const v=x.eff[k]; if(k==='돈') return v>0?'돈↑':'돈↓'; return `${EFFNAME[k]}${v>0?'↑':'↓'}`; }).join(' '); }
+function renderPlan(){
+  const el=document.getElementById('plan'); if(!el) return;
+  const list=acts(S); S.alloc=fixAlloc(S,S.alloc||{});
+  const T=ptTotal(S), used=Object.values(S.alloc).reduce((a,b)=>a+b,0);
+  const baby=S.age<4, mods=ptMods(S);
+  const known=S.f.has('재능발견');
+  el.innerHTML=`<h3>올해 시간 계획 <small>${used}/${T}칸</small></h3>
+    <div class="ptline"><span class="chip">기본 ${ptBase(S.age)}칸 · ${esc(stageOf(S.age))}</span>${mods.map(m=>`<span class="chip ${m.v<0?'warn':'good'}">${esc(m.why)} ${m.v>0?'+':''}${m.v}${m.until<S.age+50?` (${S.birthYear+m.until}년까지)`:''}</span>`).join('')}</div>
+    ${list.map(x=>{ const v=S.alloc[x.k]||0; const dots='●'.repeat(Math.min(v,10))+'○'.repeat(Math.max(0,5-v)); return `<div class="prow ${x.future?'fut':''}"><div class="lb tiplink" data-tip-act="${x.k}" tabindex="0">${x.future?'<span class="ftag">미래</span>':''}${esc(x.label)}<small>${esc(x.hint||effHint(x))}${x.min?` · ${esc(x.lock)} ${x.min}칸 고정`:''}</small>
+      ${x.k==='invest'&&S.age>=19&&!S.studying?`<select id="invstyle" aria-label="투자 방식">${Object.keys(INV_STYLE).map(k=>`<option value="${k}" ${k===(S.invStyle||'주식')?'selected':''}>${INV_STYLE[k]}</option>`).join('')}</select>`:''}
+      ${x.k==='talent'&&known&&!baby?`<select id="focus" aria-label="연습할 재능">${TALENTS.filter(t=>traitVisible(S,t)).map(t=>`<option value="${t}" ${t===S.focus?'selected':''}>${t} (${TRAIT[t].type})</option>`).join('')}</select>`:''}</div>
+      <div class="pctl"><button data-a="${x.k}" data-d="-1" ${baby||v<=x.min?'disabled':''} aria-label="${esc(x.label)} 줄이기">−</button><span class="dots">${dots}</span><span class="dn">${v}</span><button data-a="${x.k}" data-d="1" ${baby||v>=T?'disabled':''} aria-label="${esc(x.label)} 늘리기">+</button></div></div>`; }).join('')}
+    <p class="hint">${baby?'아직은 부모님이 정해줍니다. 4살부터 직접 나눌 수 있어요.':'‘미래’ 칸은 당장은 손해지만 나중에 돌아옵니다. 시간 총량은 학생 때 가장 많고, 사건에 따라 늘거나 줄어요.'}</p>
+    ${baby?'':'<button class="btn ghost" id="rec" style="width:100%;margin-top:6px;padding:6px">추천대로 나누기</button>'}`;
+  el.querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click',()=>adjust(b.dataset.a,+b.dataset.d)));
+  const r=document.getElementById('rec'); if(r) r.addEventListener('click',()=>{ S.alloc=recommendAlloc(S); S.customPlan=false; renderPlan(); });
+  const f=document.getElementById('focus'); if(f) f.addEventListener('change',()=>{ S.focus=f.value; renderPlan(); updateStats(); save(); });
+  const iv=document.getElementById('invstyle'); if(iv) iv.addEventListener('change',()=>{ S.invStyle=iv.value; save(); });
+}
+function adjust(k,d){
+  const list=acts(S), A={...S.alloc}; const me=list.find(x=>x.k===k);
+  if(d>0){ // 다른 칸에서 하나 빼기: 가장 많은 칸부터
+    const donor=list.filter(x=>x.k!==k && (A[x.k]||0)>x.min).sort((a,b)=>(A[b.k]||0)-(A[a.k]||0))[0];
+    if(!donor) return; A[donor.k]--; A[k]=(A[k]||0)+1;
+  } else { if((A[k]||0)<=me.min) return; A[k]--; const rec=list.filter(x=>x.k!==k).sort((a,b)=>(A[a.k]||0)-(A[b.k]||0)).find(x=>x.k==='rest')||list.find(x=>x.k!==k); A[rec.k]=(A[rec.k]||0)+1; }
+  S.alloc=A; S.customPlan=true; renderPlan(); save();
+}
+/*SCENE*/
+/*TIPS*/
+function renderDecide(){
+  const el=document.getElementById('decide'); if(!el) return;
+  if(!pending){ stopScene(); el.innerHTML=''; return; }
+  if(pending.think){
+    const a=S.age;
+    const ts=thinkSpec(pending.d);
+    el.innerHTML=`<article class="decide"><canvas class="scene" id="scene" aria-hidden="true"></canvas><div class="k">생각 남기기 · ${S.year}년 · ${a}세</div><p>${esc(ts.q)}</p>
+      <textarea id="note" maxlength="80" placeholder="한 줄 남기기 (선택)"></textarea>
+      <div class="choices">${ts.o.map((o,i)=>`<button class="choice" data-i="${i}"><span class="n">${i+1}</span><span>${o}</span></button>`).join('')}</div></article>`;
+  } else {
+    const c=pending.card;
+    el.innerHTML=`<article class="decide ${c.kind==='news'?'news':''}"><canvas class="scene" id="scene" aria-hidden="true"></canvas><div class="k">${c.kind==='news'?esc(c.kicker):'인생의 갈림길'} · ${S.year}년 ${S.monthDone}월 · ${S.age}세</div>
+      ${c.headline?`<div class="headline">${esc(c.headline)}</div>`:''}
+      ${c.big?`<div class="num" style="font-size:28px;color:var(--seal)">${esc(c.big)}</div>`:''}
+      <p>${esc(c.text)}</p>
+      <div class="choices">${c.choices.map((ch,i)=>`<button class="choice" data-i="${i}" ${ch.ok?'':'disabled'}><span class="n">${i+1}</span><span>${esc(ch.l)}${!ch.ok&&ch.needT?`<small>조건: ${esc(ch.needT)}</small>`:''}</span></button>`).join('')}</div></article>`;
+  }
+  startScene(pending);
+  el.querySelectorAll('.choice').forEach(b=>b.addEventListener('click',()=>{ const n=document.getElementById('note'); choose(+b.dataset.i, n?n.value.trim():''); }));
+  el.scrollIntoView({block:'nearest'});
+}
+function feedLi(f){ return `<li class="${f.k}"><span class="t">${f.k==='yr'?'':`${f.m}월`}</span><span class="x">${f.h}</span></li>`; }
+let feedAll=false;
+const FEED_N=()=>feedAll?200:40;
+function renderFeedAll(){ const ul=document.getElementById('feed'); if(!ul) return; ul.innerHTML=S.feed.slice(-FEED_N()).reverse().map(feedLi).join(''); }
+function renderFeedTop(){ const ul=document.getElementById('feed'); if(!ul) return; const f=S.feed[S.feed.length-1]; ul.insertAdjacentHTML('afterbegin', feedLi(f)); ul.firstElementChild.classList.add('fresh'); while(ul.children.length>FEED_N()) ul.lastElementChild.remove(); }
+
+document.addEventListener('keydown',e=>{
+  if(!S||ended||e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.code==='Space'){ e.preventDefault(); setSpeed(speed?0:lastSpeed); return; }
+  const n=+e.key;
+  if(pending && n>=1 && n<=9){ const b=document.querySelector(`.choice[data-i="${n-1}"]:not([disabled])`); if(b) b.click(); return; }
+  if(!pending && n>=1 && n<=5) setSpeed(SPEEDS[n]);
+});
+
+/* ---------- 엔딩 ---------- */
+function showEnding(){
+  try{ localStorage.removeItem('k50m-rt'); }catch(e){}
+  const e=ending(S); S._end=e;
+  playFuneral(S,e,()=>renderEnding(e));
+}
+function renderEnding(e){ const hlist=S.hlist.slice(-10);
+  const share=`[오천만분의 일]\n${S.name} (${S.birthYear}~${S.birthYear+S.age}, 향년 ${S.age}세)\n${S.region.name} · 소득 ${S.rich?'최상위':S.wealth0+'분위'} 출생\n${hlist.slice(1,5).map(h=>'· '+h.t).join('\n')}\n${S.uni?S.uni+' · ':''}${(S.jobHist||[]).map(j=>j.co||j.name).join('→')||'무직'}\n성격 ${(S.mbHist||[]).map(h=>h.t).join('→')||'-'}\n자산 ${won(e.asset)} · 자녀 ${S.kids}명 · 제사: ${e.jesa}\n${e.title} · 대한민국 상위 ${e.top}%의 인생\n사회가 보는 점수 ${socialScore(S,e).total}점 · 자산 상위 ${socialScore(S,e).top}%`;
+  const th=(S.thoughts||[]);
+  const ss=socialScore(S,e);
+  const lastJob=(S.jobHist||[]).length?S.jobHist[S.jobHist.length-1]:null;
+  const school=S.uni?S.uni:(S.f.has('자퇴')?'고교 자퇴':'고졸');
+  app.innerHTML=`
+  <section class="end1">
+    <div class="e-ob"><div class="seal">故</div><div class="lbl">부 고</div><h2>故 ${esc(S.name)}</h2>
+      <div class="years">${S.birthYear} – ${S.birthYear+S.age} · 향년 ${S.age}세 · ${esc(S.cause||'노환')}</div>
+      <div class="cause">${esc(S.region.name)} 출생 · ${esc(school)} · ${esc(lastJob?(lastJob.co||lastJob.name):'직장 경력 없음')}${S.mbLast?` · ${S.mbLast}`:''}</div></div>
+    <div class="e-v"><div><div class="t">${esc(e.title)}</div><div class="rank">대한민국 상위 ${e.top}%의 인생</div></div>
+      <div class="e-sc"><b class="num">${ss.total}</b><small>/100</small><span>${esc(ss.grade)}</span></div></div>
+    <div class="e-grid">
+      <div><span>자산</span><b class="num">${won(e.asset)}</b><i>가구 상위 ${ss.top}%</i></div>
+      <div><span>수명</span><b>${S.age}세</b><i>기대수명 83세</i></div>
+      <div><span>자녀</span><b>${S.kids}명</b><i>${S.kids?`관계 ${Math.round(S.h.kid)}`:S.f.has('기혼')?'딩크':'비혼'}</i></div>
+      <div><span>제사</span><b>${esc(e.jesa)}</b><i>${e.attend?e.attend+'명':'-'}</i></div>
+      <div><span>평균 행복</span><b>${e.avgH}</b><i>/100</i></div>
+      <div><span>조문객</span><b>${e.mourners}명</b><i>명예 ${e.honor}점</i></div>
+      <div><span>연평균 소득</span><b class="num">${S.incYears?won(avgIncome(S)):'-'}</b><i>${S.incYears?S.incYears+'년 일함':'소득 없음'}</i></div>
+      <div><span>최고 연봉</span><b class="num">${S.incPeak?won(S.incPeak):'-'}</b><i>${S.incPeak?'세전':'-'}</i></div>
+      <div><span>화환</span><b>${(S.wreaths||[]).length}개</b><i>${esc((S.wreaths||[])[0]||'-')}</i></div>
+    </div>
+    <p class="quote">${esc(e.quote)}</p>
+    <div class="row"><button class="btn primary" id="again" style="flex:1">다시 태어나기</button><button class="btn" id="copy" style="flex:1">결과 복사</button><button class="btn" id="more" style="flex:1">자세히 보기</button></div>
+  </section>
+  <textarea id="sharetxt" readonly hidden style="width:100%;height:140px;font:inherit;font-size:13px;background:var(--sheet);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px">${esc(share)}</textarea>
+  <div id="detail" hidden class="detail">
+  <section class="sheet score"><div class="sc-h"><span>사회가 보는 내 인생</span><b class="num">${ss.total}<small>/100</small></b></div><div class="sc-g">${esc(ss.grade)}</div>
+    ${ss.parts.map(p=>`<div class="sc-r"><span>${p[0]}</span><div class="bar"><i style="width:${Math.round(p[1]/p[2]*100)}%"></i></div><span class="num">${Math.round(p[1])}/${p[2]}</span></div>`).join('')}
+    <div class="tal-k">배점은 한국인이 꼽은 삶의 의미 순서(물질적 풍요 · 건강 · 가족 / Pew Research 2021)와 직업 위신·학벌을 반영했습니다.</div></section>
+  <section class="sheet"><h3 class="dh">자산 · 제사</h3><ul class="hl"><li><span class="num">자산</span><span>${won(e.asset)} · 대한민국 가구 순자산 상위 ${ss.top}% · ${S.house?`집 포함 (대출 ${won(S.house.loan)})`:'무주택'}</span></li><li><span class="num">제사</span><span>${esc(e.jesaT)}</span></li></ul></section>
+  <section class="sheet"><h3 class="dh">학력 · 경력</h3><ul class="hl">${S.uni?`<li><span class="num">학교</span><span>${esc(S.uni)}${S.major&&S.major!=='전문대'?' '+esc(S.major):''}${S.f.has('졸업')?' 졸업':''}</span></li>`:`<li><span class="num">학교</span><span>${S.f.has('자퇴')?(S.f.has('검정고시')?'고등학교 자퇴 · 검정고시':'고등학교 자퇴'):'고등학교 졸업'}</span></li>`}${(S.jobHist||[]).map(j=>`<li><span class="num">${j.age}세</span><span>${esc(j.co||j.name)}${j.co?` · ${esc(j.name)}`:''}</span></li>`).join('')||'<li><span class="num">-</span><span>직장 경력 없음</span></li>'}</ul></section>
+  ${(S.wreaths||[]).length?`<section class="sheet"><h3 class="dh">빈소에 온 화환 ${S.wreaths.length}개</h3><div class="titles">${S.wreaths.map(w=>`<span>근조 · ${esc(w)}</span>`).join('')}</div><div class="tal-k">화환 수는 다닌 회사·학교·가족·인맥·명예·조문객 수로 정해집니다.</div></section>`:''}
+  ${(S.worldLog||[]).length?`<section class="sheet"><h3 class="dh">내가 겪은 세상 (가상 미래)</h3><ul class="hl">${S.worldLog.map(w=>`<li><span class="num">${w.y}</span><span>${esc(w.h)} (${w.a}세)</span></li>`).join('')}</ul></section>`:''}
+  ${(S.mbHist||[]).length?`<section class="sheet"><h3 class="dh">성격 변천사</h3><ul class="hl">${S.mbHist.map(h=>`<li><span class="num">${h.age}세</span><span><b class="num">${h.t}</b> ${esc(MBTI_NAME[h.t])}</span></li>`).join('')}</ul></section>`:''}
+  ${th.length?`<section class="sheet"><h3 class="dh">남긴 생각</h3><ul class="hl">${th.map(t=>`<li><span class="num">${t.age}세</span><span>${esc(t.note||t.mood)}</span></li>`).join('')}</ul></section>`:''}
+  <section class="sheet"><h3 class="dh">인생 명장면</h3><ul class="hl">${S.hlist.map(h=>`<li><span class="num">${h.age}세</span><span>${esc(h.t)}</span></li>`).join('')}</ul></section>
+  ${e.titles.length?`<section class="sheet"><h3 class="dh">칭호</h3><div class="titles">${e.titles.map(t=>`<span>${esc(t)}</span>`).join('')}</div></section>`:''}
+  <p class="note">통계와 뉴스는 실제 자료를 참고했지만 게임 속 수치는 단순화되어 있습니다. 2027년 이후 사건은 가상의 시나리오입니다. 등장하는 회사·학교·단체 이름은 모두 가상이며 실제와 관계없습니다.</p>
+  </div>`;
+  document.getElementById('more').addEventListener('click',ev=>{ const d=document.getElementById('detail'); d.hidden=!d.hidden; ev.currentTarget.textContent=d.hidden?'자세히 보기':'접기'; if(!d.hidden) d.scrollIntoView({behavior:'smooth', block:'start'}); });
+  document.getElementById('again').addEventListener('click',()=>{ S=null; startScreen(); window.scrollTo(0,0); });
+  document.getElementById('copy').addEventListener('click',async ev=>{ const b=ev.currentTarget; try{ await navigator.clipboard.writeText(share); b.textContent='복사됨'; }catch(err){ const t=document.getElementById('sharetxt'); t.hidden=false; t.select(); b.textContent='아래 글을 복사하세요'; } });
+  window.scrollTo(0,0);
+}
+
+window.claude?.hot?.snapshot?.(()=>({save:S&&!S.dead?serializeRT(S):null}));
+function boot(data){ if(data&&data.save){ try{ S=deserialize(data.save); S.feed=S.feed||[]; return begin(); }catch(e){} } startScreen(); }
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+window.__sim=simulateRT;
+window.__turbo=(v)=>{ auto=true; speed=v; };
+</script>
