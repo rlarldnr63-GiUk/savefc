@@ -78,7 +78,7 @@ function playFuneral(S,e,done){
   if(reduce){ done(); return; }
   const n=senders.length;
   // 화환이 많을수록 복도가 길어지고, 천천히 걸어 들어간다
-  const Tw=clamp(3.2+n*.42, 4.5, 13), Tend=Tw+3.2;
+  const Tw=clamp(3.2+n*.42, 4.5, 13), Th=Tw+3.0, Tend=Th+5.2;   // Th: 식당 장면 시작
   const ov=document.createElement('div'); ov.className='funeral';
   ov.innerHTML=`<canvas id="fcv"></canvas><div class="f-cap" style="animation-delay:${Tw.toFixed(1)}s"><b>故 ${esc(S.name)}</b><span>${S.birthYear} – ${S.birthYear+S.age} · 향년 ${S.age}세</span><span>화환 ${n}개 · 조문객 ${e.mourners}명</span></div><button class="btn ghost f-skip" id="fskip">건너뛰기</button>`;
   document.body.appendChild(ov);
@@ -96,8 +96,40 @@ function playFuneral(S,e,done){
   const finish=()=>{ if(finished) return; finished=true; cancelAnimationFrame(raf); ov.classList.add('out'); setTimeout(()=>{ ov.remove(); done(); },500); };
   ov.querySelector('#fskip').addEventListener('click',finish);
   const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+  // ===== 장례식장 식당: 조문객 수만큼 자리가 찬다 =====
+  const M2=Math.min(W,H), EMJ='"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",serif';
+  const cols=W<H?2:3, rows=W<H?6:4, seatPer=6;
+  const hx0=W*.06, hx1=W*.94, hy0=H*.2, hy1=H*.86, cw=(hx1-hx0)/cols, rh=(hy1-hy0)/rows;
+  const seats=[]; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const tx0=hx0+c*cw+cw*.1, tw0=cw*.8, ty0=hy0+r*rh+rh*.38, th0=rh*.24;
+    for(let k=0;k<3;k++){ seats.push({x:tx0+tw0*(k+.5)/3, y:ty0-rh*.14, tx:tx0+tw0*(k+.5)/3, ty:ty0+th0*.3}); seats.push({x:tx0+tw0*(k+.5)/3, y:ty0+th0+rh*.14, tx:tx0+tw0*(k+.5)/3, ty:ty0+th0*.7}); } }
+  const cap=seats.length, mourn=e.mourners||0, people=clamp(Math.round(mourn/4),2,cap+24), seated=Math.min(people,cap), queue=people-seated;
+  const seatOrder=seats.map((s,i)=>i).sort(()=>R()-.5).slice(0,seated);
+  const faces=['🧑','👩','👨','👴','👵','🧑‍💼','👩‍🦳','👨‍🦳','🧔','👱'], foods=['🍚','🥣','🍖','🥤','🍶'];
+  const ppl=seatOrder.map((si,i)=>({s:seats[si], f:faces[(si*7+i)%faces.length], food:foods[(si*3)%foods.length], at:.4+ i/Math.max(1,seated)*2.6}));
+  let capHidden=false;
+  const drawHall=u=>{
+    if(!capHidden){ capHidden=true; const fc=ov.querySelector('.f-cap'); if(fc) fc.style.display='none'; }
+    g.fillStyle='#d9cbb2'; g.fillRect(0,0,W,H);
+    for(let y=0;y<H;y+=M2*.08){ g.fillStyle=(Math.floor(y/(M2*.08))%2)?'#d3c4a9':'#dccfb7'; g.fillRect(0,y,W,M2*.08); }
+    g.fillStyle='#3b342b'; g.fillRect(0,0,W,H*.13); g.fillStyle='#f3ead8'; g.font=`700 ${M2*.042}px "Noto Sans KR",sans-serif`; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('장례식장 식당', W/2, H*.05); g.font=`500 ${M2*.03}px "Noto Sans KR",sans-serif`; g.fillText(`故 ${S.name} · 조문객 ${mourn}명`, W/2, H*.095);
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const tx0=hx0+c*cw+cw*.1, tw0=cw*.8, ty0=hy0+r*rh+rh*.38, th0=rh*.24;
+      g.fillStyle='rgba(0,0,0,.12)'; g.fillRect(tx0+3,ty0+4,tw0,th0); g.fillStyle='#fbfaf6'; g.fillRect(tx0,ty0,tw0,th0); g.strokeStyle='#bfb39c'; g.lineWidth=1; g.strokeRect(tx0,ty0,tw0,th0); }
+    seats.forEach(s0=>{ g.fillStyle='#8c6f4f'; g.beginPath(); g.arc(s0.x,s0.y,M2*.018,0,6.28); g.fill(); });
+    const fs=Math.min(cw/4.2, rh*.36);
+    ppl.forEach(p=>{ const k=clamp((u-p.at)/.35,0,1); if(k<=0) return; const pop=k<1? 1+.25*Math.sin(k*Math.PI) : 1;
+      g.save(); g.globalAlpha=k; g.font=`${fs*.7}px ${EMJ}`; g.textAlign='center'; g.textBaseline='middle'; g.fillStyle='#000'; g.fillText(p.food,p.s.tx,p.s.ty);
+      g.font=`${fs*pop}px ${EMJ}`; g.fillText(p.f,p.s.x,p.s.y); g.restore(); });
+    // 자리가 모자라면 입구에 줄이 선다
+    if(queue>0){ const qk=clamp((u-2.6)/1.2,0,1); const nq=Math.round(queue*qk); for(let i=0;i<nq;i++){ g.font=`${fs*.8}px ${EMJ}`; g.textAlign='center'; g.fillStyle='#000'; g.fillText(faces[i%faces.length], W*.06+(i%Math.floor(W/(fs*.9)))*fs*.9, H*.93+Math.floor(i/Math.floor(W/(fs*.9)))*fs*.5); }
+      if(nq>0){ g.font=`600 ${M2*.028}px "Noto Sans KR",sans-serif`; g.fillStyle='#3b342b'; g.textAlign='right'; g.fillText(`자리가 없어 기다리는 조문객 ${queue*4}명`, W*.96, H*.89); } }
+    const word = mourn>=250?'빈자리가 하나도 없다. 밤늦게까지 사람들이 오갔다.' : mourn>=150?'식당이 북적인다. 여기저기서 옛이야기가 들린다.' : mourn>=80?'테이블 몇 개가 채워졌다. 조용히 술잔이 돈다.' : '빈 테이블이 많다. 가까운 사람들만 오래 남았다.';
+    if(u>3.2){ const a=clamp((u-3.2)/.6,0,1); g.save(); g.globalAlpha=a; g.font=`600 ${M2*.034}px "Noto Sans KR",sans-serif`; const w0=g.measureText(word).width+M2*.06; g.fillStyle='rgba(40,34,27,.85)'; g.fillRect(W/2-w0/2,H*.15,w0,M2*.06); g.fillStyle='#f6efe0'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(word,W/2,H*.15+M2*.03); g.restore(); }
+    const fin=clamp(1-u/.5,0,1); if(fin>0){ g.fillStyle=`rgba(0,0,0,${fin})`; g.fillRect(0,0,W,H); }
+  };
   const tick=ts=>{
     if(start==null) start=ts; const t=(ts-start)/1000;
+    if(t>=Th){ drawHall(t-Th); if(t<Tend && !finished) raf=requestAnimationFrame(tick); else finish(); return; }
     const w=clamp(t/Tw,0,1), cam=camStart+(camEnd-camStart)*ease(w);
     const walking=w>0&&w<1, bob=walking?Math.sin(t*7.5)*3.2*Math.sin(w*Math.PI):0, sway=walking?Math.sin(t*3.75)*2*Math.sin(w*Math.PI):0;
     const HY=H*.46+bob, CX=W/2+sway;

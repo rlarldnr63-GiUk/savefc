@@ -123,11 +123,11 @@ function yearTick(S, ms){
   // 부모님
   if(!S.f.has('부모별세') && S.age>=S.parentDeathAge){ S.f.add('부모별세'); ms.push({kind:'ms', name:'parents'}); }
   // 사망 판정
-  let q = baseQ(S.age) * clamp(1+(50-S.s.체)/40,.6,2.8);
+  let q = baseQ(S.age) * clamp(1+(50-S.s.체)/40,.6,2.8) * DEATH_MULT;
   if(S.f.has('지병')) q*=1.8;
   let extra=null;
-  if(S.f.has('오토바이') && S.age<60 && R()<.0025) extra=['오토바이 사고','빗길 교차로였다.'];
-  if(S.f.has('과로') && S.age>=35 && S.s.체<30 && R()<.004) extra=['과로사','책상 위에 결재 서류가 쌓여 있었다.'];
+  if(S.f.has('오토바이') && S.age<60 && R()<.0025*DEATH_MULT) extra=['오토바이 사고','빗길 교차로였다.'];
+  if(S.f.has('과로') && S.age>=35 && S.s.체<30 && R()<.004*DEATH_MULT) extra=['과로사','책상 위에 결재 서류가 쌓여 있었다.'];
   if(extra){ killNow(S,extra[0],extra[1]); return; }
   if(R()<q){ const list=CAUSES.find(c=>S.age<c[0])[1]; killNow(S,pick(list),''); }
 }
@@ -297,7 +297,7 @@ function buildCard(S, d){
     const body=[d.extra, n.t].filter(Boolean).join('\n\n');
     return {kind:'news', kicker:`${n.y}년 뉴스${n.future?' · 가상 시나리오':''}`, headline:n.h, text:body, choices:(n.c||[]).map(c=>({l:c.l, ok:!c.need||c.need(S), needT:c.needT}))}; }
   if(d.kind==='ms'){ if(d.static) return {kind:'ms', kicker:d.static.title, title:d.static.title, text:d.static.text, choices:[]};
-    const m=MS[d.name].build(S,d); d._m=m; if(!m.choices.length) d.static={title:m.title, text:m.text}; return {kind:'ms', kicker:m.title, title:m.title, text:m.text, big:m.big, choices:m.choices.map(c=>({l:c.l, ok:!c.need||c.need(S), needT:c.needT}))}; }
+    const m=MS[d.name].build(S,d); d._m=m; if(!m.choices.length) d.static={title:m.title, text:m.text}; return {kind:'ms', kicker:m.title, title:m.title, text:m.text, big:m.big, grid:m.grid, choices:m.choices.map(c=>({l:c.l, ok:!c.need||c.need(S), needT:c.needT}))}; }
   if(d.kind==='info') return {kind:'info', kicker:d.title, title:d.title, text:d.text, choices:[]};
   return {kind:'death', choices:[]};
 }

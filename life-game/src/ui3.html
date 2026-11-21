@@ -39,6 +39,15 @@ button:focus-visible, input:focus-visible, textarea:focus-visible{outline:2px so
 .form{display:flex; flex-direction:column; gap:12px}
 .form label{font-size:13px; color:var(--muted)}
 .form input{font:inherit; font-size:17px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); width:100%}
+.choices.grid4{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px}
+.choices.grid4 .choice{padding:8px 4px; justify-content:center; text-align:center; font-size:13px; line-height:1.3; min-height:52px}
+@media (max-width:480px){ .choices.grid4 .choice{font-size:12px; padding:6px 2px} }
+.dolov{background:#f6e6c8}
+.dol-cap{position:absolute; left:50%; bottom:7%; transform:translate(-50%,10px); opacity:0; transition:all .5s; text-align:center; display:grid; gap:4px; background:rgba(255,250,238,.95); border:2px solid #8e2a22; border-radius:12px; padding:12px 20px; color:#3a2a1a; min-width:min(80vw,320px)}
+.dol-cap.on{opacity:1; transform:translate(-50%,0)}
+.dol-cap b{font-family:var(--display); font-size:26px} .dol-cap span{font-size:15px; font-weight:600; color:#8e2a22} .dol-cap small{font-size:13px}
+.dol-luck{font-family:var(--display); font-size:22px; color:#c8901a; letter-spacing:.06em}
+.dolov .f-skip{color:#3a2a1a; border-color:rgba(0,0,0,.25); background:rgba(255,255,255,.6)}
 .funeral{position:fixed; inset:0; z-index:200; background:#1d1b18; opacity:1; transition:opacity .5s}
 .funeral.out{opacity:0}
 .funeral canvas{display:block}
@@ -361,6 +370,7 @@ function firstPara(t){ return String(t).split('\n\n')[0]; }
 function shortQ(t){ t=String(t); return t.length>60? t.slice(0,58)+'…' : t; }
 function choose(i, note){
   if(!pending) return;
+  if(!pending.think && pending.d.kind==='ms' && pending.d.name==='dol' && !pending.played){ pending.played=true; const it=pending.d.item; playDol(S, it, dolMatch(S,DOLM[it]), ()=>choose(i,note)); return; }
   const p=pending; pending=null;
   if(p.think){
     const ts=thinkSpec(p.d); S.thoughts=S.thoughts||[]; S.thoughts.push({age:S.age, mood:ts.o[i], note:note||'', q:ts.q});
@@ -519,7 +529,7 @@ function renderDecide(){
       ${c.headline?`<div class="headline">${esc(c.headline)}</div>`:''}
       ${c.big?`<div class="num" style="font-size:28px;color:var(--seal)">${esc(c.big)}</div>`:''}
       <p>${esc(c.text)}</p>
-      <div class="choices">${c.choices.map((ch,i)=>`<button class="choice" data-i="${i}" ${ch.ok?'':'disabled'}><span class="n">${i+1}</span><span>${esc(ch.l)}${!ch.ok&&ch.needT?`<small>조건: ${esc(ch.needT)}</small>`:''}</span></button>`).join('')}</div></article>`;
+      <div class="choices${c.grid?' grid4':''}">${c.choices.map((ch,i)=>`<button class="choice" data-i="${i}" ${ch.ok?'':'disabled'}>${c.grid?'':`<span class="n">${i+1}</span>`}<span>${esc(ch.l)}${!ch.ok&&ch.needT?`<small>조건: ${esc(ch.needT)}</small>`:''}</span></button>`).join('')}</div></article>`;
   }
   startScene(pending);
   el.querySelectorAll('.choice').forEach(b=>b.addEventListener('click',()=>{ const n=document.getElementById('note'); choose(+b.dataset.i, n?n.value.trim():''); }));
@@ -555,7 +565,7 @@ function renderEnding(e){ const hlist=S.hlist.slice(-10);
   <section class="end1">
     <div class="e-ob"><div class="seal">故</div><div class="lbl">부 고</div><h2>故 ${esc(S.name)}</h2>
       <div class="years">${S.birthYear} – ${S.birthYear+S.age} · 향년 ${S.age}세 · ${esc(S.cause||'노환')}</div>
-      <div class="cause">${esc(S.region.name)} 출생 · ${esc(school)} · ${esc(lastJob?(lastJob.co||lastJob.name):'직장 경력 없음')}${S.mbLast?` · ${S.mbLast}`:''}</div></div>
+      ${(S.dreams||[]).length?`<div class="cause">꿈: ${esc(dreamSummary(S))}</div>`:''}<div class="cause">${esc(S.region.name)} 출생 · ${esc(school)} · ${esc(lastJob?(lastJob.co||lastJob.name):'직장 경력 없음')}${S.mbLast?` · ${S.mbLast}`:''}</div></div>
     <div class="e-v"><div><div class="t">${esc(e.title)}</div><div class="rank">대한민국 상위 ${e.top}%의 인생</div></div>
       <div class="e-sc"><b class="num">${ss.total}</b><small>/100</small><span>${esc(ss.grade)}</span></div></div>
     <div class="e-grid">

@@ -39,6 +39,15 @@ button:focus-visible, input:focus-visible, textarea:focus-visible{outline:2px so
 .form{display:flex; flex-direction:column; gap:12px}
 .form label{font-size:13px; color:var(--muted)}
 .form input{font:inherit; font-size:17px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--paper); color:var(--ink); width:100%}
+.choices.grid4{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px}
+.choices.grid4 .choice{padding:8px 4px; justify-content:center; text-align:center; font-size:13px; line-height:1.3; min-height:52px}
+@media (max-width:480px){ .choices.grid4 .choice{font-size:12px; padding:6px 2px} }
+.dolov{background:#f6e6c8}
+.dol-cap{position:absolute; left:50%; bottom:7%; transform:translate(-50%,10px); opacity:0; transition:all .5s; text-align:center; display:grid; gap:4px; background:rgba(255,250,238,.95); border:2px solid #8e2a22; border-radius:12px; padding:12px 20px; color:#3a2a1a; min-width:min(80vw,320px)}
+.dol-cap.on{opacity:1; transform:translate(-50%,0)}
+.dol-cap b{font-family:var(--display); font-size:26px} .dol-cap span{font-size:15px; font-weight:600; color:#8e2a22} .dol-cap small{font-size:13px}
+.dol-luck{font-family:var(--display); font-size:22px; color:#c8901a; letter-spacing:.06em}
+.dolov .f-skip{color:#3a2a1a; border-color:rgba(0,0,0,.25); background:rgba(255,255,255,.6)}
 .funeral{position:fixed; inset:0; z-index:200; background:#1d1b18; opacity:1; transition:opacity .5s}
 .funeral.out{opacity:0}
 .funeral canvas{display:block}
@@ -265,6 +274,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible{outline:2px so
 <div class="wrap" id="app"></div>
 
 <script>
+const DEATH_MULT = 2;   // 사망 확률 배율 (재미를 위해 현실의 2배)
 /* ===== 데이터: 이벤트 · 뉴스 · 직업 ===== */
 /* 효과 키: 학 체 멘 행 인 매(0~100) 돈(만원) / 숨은값 risk par hon spec kid / f:기록추가 uf:기록제거 title:칭호 hl:명장면 */
 
@@ -388,8 +398,8 @@ const EVENTS = [
   {l:'간다', e:{행:6, 학:-5, risk:6, f:'무단결석'}, t:'담임이 집으로 전화했다. 세 번째였다.'},
   {l:'학교 간다', e:{risk:-3}, t:'친구가 “노잼”이라고 답장했다.'}]},
 {id:'scooter', a:[15,19], if:S=>S.h.risk>=50 || S.f.has('비행또래'), w:3, t:'친구가 배달 스쿠터를 빌려 왔다. “뒤에 타. 헬멧은 없어.”', c:[
-  {l:'뒤에 탄다', run:S=>{ const r=R(); if(r<.006){ return killNow(S,'오토바이 사고 (동승)','새벽 국도에서 스쿠터가 미끄러졌다. 헬멧은 없었다.'); } if(r<.06){ add(S,{체:-20, 멘:-8, risk:3}); hl(S,'오토바이 사고로 다리 골절'); return '커브에서 넘어졌다. 다리에 철심을 박았다.'; } add(S,{행:8, risk:5}); return '바람이 시원했다. 무서운 줄 몰랐다.'; }},
-  {l:'직접 몬다 (무면허)', run:S=>{ const r=R(); if(r<.015){ return killNow(S,'무면허 오토바이 사고','처음 잡아본 핸들이었다. 신호를 보지 못했다.'); } if(r<.12){ add(S,{체:-25, 멘:-10, 돈:-300, f:'오토바이전과'}); hl(S,'무면허 오토바이 사고'); return '택시와 부딪혔다. 3주 입원하고 합의금까지 물었다.'; } add(S,{행:10, risk:8, f:'오토바이'}); return '스피드에 빠졌다. 주말마다 타게 됐다.'; }},
+  {l:'뒤에 탄다', run:S=>{ const r=R(); if(r<.006*DEATH_MULT){ return killNow(S,'오토바이 사고 (동승)','새벽 국도에서 스쿠터가 미끄러졌다. 헬멧은 없었다.'); } if(r<.06){ add(S,{체:-20, 멘:-8, risk:3}); hl(S,'오토바이 사고로 다리 골절'); return '커브에서 넘어졌다. 다리에 철심을 박았다.'; } add(S,{행:8, risk:5}); return '바람이 시원했다. 무서운 줄 몰랐다.'; }},
+  {l:'직접 몬다 (무면허)', run:S=>{ const r=R(); if(r<.015*DEATH_MULT){ return killNow(S,'무면허 오토바이 사고','처음 잡아본 핸들이었다. 신호를 보지 못했다.'); } if(r<.12){ add(S,{체:-25, 멘:-10, 돈:-300, f:'오토바이전과'}); hl(S,'무면허 오토바이 사고'); return '택시와 부딪혔다. 3주 입원하고 합의금까지 물었다.'; } add(S,{행:10, risk:8, f:'오토바이'}); return '스피드에 빠졌다. 주말마다 타게 됐다.'; }},
   {l:'거절한다', e:{risk:-4, 인:-2}, t:'“겁쟁이.” 친구들이 웃었다. 집에 와서 뉴스를 보니 그 동네에서 사고가 났다.'}]},
 {id:'runaway', a:[14,18], if:S=>S.h.risk>=60, w:3, t:'아빠와 크게 싸웠다. “나가! 다신 들어오지 마!”', c:[
   {l:'진짜 나간다 (가출)', e:{risk:10, par:-12, 멘:-8, 학:-6, 돈:-30, f:'가출'}, t:'친구 자취방과 PC방을 전전했다. 일주일 만에 경찰이 데려다줬다.'},
@@ -622,7 +632,7 @@ const EVENTS = [
 
 // ===== 성인 일탈 / 위험 =====
 {id:'drunk_drive', a:[20,60], rep:true, w:S=>S.h.risk>35?1.2:.25, t:'회식 끝. 대리기사가 안 잡힌다. 집까지 10분 거리.', c:[
-  {l:'그냥 운전한다', run:S=>{ const r=R(); if(r<.01){ return killNow(S,'음주운전 사고','10분 거리였다.'); } if(r<.15){ add(S,{돈:-1500, hon:-5, 멘:-12, f:'음주운전'}); if(S.job && S.job.kind==='공공'){ S.job=null; S.track=null; return '단속에 걸렸다. 면허 취소에 징계 해임까지.'; } return '단속에 걸렸다. 면허 취소, 벌금 1,500만원.'; } add(S,{risk:5}); return '무사히 도착했다. 운이 좋았을 뿐이다.'; }},
+  {l:'그냥 운전한다', run:S=>{ const r=R(); if(r<.01*DEATH_MULT){ return killNow(S,'음주운전 사고','10분 거리였다.'); } if(r<.15){ add(S,{돈:-1500, hon:-5, 멘:-12, f:'음주운전'}); if(S.job && S.job.kind==='공공'){ S.job=null; S.track=null; return '단속에 걸렸다. 면허 취소에 징계 해임까지.'; } return '단속에 걸렸다. 면허 취소, 벌금 1,500만원.'; } add(S,{risk:5}); return '무사히 도착했다. 운이 좋았을 뿐이다.'; }},
   {l:'1시간 기다린다', e:{체:-1}, t:'새벽 1시에 대리기사가 왔다.'},
   {l:'택시 타고 간다', e:{돈:-3}, t:'차는 내일 찾으러 가기로 했다.'}]},
 {id:'coin_allin', a:[22,50], rep:true, w:S=>S.h.risk>30?1:.4, t:'단톡방 리딩방: “이 코인 다음 주 10배 갑니다.”', c:[
@@ -633,7 +643,7 @@ const EVENTS = [
   {l:'오토바이 배달을 시작한다', run:S=>{ S.job={name:'배달 라이더', sal:3200, hon:0, kind:'현장'}; S.track='배달'; add(S,{f:'오토바이', 체:-2}); return '비 오는 날 콜이 제일 많다. 신호가 길게 느껴진다.'; }},
   {l:'안 한다', e:{}, t:'위험해 보였다.'}]},
 {id:'speeding_call', a:[19,45], rep:true, w:S=>S.f.has('오토바이')?2.5:0, t:'배달 마감 3분 전. 앞 신호가 막 빨간불로 바뀌었다.', c:[
-  {l:'신호를 무시하고 달린다', run:S=>{ const r=R(); if(r<.012){ return killNow(S,'오토바이 배달 중 교통사고','마감 3분 전이었다.'); } if(r<.1){ add(S,{체:-20, 돈:-400, 멘:-8}); hl(S,'배달 중 교통사고'); return '좌회전 차량과 부딪혔다. 두 달을 쉬었다.'; } add(S,{돈:20}); return '시간 안에 도착했다. 별점 5점.'; }},
+  {l:'신호를 무시하고 달린다', run:S=>{ const r=R(); if(r<.012*DEATH_MULT){ return killNow(S,'오토바이 배달 중 교통사고','마감 3분 전이었다.'); } if(r<.1){ add(S,{체:-20, 돈:-400, 멘:-8}); hl(S,'배달 중 교통사고'); return '좌회전 차량과 부딪혔다. 두 달을 쉬었다.'; } add(S,{돈:20}); return '시간 안에 도착했다. 별점 5점.'; }},
   {l:'기다린다', e:{돈:-5, 멘:-1}, t:'“배달이 늦어요” 리뷰가 달렸다. 그래도 살았다.'},
   {l:'헬멧을 바꾸고 안전 교육을 듣는다', e:{돈:-30, uf:'오토바이'}, t:'조금 덜 벌어도 괜찮다고 생각했다.'}]},
 {id:'crisis', a:[13,90], rep:true, w:S=>S.s.멘<15?8:0, t:'마음이 바닥까지 내려앉았다. 아무것도 하고 싶지 않다.', c:[
@@ -1158,11 +1168,11 @@ function yearTick(S, ms){
   // 부모님
   if(!S.f.has('부모별세') && S.age>=S.parentDeathAge){ S.f.add('부모별세'); ms.push({kind:'ms', name:'parents'}); }
   // 사망 판정
-  let q = baseQ(S.age) * clamp(1+(50-S.s.체)/40,.6,2.8);
+  let q = baseQ(S.age) * clamp(1+(50-S.s.체)/40,.6,2.8) * DEATH_MULT;
   if(S.f.has('지병')) q*=1.8;
   let extra=null;
-  if(S.f.has('오토바이') && S.age<60 && R()<.0025) extra=['오토바이 사고','빗길 교차로였다.'];
-  if(S.f.has('과로') && S.age>=35 && S.s.체<30 && R()<.004) extra=['과로사','책상 위에 결재 서류가 쌓여 있었다.'];
+  if(S.f.has('오토바이') && S.age<60 && R()<.0025*DEATH_MULT) extra=['오토바이 사고','빗길 교차로였다.'];
+  if(S.f.has('과로') && S.age>=35 && S.s.체<30 && R()<.004*DEATH_MULT) extra=['과로사','책상 위에 결재 서류가 쌓여 있었다.'];
   if(extra){ killNow(S,extra[0],extra[1]); return; }
   if(R()<q){ const list=CAUSES.find(c=>S.age<c[0])[1]; killNow(S,pick(list),''); }
 }
@@ -1332,7 +1342,7 @@ function buildCard(S, d){
     const body=[d.extra, n.t].filter(Boolean).join('\n\n');
     return {kind:'news', kicker:`${n.y}년 뉴스${n.future?' · 가상 시나리오':''}`, headline:n.h, text:body, choices:(n.c||[]).map(c=>({l:c.l, ok:!c.need||c.need(S), needT:c.needT}))}; }
   if(d.kind==='ms'){ if(d.static) return {kind:'ms', kicker:d.static.title, title:d.static.title, text:d.static.text, choices:[]};
-    const m=MS[d.name].build(S,d); d._m=m; if(!m.choices.length) d.static={title:m.title, text:m.text}; return {kind:'ms', kicker:m.title, title:m.title, text:m.text, big:m.big, choices:m.choices.map(c=>({l:c.l, ok:!c.need||c.need(S), needT:c.needT}))}; }
+    const m=MS[d.name].build(S,d); d._m=m; if(!m.choices.length) d.static={title:m.title, text:m.text}; return {kind:'ms', kicker:m.title, title:m.title, text:m.text, big:m.big, grid:m.grid, choices:m.choices.map(c=>({l:c.l, ok:!c.need||c.need(S), needT:c.needT}))}; }
   if(d.kind==='info') return {kind:'info', kicker:d.title, title:d.title, text:d.text, choices:[]};
   return {kind:'death', choices:[]};
 }
@@ -2605,7 +2615,7 @@ const WORLD = [
   {k:'volcano_sign', p:.003, h:'[가상] 백두산 분화 징조 · 화산성 지진 증가', fx:S=>{ S.volcano=S.year; add(S,{멘:-3}); return '뉴스마다 백두산 이야기다. 대피 가방을 싸두었다.'; }},
   {k:'volcano', p:0, h:'[가상] 백두산 분화 · 화산재로 하늘길 마비', fx:S=>{ S.shockStock=S.shockStock||{}; S.shockStock[S.year]=(S.shockStock[S.year]||0)-12; add(S,{체:-4, 멘:-6}); return '하늘이 잿빛이 됐다. 마스크를 쓰고 출근했고, 비행기는 한 달 동안 뜨지 않았다.'; }},
   {k:'tension', p:.03, h:'[가상] 남북 긴장 고조 · 군사 도발', fx:S=>{ S.shockStock=S.shockStock||{}; S.shockStock[S.year]=(S.shockStock[S.year]||0)-6; add(S,{멘:-2}); return '하루 종일 속보가 떴다. 며칠 뒤 잠잠해졌다.'; }},
-  {k:'war', p:.0003, h:'[가상] 한반도 전쟁 발발', fx:S=>{ S.shockStock=S.shockStock||{}; S.shockStock[S.year]=(S.shockStock[S.year]||0)-45; if(S.house) S.house.val*=.6; add(S,{멘:-25, 행:-20, 체:-8}); hl(S,`${S.age}세, 전쟁을 겪었다`); S.titles.add('전쟁을 겪은 세대'); if(R()<.03) return killNow(S,'전쟁','포성이 그치지 않던 밤이었다.'); return '모든 것이 멈췄다. 피난길에서 몇 달을 보냈다. 살아남았다.'; }},
+  {k:'war', p:.0003, h:'[가상] 한반도 전쟁 발발', fx:S=>{ S.shockStock=S.shockStock||{}; S.shockStock[S.year]=(S.shockStock[S.year]||0)-45; if(S.house) S.house.val*=.6; add(S,{멘:-25, 행:-20, 체:-8}); hl(S,`${S.age}세, 전쟁을 겪었다`); S.titles.add('전쟁을 겪은 세대'); if(R()<.03*DEATH_MULT) return killNow(S,'전쟁','포성이 그치지 않던 밤이었다.'); return '모든 것이 멈췄다. 피난길에서 몇 달을 보냈다. 살아남았다.'; }},
   {k:'unify', p:.0008, h:'[가상] 남북 통일 합의', fx:S=>{ S.shockStock=S.shockStock||{}; S.shockStock[S.year]=(S.shockStock[S.year]||0)+20; add(S,{행:6}); S.titles.add('통일 세대'); return '광화문에 사람들이 모여 울었다. 세금이 오른다는 뉴스도 같이 나왔다.'; }},
   {k:'ai', p:.03, h:'[가상] AI 대전환 · 산업 지도가 바뀌다', fx:S=>{ S.shockStock=S.shockStock||{}; S.shockStock[S.year]=(S.shockStock[S.year]||0)+15; if(S.job&&S.job.kind==='사무'&&R()<.12){ S.job=null; S.track=null; add(S,{멘:-10}); return 'AI가 내 업무를 대신하게 됐다. 권고사직을 받았다.'; } add(S,{spec:2}); return '회사에 AI 동료가 생겼다. 일하는 방식이 바뀌었다.'; }},
   {k:'climate', p:.04, h:'[가상] 기록적 폭우 · 폭염', fx:S=>{ if(R()<.1){ add(S,{돈:-800, 멘:-6}); return '집이 침수됐다. 가구를 다 버려야 했다.'; } add(S,{체:-2}); return '여름이 한 달 더 길어진 것 같다.'; }},
@@ -2675,28 +2685,28 @@ scheduleYear = function(S){
 const RARE_P = .0006; const RARE_YEAR = .0008;
 const RARE = [
   {id:'r_plane', a:[20,75], t:'해외여행 비행기. 갑자기 기체가 크게 흔들리더니 산소마스크가 떨어졌다. 기장 방송: “비상착륙합니다.”', c:[
-    {l:'안전 자세를 취하고 기도한다', run:S=>{ if(R()<.02) return killNow(S,'항공기 사고','착륙 직전이었다.'); add(S,{멘:-12, 체:-4}); hl(S,`${S.age}세, 비행기 비상착륙에서 살아남았다`); S.titles.add('기적의 생존자'); return '활주로에 불꽃이 튀었다. 모두 살아서 내렸다. 공항에서 가족에게 전화하며 울었다.'; }},
+    {l:'안전 자세를 취하고 기도한다', run:S=>{ if(R()<.02*DEATH_MULT) return killNow(S,'항공기 사고','착륙 직전이었다.'); add(S,{멘:-12, 체:-4}); hl(S,`${S.age}세, 비행기 비상착륙에서 살아남았다`); S.titles.add('기적의 생존자'); return '활주로에 불꽃이 튀었다. 모두 살아서 내렸다. 공항에서 가족에게 전화하며 울었다.'; }},
     {l:'옆 사람 손을 잡아준다', run:S=>{ add(S,{멘:-8, hon:2, 인:3}); hl(S,`${S.age}세, 비행기 비상착륙에서 살아남았다`); S.titles.add('기적의 생존자'); return '모르는 할머니의 손을 끝까지 잡았다. 착륙 후 그분이 내 이름을 물었다.'; }}]},
   {id:'r_hijack', a:[20,70], t:'경유지로 가는 비행기 안. 한 남자가 일어나 조종실 쪽으로 소리친다. 납치범이다.', c:[
     {l:'고개를 숙이고 시키는 대로 한다', run:S=>{ add(S,{멘:-18}); hl(S,`${S.age}세, 항공기 납치 사건에서 무사히 풀려났다`); return '열한 시간 뒤 특공대가 진입했다. 무사히 풀려났지만, 한동안 비행기를 못 탔다.'; }},
-    {l:'승객들과 함께 제압한다', run:S=>{ if(R()<.05) return killNow(S,'항공기 납치','다른 승객들을 지키려 했다.'); add(S,{멘:-10, hon:8, 체:-5}); S.titles.add('하늘의 의인'); hl(S,`${S.age}세, 납치범을 제압해 의인상을 받았다`); return '승객 셋이 함께 덮쳤다. 다음 날 뉴스에 내 얼굴이 나왔다.'; }}]},
+    {l:'승객들과 함께 제압한다', run:S=>{ if(R()<.05*DEATH_MULT) return killNow(S,'항공기 납치','다른 승객들을 지키려 했다.'); add(S,{멘:-10, hon:8, 체:-5}); S.titles.add('하늘의 의인'); hl(S,`${S.age}세, 납치범을 제압해 의인상을 받았다`); return '승객 셋이 함께 덮쳤다. 다음 날 뉴스에 내 얼굴이 나왔다.'; }}]},
   {id:'r_lotto', a:[20,90], t:'습관처럼 산 로또. 토요일 밤, 번호를 맞춰보는데 손이 떨린다. 6개가 다 맞았다.', c:[
     {l:'아무에게도 말하지 않는다', run:S=>{ add(S,{돈:150000, 행:12}); S.titles.add('로또 1등'); hl(S,`${S.age}세, 로또 1등 당첨 (실수령 약 15억)`); return '실수령 15억. 다음 날도 평소처럼 출근했다. 은행 앱만 수십 번 열어봤다.'; }},
     {l:'가족과 친구들에게 크게 쏜다', run:S=>{ add(S,{돈:120000, 행:10, 인:8, par:6}); S.titles.add('로또 1등'); hl(S,`${S.age}세, 로또 1등 당첨`); return '부모님 집 대출을 갚아드렸다. 연락 안 하던 친척들이 갑자기 연락해왔다.'; }}]},
-  {id:'r_lightning', a:[12,80], t:'등산 중 갑자기 먹구름이 몰려왔다. 바로 옆 나무에 번개가 떨어졌다.', c:[{l:'정신을 차린다', run:S=>{ if(R()<.05) return killNow(S,'낙뢰 사고','산 정상 바로 아래였다.'); add(S,{체:-6, 멘:-6}); S.titles.add('번개를 피한 사람'); return '귀가 한참 멍했다. 머리카락이 곤두서 있었다. 살았다.'; }}]},
+  {id:'r_lightning', a:[12,80], t:'등산 중 갑자기 먹구름이 몰려왔다. 바로 옆 나무에 번개가 떨어졌다.', c:[{l:'정신을 차린다', run:S=>{ if(R()<.05*DEATH_MULT) return killNow(S,'낙뢰 사고','산 정상 바로 아래였다.'); add(S,{체:-6, 멘:-6}); S.titles.add('번개를 피한 사람'); return '귀가 한참 멍했다. 머리카락이 곤두서 있었다. 살았다.'; }}]},
   {id:'r_phishing', a:[30,90], t:'“엄마, 나 폰 고장 나서 친구 폰으로 연락해. 급하게 돈 좀…” 자녀(가족)라는 문자가 왔다.', c:[
     {l:'바로 송금한다', run:S=>{ add(S,{돈:-Math.min(3000,Math.max(300,S.money*.2)), 멘:-12}); return '보이스피싱이었다. 경찰서에서 진술서를 쓰는데 손이 떨렸다.'; }},
     {l:'전화부터 걸어본다', e:{멘:2}, t:'진짜 가족은 회사에 있었다. 사기 번호를 신고했다.'}]},
   {id:'r_inherit', a:[25,80], t:'모르는 변호사에게서 연락이 왔다. 얼굴도 모르는 먼 친척이 유산을 남겼다고 한다.', c:[{l:'변호사를 만나본다', run:S=>{ const v=R()<.7? ri(3000,9000): -ri(2000,5000); if(v<0){ add(S,{멘:-6}); return '알고 보니 빚이 더 많았다. 상속 포기 서류를 냈다.'; } add(S,{돈:v, 행:6}); hl(S,`${S.age}세, 먼 친척의 유산을 받았다`); return `시골 땅과 예금 ${won(v)}. 그분의 사진을 처음 봤다. 나랑 눈매가 닮았다.`; }}]},
   {id:'r_twins', a:[28,42], if:S=>S.f.has('기혼'), t:'초음파를 보던 의사가 웃으며 말했다. “심장 소리가 두 개네요.”', c:[{l:'두 손을 꼭 잡는다', run:S=>{ S.kids+=2; S.kidBirth.push(S.age+1,S.age+1); add(S,{행:10, 돈:-500, f:['출산','자녀결정']}); S.titles.add('쌍둥이 부모'); hl(S,`${S.age+1}세, 쌍둥이의 부모가 됐다`); return '유모차를 두 대 살지 쌍둥이용을 살지 한 달을 고민했다.'; }}]},
   {id:'r_hero', a:[18,70], t:'지하철 승강장. 앞에 서 있던 사람이 갑자기 쓰러지더니 선로로 떨어졌다.', c:[
-    {l:'뛰어내려 구한다', run:S=>{ if(R()<.03) return killNow(S,'선로 구조 중 사고','누군가를 구하려 했다.'); add(S,{hon:10, 멘:6, 체:-5}); S.titles.add('지하철 의인'); hl(S,`${S.age}세, 선로에 떨어진 사람을 구해 의인상을 받았다`); return '열차가 들어오기 20초 전이었다. 다음 날 의인상 연락이 왔다.'; }},
+    {l:'뛰어내려 구한다', run:S=>{ if(R()<.03*DEATH_MULT) return killNow(S,'선로 구조 중 사고','누군가를 구하려 했다.'); add(S,{hon:10, 멘:6, 체:-5}); S.titles.add('지하철 의인'); hl(S,`${S.age}세, 선로에 떨어진 사람을 구해 의인상을 받았다`); return '열차가 들어오기 20초 전이었다. 다음 날 의인상 연락이 왔다.'; }},
     {l:'비상벨을 누르고 소리친다', e:{hon:3, 멘:2}, t:'역무원이 열차를 세웠다. 그 사람은 무사히 구조됐다.'}]},
   {id:'r_quiz', a:[18,70], if:S=>S.s.학>=60, t:'TV 퀴즈쇼 예선에 붙었다. 결승 마지막 문제가 나왔다.', c:[{l:'떨리는 손으로 답을 쓴다', run:S=>{ if(R()<.4){ add(S,{돈:5000, 매:4, hon:2}); S.titles.add('퀴즈왕'); hl(S,`${S.age}세, 퀴즈쇼 우승`); return '정답! 꽃가루가 쏟아졌다. 상금 5천만원.'; } add(S,{행:3}); return '한 글자 차이로 틀렸다. 그래도 방송에 나온 내 얼굴을 보며 웃었다.'; }}]},
   {id:'r_viral', a:[14,60], t:'친구가 찍어 올린 내 영상이 밤사이 조회수 2천만을 넘었다. 댓글이 외국어로 가득하다.', c:[{l:'즐긴다', run:S=>{ add(S,{매:6, 인:8, 행:5}); S.titles.add('밈의 주인공'); hl(S,`${S.age}세, 전 세계 밈의 주인공이 됐다`); return '광고 제안이 세 개 들어왔다. 한 달 뒤 다들 잊었다.'; }}]},
   {id:'r_celeb', a:[10,60], t:'카페에서 옆자리에 앉은 사람이 아무리 봐도 유명 배우다.', c:[{l:'용기 내서 사인을 받는다', e:{행:6, 매:1}, t:'“팬이에요…” 배우가 웃으며 사인해줬다. 사진은 흔들려서 아무도 안 믿었다.'}]},
   {id:'r_elevator', a:[10,85], t:'퇴근길 엘리베이터가 덜컹 멈췄다. 비상벨을 눌러도 응답이 없다.', c:[{l:'침착하게 기다린다', e:{멘:-4}, t:'세 시간 만에 구조됐다. 그날부터 계단을 이용한다.'}]},
-  {id:'r_lost_mtn', a:[15,75], t:'혼자 간 산에서 길을 잃었다. 해가 지고 휴대폰 배터리는 5%.', c:[{l:'119에 위치를 보내고 기다린다', run:S=>{ if(R()<.02) return killNow(S,'산악 조난','혼자 오른 겨울 산이었다.'); add(S,{체:-6, 멘:-8}); return '새벽 2시, 손전등 불빛이 다가왔다. 구조대원이 담요를 덮어줬다.'; }}]},
+  {id:'r_lost_mtn', a:[15,75], t:'혼자 간 산에서 길을 잃었다. 해가 지고 휴대폰 배터리는 5%.', c:[{l:'119에 위치를 보내고 기다린다', run:S=>{ if(R()<.02*DEATH_MULT) return killNow(S,'산악 조난','혼자 오른 겨울 산이었다.'); add(S,{체:-6, 멘:-8}); return '새벽 2시, 손전등 불빛이 다가왔다. 구조대원이 담요를 덮어줬다.'; }}]},
   {id:'r_wallet', a:[8,85], t:'길에서 두툼한 지갑을 주웠다. 현금 2백만원과 신분증이 들어 있다.', c:[
     {l:'경찰서에 가져다준다', run:S=>{ add(S,{hon:2, 돈:20, 멘:3}); return '주인이 찾아와 사례금 20만원을 쥐여줬다. 기분 좋은 하루.'; }},
     {l:'모른 척 챙긴다', run:S=>{ if(R()<.6){ add(S,{돈:-100, hon:-4, 멘:-8}); return 'CCTV에 다 찍혀 있었다. 점유이탈물횡령으로 벌금을 냈다.'; } add(S,{돈:200, 멘:-4}); return '들키지 않았다. 그런데 그 돈은 이상하게 빨리 사라졌다.'; }}]},
@@ -2829,6 +2839,176 @@ function inheritAmount(S){
   return Math.round((estate-tax)/(S.siblings+1));
 }
 
+/* ===== 장래희망: 태어날 때 · 10살 · 20살에 고른다 =====
+   같은 꿈을 오래 품을수록(최대 3번) 관련 재능이 자라고, 그 직업이 되기 쉬워진다. */
+const DREAMS = [
+  {k:'의사',        e:'🩺', jobs:['의사'],               tr:['두뇌']},
+  {k:'선생님',      e:'🍎', jobs:['교사'],               tr:['말솜씨','두뇌']},
+  {k:'공무원',      e:'🏛️', jobs:['공무원'],             tr:['두뇌']},
+  {k:'대기업 직장인', e:'🏢', jobs:['대기업'],             tr:['외국어','리더십']},
+  {k:'개발자',      e:'💻', jobs:['개발자'],             tr:['코딩']},
+  {k:'운동선수',    e:'⚽', jobs:['운동선수'],           tr:['운동신경','체격']},
+  {k:'연예인',      e:'🎤', jobs:['배우·모델','아이돌'],  tr:['외모','말솜씨']},
+  {k:'유튜버',      e:'📹', jobs:['크리에이터'],         tr:['말솜씨','외모']},
+  {k:'웹툰·예술가', e:'🎨', jobs:['웹툰 작가','디자이너·예술가'], tr:['예술감각']},
+  {k:'셰프',        e:'🍳', jobs:['셰프'],               tr:['손재주']},
+  {k:'파일럿·승무원', e:'✈️', jobs:['파일럿','승무원'],   tr:['외국어','체격']},
+  {k:'경찰·소방관', e:'🚒', jobs:['경찰관','소방관'],     tr:['체격','운동신경']},
+  {k:'간호사',      e:'💉', jobs:['간호사'],             tr:['말솜씨']},
+  {k:'사장님',      e:'💼', jobs:['창업'],               tr:['말솜씨','리더십','재테크']},
+  {k:'과학자',      e:'🔬', jobs:['연구원'],             tr:['두뇌','코딩']},
+  {k:'프로게이머',  e:'🎮', jobs:['프로게이머'],         tr:['운동신경']},
+];
+const DREAM = {}; DREAMS.forEach(d=>DREAM[d.k]=d);
+const DREAM_AGES = [0,10,20];
+function dreamNow(S){ return S.dream? DREAM[S.dream] : null; }
+function dreamPower(S){ if(!S.dream) return 0; return (S.dreams||[]).filter(x=>x.k===S.dream).length; }   // 1~3
+function isDreamJob(S,t){ const d=dreamNow(S); return !!(d && d.jobs.includes(t)); }
+
+// 창업(사장님) 진로: 대박 아니면 쪽박
+JOBS['자영업']=JOBS['자영업']||{sal:3500, hon:2, kind:'자영'};
+JOBCAT['창업'] = {show:S=>S.age>=20 && isDreamJob(S,'창업'), p:S=>.35+ab(S,'말솜씨')/250+ab(S,'리더십')/300, prep:'모아둔 돈으로 내 가게·회사', cost:2000,
+  hire:S=>{ const r=R(); const sal = r<.12? ri(12000,40000) : r<.55? ri(3500,7000) : ri(1500,3000);
+    S.job={name:'자영업', sal, hon:r<.12?4:2, kind:'자영'}; if(r<.12){ S.titles.add('성공한 사장님'); return `창업 대성공! 매장이 세 개로 늘었다. 올해 수입 ${won(sal)}.`; }
+    return r<.55? '가게를 열었다. 단골이 하나둘 생긴다.' : '가게를 열었다. 손님이 생각보다 적다. 그래도 내 가게다.'; }};
+PRESTIGE['창업']=6;
+
+// 1) 고르는 장면
+MS.dream = {build:(S,d)=>{
+  const a=S.age, cur=dreamNow(S);
+  const text = a===0 ? `${S.name}이(가) 태어났다. 이 아이는 커서 무엇이 되고 싶어 할까?\n\n같은 꿈을 10살·20살에도 고르면 관련 재능이 더 자라고, 그 직업이 되기 훨씬 쉬워진다.`
+    : a===10 ? `초등학교 3학년. 선생님이 장래희망을 적어 내라고 한다.${cur?`\n\n태어날 때 꿈: ${cur.e} ${cur.k}. 그대로 적으면 꿈이 더 단단해진다.`:''}`
+    : `스무 살. 이제 진짜 하고 싶은 일을 정할 때다.${cur?`\n\n지금까지의 꿈: ${(S.dreams||[]).map(x=>DREAM[x.k].e+' '+x.k).join(' → ')}`:''}`;
+  return {title: a===0?'첫 번째 꿈':a===10?'장래희망 발표':'진짜 하고 싶은 일', text, grid:true,
+    choices: DREAMS.map(dr=>({l:`${dr.e} ${dr.k}${cur&&cur.k===dr.k?' ★':''}`, run:S=>pickDream(S,dr.k)}))};
+}};
+function pickDream(S,k){
+  const keep = S.dream===k; S.dream=k; (S.dreams=S.dreams||[]).push({age:S.age, k});
+  const p=dreamPower(S), dr=DREAM[k];
+  if(dr.jobs.includes('의사')) S.f.add('의대도전'); else if(S.age===20) S.f.delete('의대도전');
+  if(dr.jobs.includes('아이돌') && S.age>=10) S.f.add('연습생');
+  if(dr.jobs.includes('크리에이터')) S.f.add('크리에이터꿈');
+  if(dr.jobs.includes('개발자')) S.f.add('코딩관심');
+  hl(S, `${S.age}세, 장래희망: ${dr.e} ${k}`);
+  if(S.age===0) return `${dr.e} ${k}. 부모님이 돌잔치 날 그 이야기를 꺼내며 웃었다.`;
+  if(keep) return `${dr.e} ${k}. 꿈이 ${p}번째 이어졌다. ${dr.tr.join('·')} 쪽이 눈에 띄게 늘고 있다.`;
+  return `${dr.e} ${k}(으)로 꿈을 바꿨다. 새로 시작하는 꿈은 아직 약하다.`;
+}
+const _syD = scheduleYear;
+scheduleYear = function(S){
+  _syD(S);
+  if(S.dead) return;
+  S.dreamAsked=S.dreamAsked||{};
+  if(DREAM_AGES.includes(S.age) && !S.dreamAsked[S.age]){ S.dreamAsked[S.age]=1; S.sched.push({m:S.age===0?2:3, d:{kind:'ms', name:'dream'}}); S.sched.sort((a,b)=>a.m-b.m); }
+};
+MAJOR.add('dream');
+
+// 2) 꿈이 재능을 키운다: 같은 꿈 1번 +5, 2번 +10, 3번 +16 (관련 재능에만)
+const _abD = ability;
+ability = function(S,t){ const v=_abD(S,t); const d=dreamNow(S); if(!d || !d.tr.includes(t)) return v; return v + [0,5,10,16,20][Math.min(4,dreamPower(S))]; };
+
+// 3) 진로: 꿈 직업은 조건이 모자라도 목록 맨 위에 뜬다 (★표시)
+const _toD = trackOptions;
+trackOptions = function(S){
+  let L=_toD(S); const d=dreamNow(S); if(!d) return L;
+  const pin=d.jobs.filter(t=>t!=='의사' && (JOBCAT[t]? (t==='창업'||S.age<=40) : true));
+  return [...pin, ...L.filter(t=>!pin.includes(t))];
+};
+const _tbD = MS.track.build;
+MS.track.build = function(S,d){ const r=_tbD(S,d); r.choices.forEach(c=>{ const t=(c.l.split(' · ')[0]||'').trim(); if(isDreamJob(S,t)) c.l='★ 꿈 · '+c.l; }); return r; };
+// 합격 확률: 꿈 직업이면 +12%p, 같은 꿈을 품은 횟수마다 +10%p
+const dreamBonus = S=> isDreamJob(S,S.track)? .04 + .12*dreamPower(S) : 0;
+const _shD = snowHunt;
+snowHunt = function(S){ return _shD(S) + dreamBonus(S); };
+const _epD = estP;
+estP = function(S,t){ const b = isDreamJob(S,t)? .04+.12*dreamPower(S) : 0; return _epD(S,t)+b; };
+
+// 4) 꿈을 이루면
+const _mtD = monthTick;
+monthTick = function(S){
+  _mtD(S);
+  if(S.job && S.dream && !S.f.has('꿈이룸') && isDreamJob(S,S.job.name==='자영업'?'창업':S.job.name)){
+    S.f.add('꿈이룸'); S.titles.add('꿈을 이룬 사람'); add(S,{행:10, 멘:6});
+    hl(S, `${S.age}세, 어릴 적 꿈 ${DREAM[S.dream].e} ${S.dream}을(를) 이뤘다`);
+  }
+};
+function dreamSummary(S){
+  const L=(S.dreams||[]); if(!L.length) return '';
+  return L.map(x=>`${x.age}세 ${DREAM[x.k].e} ${x.k}`).join(' → ') + (S.f.has('꿈이룸')? ' · 꿈을 이뤘다' : ' · 다른 길을 걸었다');
+}
+
+// 5) 대학 원서: 꿈과 이어지는 과에 ★ · 의사가 꿈이면 오래 품을수록 의대 문이 넓어진다
+const DREAM_MAJOR = {의사:'의대', 선생님:'사범대', 간호사:'간호학과', 개발자:'공대', 과학자:'공대', '대기업 직장인':'상경계'};
+const _cbD = MS.college.build;
+MS.college.build = function(S,d){
+  const r=_cbD(S,d); const dr=S.dream, p=dreamPower(S), want=DREAM_MAJOR[dr];
+  if(dr==='의사' && !r.choices.some(c=>/의대/.test(c.l))){
+    const okTier = S.tier==='S' || (S.tier==='A' && p>=1) || (S.tier==='B' && p>=2) || (S.tier==='C' && p>=3);
+    if(okTier) r.choices.unshift({l:'의대 (6년)', run:S=>{ S.major='의대'; S.studying=true; S.studyLeft=6; add(S,{f:'대학생', 행:8, risk:-6}); S.uni=pickUni(S); hl(S,`${S.uni} 의대 입학`); return `${S.uni} 의대에 붙었다. 어릴 때부터 꾼 꿈에 한 걸음 다가섰다.`; }});
+  }
+  if(want) r.choices.forEach(c=>{ if(c.l.startsWith(want==='공대'?'공대':want==='상경계'?'경영':want==='사범대'?'교대':want)) c.l='★ 꿈 · '+c.l; });
+  return r;
+};
+
+/* ===== 돌잡이: 첫 생일에 무엇을 잡느냐로 '수저'가 정해진다 =====
+   잡은 물건 → 관련 재능이 평생 크게 오른다. 태어날 때 고른 꿈과 맞으면 '운명의 돌잡이' (보너스 1.8배 + 꿈 한 칸 더).
+   돈(금수저)은 너무 쉬워지므로 잘 안 잡힌다. */
+const DOL = [
+  {k:'연필',   e:'✏️', spoon:'지능 수저',   tr:{두뇌:12},            st:{학:5},       w:1,   say:'“공부 잘하겠네!” 할머니가 박수를 쳤다.'},
+  {k:'청진기', e:'🩺', spoon:'지능 수저',   tr:{두뇌:10, 말솜씨:4},   st:{학:4},       w:.8,  say:'“의사 선생님 나셨네!” 엄마가 그날 맘카페에 사진을 올렸다.'},
+  {k:'마우스', e:'🖱️', spoon:'지능 수저',   tr:{코딩:14, 두뇌:4},     st:{학:3},       w:.8,  say:'“요즘 애들은 다르네.” 삼촌이 휴대폰으로 찍었다.'},
+  {k:'공',     e:'⚽', spoon:'예체능 수저', tr:{운동신경:12, 체격:6}, st:{체:5},       w:1,   say:'공을 잡자마자 던졌다. 아빠가 “국가대표!”라고 외쳤다.'},
+  {k:'붓',     e:'🖌️', spoon:'예체능 수저', tr:{예술감각:12, 손재주:6}, st:{행:4},     w:1,   say:'붓을 쥐고 상 위에 낙서를 했다. 다들 “화가 나셨네” 했다.'},
+  {k:'마이크', e:'🎤', spoon:'인맥 수저',   tr:{말솜씨:12, 외모:4, 리더십:4}, st:{인:6, 매:3}, w:1, say:'마이크를 잡고 옹알이를 했다. 사회자가 “연예인 하겠네요!”'},
+  {k:'실',     e:'🧵', spoon:'건강 수저',   tr:{체격:8},             st:{체:7, 멘:3}, w:.9,  say:'“오래오래 살겠네.” 증조할머니가 손을 꼭 잡았다.', long:true},
+  {k:'돈',     e:'💴', spoon:'금수저',      tr:{재테크:10},          st:{},           w:.22, say:'지폐를 꽉 쥐고 놓지 않았다. 아빠가 제일 크게 웃었다.', money:3000},
+];
+const DOLM = {}; DOL.forEach(x=>DOLM[x.k]=x);
+function dolMatch(S,item){ const d=(typeof dreamNow==='function')&&dreamNow(S); if(!d) return false;
+  if(item.k==='돈') return d.k==='사장님';
+  if(item.k==='청진기') return d.k==='의사'||d.k==='간호사';
+  return Object.keys(item.tr).some(t=>d.tr.includes(t)); }
+function dolMult(S){ return S.dolLucky? 1.8 : 1; }
+
+// 정기 이벤트의 옛 돌잡이는 빼고, 1살 3월에 반드시 돌잔치를 연다
+(function(){ const e=EVENTS.find(x=>x.id==='doljabi'); if(e) e.manual=true; })();
+const _syDol = scheduleYear;
+scheduleYear = function(S){
+  _syDol(S);
+  if(S.dead) return;
+  if(S.age===1 && !S.f.has('돌잔치')){ S.f.add('돌잔치'); S.sched.push({m:3, d:{kind:'ms', name:'dol'}}); S.sched.sort((a,b)=>a.m-b.m); }
+};
+MS.dol = {build:(S,d)=>{
+  if(!d.item) d.item = wpick(DOL, x=>x.w).k;
+  const dr=(typeof dreamNow==='function')&&dreamNow(S);
+  return {title:'돌잡이', text:`첫 생일. 돌상 위에 ${DOL.map(x=>x.e+' '+x.k).join(', ')}가 놓여 있다.\n\n무엇을 잡느냐로 평생 따라다닐 ‘수저’가 정해진다.${dr?`\n\n태어날 때 꿈은 ${dr.e} ${dr.k}. 관련된 걸 잡으면 운명의 돌잡이!`:''}`,
+    choices:[{l:'아기를 돌상 앞에 내려놓는다', run:S=>applyDol(S,d.item)}]};
+}};
+MAJOR.add('dol');
+function applyDol(S,k){
+  const it=DOLM[k]; S.dol=k; S.dolLucky=dolMatch(S,it);
+  S.f.add('돌잡이'+k); if(k==='돈') S.f.add('돌잡이돈'); if(k==='연필') S.f.add('돌잡이연필');
+  if(it.money) add(S,{돈:it.money*(S.dolLucky?2:1)});
+  add(S, Object.fromEntries(Object.entries(it.st).map(([s,v])=>[s,v*dolMult(S)])));
+  if(S.dolLucky){ S.titles.add('운명의 돌잡이'); hl(S,`1세, 돌잡이에서 ${it.e} ${k}을(를) 잡았다 — 꿈과 같은 운명의 ${it.spoon}`); }
+  else hl(S,`1세, 돌잡이에서 ${it.e} ${k}을(를) 잡았다 (${it.spoon})`);
+  return `${it.e} ${k}! ${it.say}\n${it.spoon}를 물었다: ${Object.entries(it.tr).map(([t,v])=>`${t} +${Math.round(v*dolMult(S))}`).join(' · ')}${S.dolLucky?'\n태어날 때 꿈과 같은 쪽이다. 운명의 돌잡이!':''}`;
+}
+// 평생 효과 ①: 재능 보너스
+const _abDol = ability;
+ability = function(S,t){ const v=_abDol(S,t); if(!S||!S.dol) return v; const b=DOLM[S.dol].tr[t]; return b? v+b*dolMult(S) : v; };
+// 평생 효과 ②: 능력치가 자라는 목표치가 높아진다
+const _stDol = statTargets;
+statTargets = function(S,A){ const T=_stDol(S,A); if(!S.dol||S.age<2) return T; const st=DOLM[S.dol].st;
+  for(const k in st) if(T[k]!=null) T[k]=clamp(T[k]+st[k]*.8*dolMult(S),5,98); return T; };
+// 평생 효과 ③: 실(장수)은 사망 확률을 낮춘다 · 운명의 돌잡이는 꿈 한 칸을 더 쳐준다
+const _ytDol = yearTick;
+yearTick = function(S,ms){
+  if(S.dol==='실' && S.age>=40 && !S.dead){ const keep=R()<(S.dolLucky?.35:.22); if(keep){ const was=S.dead; _ytDol(S,ms); if(S.dead && !was && !/사고|전쟁|조난|낙뢰|납치/.test(S.cause||'')){ S.dead=false; S.cause=null; S.queue=S.queue.filter(q=>q.kind!=='death'); } return; } }
+  _ytDol(S,ms);
+};
+if(typeof dreamPower==='function'){ const _dpDol=dreamPower; dreamPower=function(S){ const p=_dpDol(S); return p>0 && S.dolLucky && S.dol && dolMatch(S,DOLM[S.dol])? Math.min(4,p+1) : p; }; }
+
 /* ===== 실시간 뉴스: 매주 자동 업데이트되는 파일 =====
    - 이 파일만 고친다. NEWS 끝에 push 하므로 기존 뉴스 번호(저장 데이터)가 바뀌지 않는다.
    - 실제 일어난 일만, 특정 정치인·범죄 피해자·실명 개인은 넣지 않는다.
@@ -2939,6 +3119,7 @@ function firstPara(t){ return String(t).split('\n\n')[0]; }
 function shortQ(t){ t=String(t); return t.length>60? t.slice(0,58)+'…' : t; }
 function choose(i, note){
   if(!pending) return;
+  if(!pending.think && pending.d.kind==='ms' && pending.d.name==='dol' && !pending.played){ pending.played=true; const it=pending.d.item; playDol(S, it, dolMatch(S,DOLM[it]), ()=>choose(i,note)); return; }
   const p=pending; pending=null;
   if(p.think){
     const ts=thinkSpec(p.d); S.thoughts=S.thoughts||[]; S.thoughts.push({age:S.age, mood:ts.o[i], note:note||'', q:ts.q});
@@ -3290,6 +3471,7 @@ const SC = {
   ms_suneung:{bg:'exam', a:[['ME',.5,.66,.22,'bob'],['✏️',.58,.64,.09,'write'],['📝',.3,.6,.1,'']]},
   ms_college:{bg:'room', night:true, a:[['ME',.45,.7,.24,'bob'],['💻',.6,.64,.12,''],['🎓',.25,.3,.14,'float']]},
   ms_army:{bg:'home', a:[['ME',.6,.74,.24,'shake'],['✉️',.42,.6,.12,'pulse'],['MOM',.25,.74,.26,'lean']]},
+  ms_dream:{bg:'room', a:[['ME',.5,.78,.24,'bob'],['💭',.66,.4,.14,'float'],['🩺',.16,.28,.1,'float'],['⚽',.34,.18,.1,'float'],['🎤',.84,.24,.1,'float'],['💻',.9,.5,.1,'float'],['🎨',.1,.55,.1,'float']]},
   ms_track:{bg:'crossroads', a:[['ME',.5,.88,.22,'bob'],['🏢',.12,.5,.12,'float'],['🏛️',.3,.25,.12,'float'],['🏥',.7,.25,.12,'float'],['🎨',.88,.5,.12,'float']]},
   ms_hunt:{bg:'interview', a:[['🧑‍💼',.15,.45,.2,'nod'],['🧑‍💼',.33,.45,.2,'nod2'],['🧑‍💼',.51,.45,.2,'nod'],['ME',.78,.78,.26,'shake']]},
   ms_talentfind:{bg:'classroom', a:[['🧑‍🏫',.7,.72,.3,''],['ME',.3,.82,.24,'bob']]},
@@ -3505,7 +3687,7 @@ function playFuneral(S,e,done){
   if(reduce){ done(); return; }
   const n=senders.length;
   // 화환이 많을수록 복도가 길어지고, 천천히 걸어 들어간다
-  const Tw=clamp(3.2+n*.42, 4.5, 13), Tend=Tw+3.2;
+  const Tw=clamp(3.2+n*.42, 4.5, 13), Th=Tw+3.0, Tend=Th+5.2;   // Th: 식당 장면 시작
   const ov=document.createElement('div'); ov.className='funeral';
   ov.innerHTML=`<canvas id="fcv"></canvas><div class="f-cap" style="animation-delay:${Tw.toFixed(1)}s"><b>故 ${esc(S.name)}</b><span>${S.birthYear} – ${S.birthYear+S.age} · 향년 ${S.age}세</span><span>화환 ${n}개 · 조문객 ${e.mourners}명</span></div><button class="btn ghost f-skip" id="fskip">건너뛰기</button>`;
   document.body.appendChild(ov);
@@ -3523,8 +3705,40 @@ function playFuneral(S,e,done){
   const finish=()=>{ if(finished) return; finished=true; cancelAnimationFrame(raf); ov.classList.add('out'); setTimeout(()=>{ ov.remove(); done(); },500); };
   ov.querySelector('#fskip').addEventListener('click',finish);
   const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+  // ===== 장례식장 식당: 조문객 수만큼 자리가 찬다 =====
+  const M2=Math.min(W,H), EMJ='"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",serif';
+  const cols=W<H?2:3, rows=W<H?6:4, seatPer=6;
+  const hx0=W*.06, hx1=W*.94, hy0=H*.2, hy1=H*.86, cw=(hx1-hx0)/cols, rh=(hy1-hy0)/rows;
+  const seats=[]; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const tx0=hx0+c*cw+cw*.1, tw0=cw*.8, ty0=hy0+r*rh+rh*.38, th0=rh*.24;
+    for(let k=0;k<3;k++){ seats.push({x:tx0+tw0*(k+.5)/3, y:ty0-rh*.14, tx:tx0+tw0*(k+.5)/3, ty:ty0+th0*.3}); seats.push({x:tx0+tw0*(k+.5)/3, y:ty0+th0+rh*.14, tx:tx0+tw0*(k+.5)/3, ty:ty0+th0*.7}); } }
+  const cap=seats.length, mourn=e.mourners||0, people=clamp(Math.round(mourn/4),2,cap+24), seated=Math.min(people,cap), queue=people-seated;
+  const seatOrder=seats.map((s,i)=>i).sort(()=>R()-.5).slice(0,seated);
+  const faces=['🧑','👩','👨','👴','👵','🧑‍💼','👩‍🦳','👨‍🦳','🧔','👱'], foods=['🍚','🥣','🍖','🥤','🍶'];
+  const ppl=seatOrder.map((si,i)=>({s:seats[si], f:faces[(si*7+i)%faces.length], food:foods[(si*3)%foods.length], at:.4+ i/Math.max(1,seated)*2.6}));
+  let capHidden=false;
+  const drawHall=u=>{
+    if(!capHidden){ capHidden=true; const fc=ov.querySelector('.f-cap'); if(fc) fc.style.display='none'; }
+    g.fillStyle='#d9cbb2'; g.fillRect(0,0,W,H);
+    for(let y=0;y<H;y+=M2*.08){ g.fillStyle=(Math.floor(y/(M2*.08))%2)?'#d3c4a9':'#dccfb7'; g.fillRect(0,y,W,M2*.08); }
+    g.fillStyle='#3b342b'; g.fillRect(0,0,W,H*.13); g.fillStyle='#f3ead8'; g.font=`700 ${M2*.042}px "Noto Sans KR",sans-serif`; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('장례식장 식당', W/2, H*.05); g.font=`500 ${M2*.03}px "Noto Sans KR",sans-serif`; g.fillText(`故 ${S.name} · 조문객 ${mourn}명`, W/2, H*.095);
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const tx0=hx0+c*cw+cw*.1, tw0=cw*.8, ty0=hy0+r*rh+rh*.38, th0=rh*.24;
+      g.fillStyle='rgba(0,0,0,.12)'; g.fillRect(tx0+3,ty0+4,tw0,th0); g.fillStyle='#fbfaf6'; g.fillRect(tx0,ty0,tw0,th0); g.strokeStyle='#bfb39c'; g.lineWidth=1; g.strokeRect(tx0,ty0,tw0,th0); }
+    seats.forEach(s0=>{ g.fillStyle='#8c6f4f'; g.beginPath(); g.arc(s0.x,s0.y,M2*.018,0,6.28); g.fill(); });
+    const fs=Math.min(cw/4.2, rh*.36);
+    ppl.forEach(p=>{ const k=clamp((u-p.at)/.35,0,1); if(k<=0) return; const pop=k<1? 1+.25*Math.sin(k*Math.PI) : 1;
+      g.save(); g.globalAlpha=k; g.font=`${fs*.7}px ${EMJ}`; g.textAlign='center'; g.textBaseline='middle'; g.fillStyle='#000'; g.fillText(p.food,p.s.tx,p.s.ty);
+      g.font=`${fs*pop}px ${EMJ}`; g.fillText(p.f,p.s.x,p.s.y); g.restore(); });
+    // 자리가 모자라면 입구에 줄이 선다
+    if(queue>0){ const qk=clamp((u-2.6)/1.2,0,1); const nq=Math.round(queue*qk); for(let i=0;i<nq;i++){ g.font=`${fs*.8}px ${EMJ}`; g.textAlign='center'; g.fillStyle='#000'; g.fillText(faces[i%faces.length], W*.06+(i%Math.floor(W/(fs*.9)))*fs*.9, H*.93+Math.floor(i/Math.floor(W/(fs*.9)))*fs*.5); }
+      if(nq>0){ g.font=`600 ${M2*.028}px "Noto Sans KR",sans-serif`; g.fillStyle='#3b342b'; g.textAlign='right'; g.fillText(`자리가 없어 기다리는 조문객 ${queue*4}명`, W*.96, H*.89); } }
+    const word = mourn>=250?'빈자리가 하나도 없다. 밤늦게까지 사람들이 오갔다.' : mourn>=150?'식당이 북적인다. 여기저기서 옛이야기가 들린다.' : mourn>=80?'테이블 몇 개가 채워졌다. 조용히 술잔이 돈다.' : '빈 테이블이 많다. 가까운 사람들만 오래 남았다.';
+    if(u>3.2){ const a=clamp((u-3.2)/.6,0,1); g.save(); g.globalAlpha=a; g.font=`600 ${M2*.034}px "Noto Sans KR",sans-serif`; const w0=g.measureText(word).width+M2*.06; g.fillStyle='rgba(40,34,27,.85)'; g.fillRect(W/2-w0/2,H*.15,w0,M2*.06); g.fillStyle='#f6efe0'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(word,W/2,H*.15+M2*.03); g.restore(); }
+    const fin=clamp(1-u/.5,0,1); if(fin>0){ g.fillStyle=`rgba(0,0,0,${fin})`; g.fillRect(0,0,W,H); }
+  };
   const tick=ts=>{
     if(start==null) start=ts; const t=(ts-start)/1000;
+    if(t>=Th){ drawHall(t-Th); if(t<Tend && !finished) raf=requestAnimationFrame(tick); else finish(); return; }
     const w=clamp(t/Tw,0,1), cam=camStart+(camEnd-camStart)*ease(w);
     const walking=w>0&&w<1, bob=walking?Math.sin(t*7.5)*3.2*Math.sin(w*Math.PI):0, sway=walking?Math.sin(t*3.75)*2*Math.sin(w*Math.PI):0;
     const HY=H*.46+bob, CX=W/2+sway;
@@ -3563,6 +3777,74 @@ function playFuneral(S,e,done){
     const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.75); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.55)'); g.fillStyle=vg; g.fillRect(0,0,W,H);
     const fin=clamp(1-t/1.1,0,1); if(fin>0){ g.fillStyle=`rgba(0,0,0,${fin})`; g.fillRect(0,0,W,H); }
     if(t<Tend && !finished) raf=requestAnimationFrame(tick); else finish();
+  };
+  raf=requestAnimationFrame(tick);
+}
+
+/* ===== 돌잡이 애니메이션: 아기가 돌상 앞을 기어 다니다 하나를 잡는다 ===== */
+function playDol(S, itemK, lucky, done){
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ done(); return; }
+  const it=DOLM[itemK];
+  const ov=document.createElement('div'); ov.className='funeral dolov';
+  ov.innerHTML=`<canvas></canvas><div class="dol-cap" id="dolcap"></div><button class="btn ghost f-skip" id="dskip">건너뛰기</button>`;
+  document.body.appendChild(ov);
+  const cv=ov.querySelector('canvas'), dpr=Math.min(2,window.devicePixelRatio||1);
+  const W=window.innerWidth, H=window.innerHeight; cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px';
+  const g=cv.getContext('2d'); g.scale(dpr,dpr);
+  const M=Math.min(W,H), EM='"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",serif';
+  // 돌상과 물건 배치
+  const tw=Math.min(W*.92, M*1.15), tx=W/2-tw/2, ty=H*.44, th=H*.1;
+  const order=[...DOL].sort(()=>R()-.5);
+  const items=order.map((x,i)=>({...x, x:tx+tw*(i+.5)/order.length, y:ty+th*.35+(i%2)*th*.25}));
+  const target=items.find(x=>x.k===itemK);
+  const decoys=items.filter(x=>x.k!==itemK).sort(()=>R()-.5).slice(0,2);
+  const reachY=ty+th+M*.09;
+  const path=[{x:W/2,y:H*.95,t:0},{x:decoys[0].x,y:reachY,t:1.6},{x:decoys[0].x,y:reachY,t:2.2},{x:decoys[1].x,y:reachY,t:3.3},{x:decoys[1].x,y:reachY,t:3.9},{x:target.x,y:reachY,t:5.0}];
+  const T0=.6, tGrab=T0+5.0, tEnd=tGrab+(lucky?4.2:3.4);
+  const fam=['👵','👴','👩','👨','🧑','👧'];
+  const shouts=['이쪽이야!','연필 잡아!','돈 잡아라!','까꿍!','공 잡자~','마이크!'];
+  const conf=[]; if(lucky) for(let i=0;i<140;i++) conf.push({x:R()*W, y:-R()*H, vy:60+R()*120, vx:(R()-.5)*60, r:R()*6.28, c:['#e8b44a','#d94f4f','#4f8bd9','#5bb86b','#ffffff'][i%5]});
+  let start=null, raf=null, finished=false, capShown=false;
+  const finish=()=>{ if(finished) return; finished=true; cancelAnimationFrame(raf); ov.classList.add('out'); setTimeout(()=>{ ov.remove(); done(); },450); };
+  ov.querySelector('#dskip').addEventListener('click',finish);
+  const lerp=(a,b,k)=>a+(b-a)*k, ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+  const babyAt=t=>{ const u=t-T0; if(u<=0) return {...path[0], moving:false}; for(let i=1;i<path.length;i++){ if(u<=path[i].t){ const a=path[i-1], b=path[i], k=ease((u-a.t)/(b.t-a.t)); return {x:lerp(a.x,b.x,k), y:lerp(a.y,b.y,k), moving:a.x!==b.x||a.y!==b.y}; } } return {...path[path.length-1], moving:false}; };
+  const emoji=(ch,x,y,size,rot=0,alpha=1)=>{ g.save(); g.globalAlpha=alpha; g.translate(x,y); g.rotate(rot); g.font=`${size}px ${EM}`; g.textAlign='center'; g.textBaseline='middle'; g.fillStyle='#000'; g.fillText(ch,0,0); g.restore(); };
+  const tick=ts=>{
+    if(start==null) start=ts; const t=(ts-start)/1000;
+    // 방
+    const bg=g.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#f6e6c8'); bg.addColorStop(.55,'#efd6ac'); bg.addColorStop(.56,'#c9a170'); bg.addColorStop(1,'#b88d5e'); g.fillStyle=bg; g.fillRect(0,0,W,H);
+    // 병풍
+    const sw=Math.min(W*.9,M*1.2), sx=W/2-sw/2; for(let i=0;i<6;i++){ g.fillStyle=i%2?'#f3e3c0':'#f8ecd2'; g.fillRect(sx+i*sw/6,H*.06,sw/6,H*.3); g.strokeStyle='#8a5a2b'; g.lineWidth=2; g.strokeRect(sx+i*sw/6,H*.06,sw/6,H*.3); emoji(['🌸','🦢','🌕','🏔️','🌲','🦌'][i], sx+(i+.5)*sw/6, H*.17, M*.06, 0, .55); }
+    // 현수막
+    g.fillStyle='#c0392b'; g.fillRect(W/2-M*.32,H*.07,M*.64,M*.08); g.fillStyle='#fff3d6'; g.font=`700 ${M*.045}px "Noto Serif KR","Noto Sans KR",serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(`${S.name} 첫 돌 축하해`, W/2, H*.07+M*.04);
+    // 가족
+    fam.forEach((f,i)=>{ const fx=W*(.12+i*.152), fy=H*.33+Math.sin(t*3+i)*2; emoji(f,fx,fy,M*.085); if(t<tGrab && t>T0+.4 && Math.floor((t*1.2+i*.7))%3===0){ g.font=`600 ${M*.03}px "Noto Sans KR",sans-serif`; const s=shouts[i], w=g.measureText(s).width+12; g.fillStyle='rgba(255,255,255,.92)'; g.fillRect(fx-w/2,fy-M*.1,w,M*.045); g.fillStyle='#333'; g.fillText(s,fx,fy-M*.077); } });
+    // 돌상
+    g.fillStyle='#8e2a22'; g.fillRect(tx,ty,tw,th); g.fillStyle='#b8352a'; g.fillRect(tx,ty,tw,th*.25); g.fillStyle='#e0b04a'; g.fillRect(tx,ty+th*.92,tw,th*.08);
+    g.fillStyle='#6d1f19'; g.fillRect(tx+tw*.04,ty+th,tw*.05,th*.7); g.fillRect(tx+tw*.91,ty+th,tw*.05,th*.7);
+    // 떡·과일
+    emoji('🍡',tx+tw*.06,ty-M*.02,M*.05); emoji('🍎',tx+tw*.94,ty-M*.02,M*.05);
+    // 물건
+    items.forEach(x=>{ if(x===target && t>=tGrab) return; const near=Math.abs(babyAt(t).x-x.x)<M*.05 && t>T0; emoji(x.e, x.x, x.y + (near?-Math.abs(Math.sin(t*8))*4:0), M*.07*(near?1.15:1)); g.font=`600 ${M*.026}px "Noto Sans KR",sans-serif`; g.fillStyle='#fff3d6'; g.fillText(x.k, x.x, ty+th*.86); });
+    // 아기 (색동 저고리)
+    const b=babyAt(t), bob=b.moving? Math.sin(t*14)*M*.012 : 0, bs=M*.13;
+    g.save(); g.translate(b.x,b.y+bob); const cols=['#e74c3c','#f1c40f','#2ecc71','#3498db','#9b59b6']; cols.forEach((c,i)=>{ g.fillStyle=c; g.fillRect(-bs*.36+i*bs*.144, bs*.12, bs*.144, bs*.34); }); g.restore();
+    emoji('👶', b.x, b.y+bob, bs);
+    // 잡은 물건
+    if(t>=tGrab){ const k=clamp((t-tGrab)/.8,0,1), e=1-Math.pow(1-k,3);
+      const gx=b.x, gy=lerp(target.y, b.y-bs*.95, e);
+      const glow=g.createRadialGradient(gx,gy,2,gx,gy,M*.16); glow.addColorStop(0, lucky?'rgba(255,215,90,.9)':'rgba(255,255,255,.8)'); glow.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=glow; g.beginPath(); g.arc(gx,gy,M*.16,0,6.28); g.fill();
+      emoji(target.e, gx, gy, M*(.08+.05*e), Math.sin(t*6)*.15*e);
+      if(lucky && t-tGrab<.35){ g.fillStyle=`rgba(255,230,140,${.6*(1-(t-tGrab)/.35)})`; g.fillRect(0,0,W,H); }
+      if(!capShown && k>=1){ capShown=true; const cap=ov.querySelector('#dolcap');
+        cap.innerHTML=`${lucky?'<div class="dol-luck">운명의 돌잡이!</div>':''}<b>${target.e} ${target.k}</b><span>${target.spoon}를 물었다</span><small>${Object.entries(target.tr).map(([tt,v])=>`${tt} +${Math.round(v*(lucky?1.8:1))}`).join(' · ')}${lucky?' · 꿈과 같은 쪽!':''}</small>`; cap.classList.add('on'); }
+    }
+    // 꽃가루
+    if(lucky && t>=tGrab){ const dt=1/60; conf.forEach(p=>{ p.y+=p.vy*dt; p.x+=p.vx*dt; p.r+=.1; g.save(); g.translate(p.x,p.y); g.rotate(p.r); g.fillStyle=p.c; g.fillRect(-4,-2,8,4); g.restore(); }); }
+    const fin=clamp(1-t/.6,0,1); if(fin>0){ g.fillStyle=`rgba(0,0,0,${fin})`; g.fillRect(0,0,W,H); }
+    if(t<tEnd && !finished) raf=requestAnimationFrame(tick); else finish();
   };
   raf=requestAnimationFrame(tick);
 }
@@ -3674,7 +3956,7 @@ function renderDecide(){
       ${c.headline?`<div class="headline">${esc(c.headline)}</div>`:''}
       ${c.big?`<div class="num" style="font-size:28px;color:var(--seal)">${esc(c.big)}</div>`:''}
       <p>${esc(c.text)}</p>
-      <div class="choices">${c.choices.map((ch,i)=>`<button class="choice" data-i="${i}" ${ch.ok?'':'disabled'}><span class="n">${i+1}</span><span>${esc(ch.l)}${!ch.ok&&ch.needT?`<small>조건: ${esc(ch.needT)}</small>`:''}</span></button>`).join('')}</div></article>`;
+      <div class="choices${c.grid?' grid4':''}">${c.choices.map((ch,i)=>`<button class="choice" data-i="${i}" ${ch.ok?'':'disabled'}>${c.grid?'':`<span class="n">${i+1}</span>`}<span>${esc(ch.l)}${!ch.ok&&ch.needT?`<small>조건: ${esc(ch.needT)}</small>`:''}</span></button>`).join('')}</div></article>`;
   }
   startScene(pending);
   el.querySelectorAll('.choice').forEach(b=>b.addEventListener('click',()=>{ const n=document.getElementById('note'); choose(+b.dataset.i, n?n.value.trim():''); }));
@@ -3710,7 +3992,7 @@ function renderEnding(e){ const hlist=S.hlist.slice(-10);
   <section class="end1">
     <div class="e-ob"><div class="seal">故</div><div class="lbl">부 고</div><h2>故 ${esc(S.name)}</h2>
       <div class="years">${S.birthYear} – ${S.birthYear+S.age} · 향년 ${S.age}세 · ${esc(S.cause||'노환')}</div>
-      <div class="cause">${esc(S.region.name)} 출생 · ${esc(school)} · ${esc(lastJob?(lastJob.co||lastJob.name):'직장 경력 없음')}${S.mbLast?` · ${S.mbLast}`:''}</div></div>
+      ${(S.dreams||[]).length?`<div class="cause">꿈: ${esc(dreamSummary(S))}</div>`:''}<div class="cause">${esc(S.region.name)} 출생 · ${esc(school)} · ${esc(lastJob?(lastJob.co||lastJob.name):'직장 경력 없음')}${S.mbLast?` · ${S.mbLast}`:''}</div></div>
     <div class="e-v"><div><div class="t">${esc(e.title)}</div><div class="rank">대한민국 상위 ${e.top}%의 인생</div></div>
       <div class="e-sc"><b class="num">${ss.total}</b><small>/100</small><span>${esc(ss.grade)}</span></div></div>
     <div class="e-grid">
