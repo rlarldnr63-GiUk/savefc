@@ -49,6 +49,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible{outline:2px so
 .dol-spoon{justify-self:center; font-size:12px; font-weight:700; color:#fff; background:#8e2a22; border-radius:999px; padding:3px 12px; letter-spacing:.04em}
 .dol-luck{font-family:var(--display); font-size:22px; color:#c8901a; letter-spacing:.06em}
 .dolov .f-skip{color:#3a2a1a; border-color:rgba(0,0,0,.25); background:rgba(255,255,255,.6)}
+.deathov{background:#000}
+.death-cap{position:absolute; left:50%; top:8%; transform:translateX(-50%); text-align:center; display:grid; gap:4px; color:#f2ece0; text-shadow:0 1px 4px #000; animation:fcap 1s .4s both; white-space:nowrap}
+.death-cap b{font-family:var(--display); font-size:20px; letter-spacing:.06em} .death-cap span{font-size:14px; opacity:.85}
 .funeral{position:fixed; inset:0; z-index:200; background:#1d1b18; opacity:1; transition:opacity .5s}
 .funeral.out{opacity:0}
 .funeral canvas{display:block}
@@ -554,7 +557,7 @@ document.addEventListener('keydown',e=>{
 function showEnding(){
   try{ localStorage.removeItem('k50m-rt'); }catch(e){}
   const e=ending(S); S._end=e;
-  playFuneral(S,e,()=>renderEnding(e));
+  playDeath(S,()=>playFuneral(S,e,()=>renderEnding(e)));
 }
 function renderEnding(e){ const hlist=S.hlist.slice(-10);
   const share=`[오천만분의 일]\n${S.name} (${S.birthYear}~${S.birthYear+S.age}, 향년 ${S.age}세)\n${S.region.name} · 소득 ${S.rich?'최상위':S.wealth0+'분위'} 출생\n${hlist.slice(1,5).map(h=>'· '+h.t).join('\n')}\n${S.uni?S.uni+' · ':''}${(S.jobHist||[]).map(j=>j.co||j.name).join('→')||'무직'}\n성격 ${(S.mbHist||[]).map(h=>h.t).join('→')||'-'}\n자산 ${won(e.asset)} · 자녀 ${S.kids}명 · 제사: ${e.jesa}\n${e.title} · 대한민국 상위 ${e.top}%의 인생\n사회가 보는 점수 ${socialScore(S,e).total}점 · 자산 상위 ${socialScore(S,e).top}%`;

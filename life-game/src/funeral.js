@@ -27,7 +27,7 @@ function drawWreath(g,x,y,s,label,t){
   // 받침대
   g.strokeStyle='#7a6a55'; g.lineWidth=Math.max(1.5,s*.04); g.beginPath(); g.moveTo(x,y+s*.45); g.lineTo(x-s*.28,y+s*1.25); g.moveTo(x,y+s*.45); g.lineTo(x+s*.28,y+s*1.25); g.moveTo(x,y+s*.45); g.lineTo(x,y+s*1.25); g.stroke();
   // 국화 고리
-  for(let i=0;i<22;i++){ const a=i/22*6.283, r=s*.42; g.fillStyle=i%5===0?'#f6e7a6':'#fbfbf7'; g.beginPath(); g.arc(x+Math.cos(a)*r, y+Math.sin(a)*r, s*.11, 0, 6.28); g.fill(); g.strokeStyle='rgba(0,0,0,.08)'; g.lineWidth=1; g.stroke(); }
+  for(let i=0;i<22;i++){ const a=i/22*6.283, r=s*.42; g.fillStyle=i%5===0?'#f6e7a6':'#fbfbf7'; g.beginPath(); g.arc(x+Math.cos(a)*r, y+Math.sin(a)*r, s*.11, 0, 6.28); g.fill(); g.strokeStyle='rgba(58,42,28,.45)'; g.lineWidth=Math.max(.8,s*.012); g.stroke(); }
   g.fillStyle='#2f6b3a'; g.beginPath(); g.arc(x,y,s*.27,0,6.28); g.fill();
   // 리본: 실제 화환처럼 두 줄이 고리 앞으로 늘어진다 (왼쪽=보낸 곳, 오른쪽=추모 문구)
   const rw=s*.2, top=y-s*.08, len=s*1.45;
@@ -169,6 +169,14 @@ function playFuneral(S,e,done){
     g.save(); g.beginPath(); g.rect(fx,fy,fw,fh); g.clip(); g.globalAlpha=fa; drawPortrait(g,fc[0],fc[1]+fh*.02,fw,S,clamp((t-Tw+.3)/1.6,0,1)); g.restore();
     const rb=fw*.08, rl=fw*.38, o=fw*.05; g.strokeStyle='#0b0b0b'; g.lineWidth=rb; g.lineCap='butt';
     g.beginPath(); g.moveTo(fx-o,fy-o+rl); g.lineTo(fx-o+rl,fy-o); g.moveTo(fx+fw+o,fy-o+rl); g.lineTo(fx+fw+o-rl,fy-o); g.stroke();
+    // 조문객 두 사람: 영정 앞에서 뒷모습으로 고개 숙여 절한다 (같은 일러스트 화풍)
+    if(w>.35){ const ap=clamp((w-.35)/.2,0,1);
+      [[-.62,0],[.62,.9]].forEach(([mx,ph])=>{ const z=ZW-1.15; if(z<=near) return; const base=P(mx,0,z), k=base[2], bow=Math.max(0,Math.sin(t*1.1+ph))*.45;
+        g.save(); g.globalAlpha=ap; g.translate(base[0],base[1]); g.fillStyle='rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(0,0,.28*k,.06*k,0,0,6.28); g.fill();
+        g.fillStyle='#1d1b1a'; g.fillRect(-.14*k,-.85*k,.1*k,.85*k); g.fillRect(.04*k,-.85*k,.1*k,.85*k);
+        g.translate(0,-.85*k); g.rotate(0); g.save(); g.transform(1,0,0,1-bow*.35,0,0);
+        g.fillStyle='#232120'; dolRR(g,-.24*k,-.62*k,.48*k,.66*k,.12*k); g.fill(); g.strokeStyle='#3a2a1c'; g.lineWidth=Math.max(1,.01*k); g.stroke();
+        g.fillStyle='#2e2a27'; g.beginPath(); g.arc(0,-.74*k+bow*.25*k,.13*k,0,6.28); g.fill(); g.stroke(); g.restore(); g.restore(); }); }
     // 화환: 먼 것부터 그린다
     wr.filter(r=>r.z>near).sort((a,b)=>b.z-a.z).forEach(r=>{ const q=P(r.side*(XC-.42),1.12,r.z); const sz=.8*q[2]; drawWreath(g,q[0],q[1],sz,r.lab,t); });
     // 비네트 + 입장 페이드
