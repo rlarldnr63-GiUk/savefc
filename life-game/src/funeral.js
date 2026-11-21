@@ -123,7 +123,15 @@ function playFuneral(S,e,done){
     const rb=fw*.08, rl=fw*.38, o=fw*.05; g.strokeStyle='#0b0b0b'; g.lineWidth=rb; g.lineCap='butt';
     g.beginPath(); g.moveTo(fx-o,fy-o+rl); g.lineTo(fx-o+rl,fy-o); g.moveTo(fx+fw+o,fy-o+rl); g.lineTo(fx+fw+o-rl,fy-o); g.stroke();
     // 화환: 먼 것부터 그린다
-    wr.filter(r=>r.z>near).sort((a,b)=>b.z-a.z).forEach(r=>{ const q=P(r.side*(XC-.36),1.0,r.z); const sz=.62*q[2]; drawWreath(g,q[0],q[1],sz,r.lab,t); });
+    const tags=[];
+    wr.filter(r=>r.z>near).sort((a,b)=>b.z-a.z).forEach(r=>{ const q=P(r.side*(XC-.36),1.0,r.z); const sz=.62*q[2]; drawWreath(g,q[0],q[1],sz,r.lab,t); tags.push([q[0],q[1],sz,r.lab]); });
+    // 리본 글씨는 작아서 안 보이므로, 가까운 화환마다 가로 이름표를 띄운다
+    tags.forEach(([x,y,sz,lab])=>{ const a=clamp((sz-38)/40,0,1)*clamp((Math.min(W,H)*1.1-sz)/(Math.min(W,H)*.4),0,1); if(a<=0) return;
+      const fs=clamp(sz*.15,11,17); g.save(); g.globalAlpha=a; g.font=`600 ${fs}px "Noto Sans KR",sans-serif`; g.textAlign='center'; g.textBaseline='middle';
+      const txt='근조 · '+lab, tw=g.measureText(txt).width, ty=y+sz*.66, bw=tw+fs*1.1, bh=fs*1.7;
+      const tx=clamp(x, bw/2+4, W-bw/2-4);
+      g.fillStyle='rgba(20,18,15,.82)'; g.beginPath(); if(g.roundRect) g.roundRect(tx-bw/2,ty-bh/2,bw,bh,6); else g.rect(tx-bw/2,ty-bh/2,bw,bh); g.fill();
+      g.strokeStyle='rgba(255,240,210,.35)'; g.lineWidth=1; g.stroke(); g.fillStyle='#f5efe2'; g.fillText(txt,tx,ty+1); g.restore(); });
     // 비네트 + 입장 페이드
     const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.75); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.55)'); g.fillStyle=vg; g.fillRect(0,0,W,H);
     const fin=clamp(1-t/1.1,0,1); if(fin>0){ g.fillStyle=`rgba(0,0,0,${fin})`; g.fillRect(0,0,W,H); }

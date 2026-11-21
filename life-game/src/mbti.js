@@ -27,7 +27,7 @@ newGame = function(name, mode){
          N:clamp(50+gauss()*13+((T.예술감각||50)-50)*.35,8,92),
          F:clamp(50+gauss()*15+(S.family==='화목'?5:S.family==='갈등'?-4:0),8,92),
          P:clamp(50+gauss()*13+(S.impulsive-.5)*28,8,92) };
-  S.mbHist=[]; S.mbLast=null;
+  S.mb0={...S.mb}; S.mbHist=[]; S.mbLast=null;
   return r;
 };
 // 생활(시간 배분)이 성격을 천천히 바꾼다
@@ -40,7 +40,9 @@ monthTick = function(S){
             N:((['예술감각','코딩','말솜씨','외모'].includes(S.focus)?p('talent'):0) + p('fun')*.3 + p('study')*.05 - p('work')*.2 - p('invest')*.2)/tot*5,
             F:(p('family')+p('social')*.3-p('invest')*.4-p('study')*.3)/tot*5,
             P:(p('fun')+p('social')*.2+p('talent')*.2-p('study')*.3-p('invest')*.4)/tot*6 };
-  for(const a in d) S.mb[a]=clamp(S.mb[a]+(d[a]-(S.mb[a]-50)*.04)*k,3,97);
+  // 타고난 기질(mb0)로 되돌아가려는 힘이 있어, 생활이 성격을 조금씩만 바꾼다
+  const base=S.mb0||{E:50,N:50,F:50,P:50};
+  for(const a in d) S.mb[a]=clamp(S.mb[a]+(d[a]*.5-(S.mb[a]-base[a])*.06)*k,3,97);
 };
 // 선택이 성격을 바꾼다 (직접 고른 갈림길은 크게, 알아서 한 일은 조금)
 const _rc = resolveCard;

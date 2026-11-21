@@ -548,7 +548,7 @@ function showEnding(){
 function renderEnding(e){ const hlist=S.hlist.slice(-10);
   const share=`[오천만분의 일]\n${S.name} (${S.birthYear}~${S.birthYear+S.age}, 향년 ${S.age}세)\n${S.region.name} · 소득 ${S.rich?'최상위':S.wealth0+'분위'} 출생\n${hlist.slice(1,5).map(h=>'· '+h.t).join('\n')}\n${S.uni?S.uni+' · ':''}${(S.jobHist||[]).map(j=>j.co||j.name).join('→')||'무직'}\n성격 ${(S.mbHist||[]).map(h=>h.t).join('→')||'-'}\n자산 ${won(e.asset)} · 자녀 ${S.kids}명 · 제사: ${e.jesa}\n${e.title} · 대한민국 상위 ${e.top}%의 인생\n사회가 보는 점수 ${socialScore(S,e).total}점 · 자산 상위 ${socialScore(S,e).top}%`;
   const th=(S.thoughts||[]);
-  const ss=socialScore(S,e);
+  const ss=socialScore(S,e); const as=assetSources(S,e.asset);
   const lastJob=(S.jobHist||[]).length?S.jobHist[S.jobHist.length-1]:null;
   const school=S.uni?S.uni:(S.f.has('자퇴')?'고교 자퇴':'고졸');
   app.innerHTML=`
@@ -559,7 +559,7 @@ function renderEnding(e){ const hlist=S.hlist.slice(-10);
     <div class="e-v"><div><div class="t">${esc(e.title)}</div><div class="rank">대한민국 상위 ${e.top}%의 인생</div></div>
       <div class="e-sc"><b class="num">${ss.total}</b><small>/100</small><span>${esc(ss.grade)}</span></div></div>
     <div class="e-grid">
-      <div><span>자산</span><b class="num">${won(e.asset)}</b><i>가구 상위 ${ss.top}%</i></div>
+      <div><span>자산</span><b class="num">${won(e.asset)}</b><i>상위 ${ss.top}%${as.top?` · 주로 ${as.top}`:''}</i></div>
       <div><span>수명</span><b>${S.age}세</b><i>기대수명 83세</i></div>
       <div><span>자녀</span><b>${S.kids}명</b><i>${S.kids?`관계 ${Math.round(S.h.kid)}`:S.f.has('기혼')?'딩크':'비혼'}</i></div>
       <div><span>제사</span><b>${esc(e.jesa)}</b><i>${e.attend?e.attend+'명':'-'}</i></div>
@@ -577,7 +577,7 @@ function renderEnding(e){ const hlist=S.hlist.slice(-10);
   <section class="sheet score"><div class="sc-h"><span>사회가 보는 내 인생</span><b class="num">${ss.total}<small>/100</small></b></div><div class="sc-g">${esc(ss.grade)}</div>
     ${ss.parts.map(p=>`<div class="sc-r"><span>${p[0]}</span><div class="bar"><i style="width:${Math.round(p[1]/p[2]*100)}%"></i></div><span class="num">${Math.round(p[1])}/${p[2]}</span></div>`).join('')}
     <div class="tal-k">배점은 한국인이 꼽은 삶의 의미 순서(물질적 풍요 · 건강 · 가족 / Pew Research 2021)와 직업 위신·학벌을 반영했습니다.</div></section>
-  <section class="sheet"><h3 class="dh">자산 · 제사</h3><ul class="hl"><li><span class="num">자산</span><span>${won(e.asset)} · 대한민국 가구 순자산 상위 ${ss.top}% · ${S.house?`집 포함 (대출 ${won(S.house.loan)})`:'무주택'}</span></li><li><span class="num">제사</span><span>${esc(e.jesaT)}</span></li></ul></section>
+  <section class="sheet"><h3 class="dh">자산 · 제사</h3><ul class="hl"><li><span class="num">자산</span><span>${won(e.asset)} · 대한민국 가구 순자산 상위 ${ss.top}% · ${S.house?`집 포함 (대출 ${won(S.house.loan)})`:'무주택'}</span></li><li><span class="num">제사</span><span>${esc(e.jesaT)}</span></li></ul>${as.list.length?`<div class="tal-k" style="margin-top:6px">자산이 생긴 곳</div><ul class="hl">${as.list.map(x=>`<li><span class="num">${x[1]>=0?'+':''}${won(x[1])}</span><span>${esc(x[0])}</span></li>`).join('')}</ul>`:''}</section>
   <section class="sheet"><h3 class="dh">학력 · 경력</h3><ul class="hl">${S.uni?`<li><span class="num">학교</span><span>${esc(S.uni)}${S.major&&S.major!=='전문대'?' '+esc(S.major):''}${S.f.has('졸업')?' 졸업':''}</span></li>`:`<li><span class="num">학교</span><span>${S.f.has('자퇴')?(S.f.has('검정고시')?'고등학교 자퇴 · 검정고시':'고등학교 자퇴'):'고등학교 졸업'}</span></li>`}${(S.jobHist||[]).map(j=>`<li><span class="num">${j.age}세</span><span>${esc(j.co||j.name)}${j.co?` · ${esc(j.name)}`:''}</span></li>`).join('')||'<li><span class="num">-</span><span>직장 경력 없음</span></li>'}</ul></section>
   ${(S.wreaths||[]).length?`<section class="sheet"><h3 class="dh">빈소에 온 화환 ${S.wreaths.length}개</h3><div class="titles">${S.wreaths.map(w=>`<span>근조 · ${esc(w)}</span>`).join('')}</div><div class="tal-k">화환 수는 다닌 회사·학교·가족·인맥·명예·조문객 수로 정해집니다.</div></section>`:''}
   ${(S.worldLog||[]).length?`<section class="sheet"><h3 class="dh">내가 겪은 세상 (가상 미래)</h3><ul class="hl">${S.worldLog.map(w=>`<li><span class="num">${w.y}</span><span>${esc(w.h)} (${w.a}세)</span></li>`).join('')}</ul></section>`:''}

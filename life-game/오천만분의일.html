@@ -2205,7 +2205,7 @@ newGame = function(name, mode){
          N:clamp(50+gauss()*13+((T.예술감각||50)-50)*.35,8,92),
          F:clamp(50+gauss()*15+(S.family==='화목'?5:S.family==='갈등'?-4:0),8,92),
          P:clamp(50+gauss()*13+(S.impulsive-.5)*28,8,92) };
-  S.mbHist=[]; S.mbLast=null;
+  S.mb0={...S.mb}; S.mbHist=[]; S.mbLast=null;
   return r;
 };
 // 생활(시간 배분)이 성격을 천천히 바꾼다
@@ -2218,7 +2218,9 @@ monthTick = function(S){
             N:((['예술감각','코딩','말솜씨','외모'].includes(S.focus)?p('talent'):0) + p('fun')*.3 + p('study')*.05 - p('work')*.2 - p('invest')*.2)/tot*5,
             F:(p('family')+p('social')*.3-p('invest')*.4-p('study')*.3)/tot*5,
             P:(p('fun')+p('social')*.2+p('talent')*.2-p('study')*.3-p('invest')*.4)/tot*6 };
-  for(const a in d) S.mb[a]=clamp(S.mb[a]+(d[a]-(S.mb[a]-50)*.04)*k,3,97);
+  // 타고난 기질(mb0)로 되돌아가려는 힘이 있어, 생활이 성격을 조금씩만 바꾼다
+  const base=S.mb0||{E:50,N:50,F:50,P:50};
+  for(const a in d) S.mb[a]=clamp(S.mb[a]+(d[a]*.5-(S.mb[a]-base[a])*.06)*k,3,97);
 };
 // 선택이 성격을 바꾼다 (직접 고른 갈림길은 크게, 알아서 한 일은 조금)
 const _rc = resolveCard;
@@ -2752,6 +2754,61 @@ yearTick = function(S,ms){
   _ytInc(S,ms);
 };
 function avgIncome(S){ return S.incYears? S.incSum/S.incYears : 0; }
+
+/* ===== 보정 (2026-11): 자산 출처 기록 · 직업 쏠림 · 웹툰 연봉 ===== */
+
+// 1) 자산이 어디서 왔는지 기록한다: 월급 저축 / 투자 수익 / 상속 / 횡재 / 큰 지출
+function srcOf(S){ return S.src || (S.src={save:0, inv:0, inherit:0, luck:0, loss:0}); }
+const _ytT = yearTick;
+yearTick = function(S,ms){
+  if(S.job && S.job.sal>0) srcOf(S).save += S.job.sal*.13;
+  _ytT(S,ms);
+};
+const _mtT = monthTick;
+monthTick = function(S){
+  const g0=S.invGain||0; _mtT(S);
+  const g1=S.invGain||0; if(g1>=g0) srcOf(S).inv += g1-g0;   // 연초 초기화된 달은 건너뛴다
+};
+const _parB = MS.parents.build;
+MS.parents.build = function(S,d){ const b=S.money; const r=_parB(S,d); srcOf(S).inherit += S.money-b+0; return r; };
+const _rcT = resolveCard;
+resolveCard = function(S,d,i){
+  const b=S.money+(S.inv||0); const t=_rcT(S,d,i);
+  const dd=S.money+(S.inv||0)-b;
+  if(d.kind==='ev' || d.kind==='news'){ if(dd>=3000) srcOf(S).luck+=dd; else if(dd<=-3000 && !(d.id==='buy_house')) srcOf(S).loss+=dd; }
+  return t;
+};
+// 엔딩에서 쓰는 요약: [이름, 금액] 목록과 가장 큰 출처
+function assetSources(S, total){
+  const s=srcOf(S), house=S.house? (S.house.val-(S.house.bought||S.house.val)) : 0;
+  const L=[['월급 저축',s.save],['투자 수익',s.inv],['상속',s.inherit],['집값 상승',house],['뜻밖의 돈',s.luck]].filter(x=>Math.abs(x[1])>=100);
+  const known=L.reduce((a,x)=>a+x[1],0)+s.loss;
+  const spend=total-known;   // 생활비·대출 이자·사건 지출 등 나머지
+  if(s.loss<=-100) L.push(['큰 지출·손실',s.loss]);
+  if(Math.abs(spend)>=100) L.push([spend<0?'생활비·이자 등':'기타',spend]);
+  const top=L.filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1])[0];
+  return {list:L, top: top? top[0] : null};
+}
+
+// 2) 진로 목록: 붙을 확률 × 직업의 매력(위신)으로 정렬 → 사회복지사·웹툰만 맨 위에 오지 않게
+const _toT = trackOptions;
+trackOptions = function(S){
+  const L=_toT(S).filter(t=> t!=='웹툰 작가' || ab(S,'예술감각')>=50);
+  const sc=t=> clamp(estP(S,t),0,.85) * (.45 + (PRESTIGE[t]??4)/10);
+  return L.sort((a,b)=>sc(b)-sc(a));
+};
+if(JOBCAT['웹툰 작가']){ JOBCAT['웹툰 작가'].p = S=>(ab(S,'예술감각')-45)/70; JOBCAT['웹툰 작가'].show = S=>ab(S,'예술감각')>=50; }
+
+// 3) 자영업형 직업도 경력이 쌓이면 수입이 오른다 (웹툰 2,400만원 50년 고정 문제)
+const _sgT = salGrowth;
+salGrowth = function(S){
+  const j=S.job; if(!j) return 1;
+  if(j.kind==='자영' && S.age<50){
+    if(j.name==='웹툰 작가'||j.name==='크리에이터'||j.name==='배우·모델') return j.sal<9000? 1.035 : 1.0;
+    return 1.015;
+  }
+  return _sgT(S);
+};
 
 /* ===== 실시간 뉴스: 매주 자동 업데이트되는 파일 =====
    - 이 파일만 고친다. NEWS 끝에 push 하므로 기존 뉴스 번호(저장 데이터)가 바뀌지 않는다.
@@ -3474,7 +3531,15 @@ function playFuneral(S,e,done){
     const rb=fw*.08, rl=fw*.38, o=fw*.05; g.strokeStyle='#0b0b0b'; g.lineWidth=rb; g.lineCap='butt';
     g.beginPath(); g.moveTo(fx-o,fy-o+rl); g.lineTo(fx-o+rl,fy-o); g.moveTo(fx+fw+o,fy-o+rl); g.lineTo(fx+fw+o-rl,fy-o); g.stroke();
     // 화환: 먼 것부터 그린다
-    wr.filter(r=>r.z>near).sort((a,b)=>b.z-a.z).forEach(r=>{ const q=P(r.side*(XC-.36),1.0,r.z); const sz=.62*q[2]; drawWreath(g,q[0],q[1],sz,r.lab,t); });
+    const tags=[];
+    wr.filter(r=>r.z>near).sort((a,b)=>b.z-a.z).forEach(r=>{ const q=P(r.side*(XC-.36),1.0,r.z); const sz=.62*q[2]; drawWreath(g,q[0],q[1],sz,r.lab,t); tags.push([q[0],q[1],sz,r.lab]); });
+    // 리본 글씨는 작아서 안 보이므로, 가까운 화환마다 가로 이름표를 띄운다
+    tags.forEach(([x,y,sz,lab])=>{ const a=clamp((sz-38)/40,0,1)*clamp((Math.min(W,H)*1.1-sz)/(Math.min(W,H)*.4),0,1); if(a<=0) return;
+      const fs=clamp(sz*.15,11,17); g.save(); g.globalAlpha=a; g.font=`600 ${fs}px "Noto Sans KR",sans-serif`; g.textAlign='center'; g.textBaseline='middle';
+      const txt='근조 · '+lab, tw=g.measureText(txt).width, ty=y+sz*.66, bw=tw+fs*1.1, bh=fs*1.7;
+      const tx=clamp(x, bw/2+4, W-bw/2-4);
+      g.fillStyle='rgba(20,18,15,.82)'; g.beginPath(); if(g.roundRect) g.roundRect(tx-bw/2,ty-bh/2,bw,bh,6); else g.rect(tx-bw/2,ty-bh/2,bw,bh); g.fill();
+      g.strokeStyle='rgba(255,240,210,.35)'; g.lineWidth=1; g.stroke(); g.fillStyle='#f5efe2'; g.fillText(txt,tx,ty+1); g.restore(); });
     // 비네트 + 입장 페이드
     const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.75); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.55)'); g.fillStyle=vg; g.fillRect(0,0,W,H);
     const fin=clamp(1-t/1.1,0,1); if(fin>0){ g.fillStyle=`rgba(0,0,0,${fin})`; g.fillRect(0,0,W,H); }
@@ -3619,7 +3684,7 @@ function showEnding(){
 function renderEnding(e){ const hlist=S.hlist.slice(-10);
   const share=`[오천만분의 일]\n${S.name} (${S.birthYear}~${S.birthYear+S.age}, 향년 ${S.age}세)\n${S.region.name} · 소득 ${S.rich?'최상위':S.wealth0+'분위'} 출생\n${hlist.slice(1,5).map(h=>'· '+h.t).join('\n')}\n${S.uni?S.uni+' · ':''}${(S.jobHist||[]).map(j=>j.co||j.name).join('→')||'무직'}\n성격 ${(S.mbHist||[]).map(h=>h.t).join('→')||'-'}\n자산 ${won(e.asset)} · 자녀 ${S.kids}명 · 제사: ${e.jesa}\n${e.title} · 대한민국 상위 ${e.top}%의 인생\n사회가 보는 점수 ${socialScore(S,e).total}점 · 자산 상위 ${socialScore(S,e).top}%`;
   const th=(S.thoughts||[]);
-  const ss=socialScore(S,e);
+  const ss=socialScore(S,e); const as=assetSources(S,e.asset);
   const lastJob=(S.jobHist||[]).length?S.jobHist[S.jobHist.length-1]:null;
   const school=S.uni?S.uni:(S.f.has('자퇴')?'고교 자퇴':'고졸');
   app.innerHTML=`
@@ -3630,7 +3695,7 @@ function renderEnding(e){ const hlist=S.hlist.slice(-10);
     <div class="e-v"><div><div class="t">${esc(e.title)}</div><div class="rank">대한민국 상위 ${e.top}%의 인생</div></div>
       <div class="e-sc"><b class="num">${ss.total}</b><small>/100</small><span>${esc(ss.grade)}</span></div></div>
     <div class="e-grid">
-      <div><span>자산</span><b class="num">${won(e.asset)}</b><i>가구 상위 ${ss.top}%</i></div>
+      <div><span>자산</span><b class="num">${won(e.asset)}</b><i>상위 ${ss.top}%${as.top?` · 주로 ${as.top}`:''}</i></div>
       <div><span>수명</span><b>${S.age}세</b><i>기대수명 83세</i></div>
       <div><span>자녀</span><b>${S.kids}명</b><i>${S.kids?`관계 ${Math.round(S.h.kid)}`:S.f.has('기혼')?'딩크':'비혼'}</i></div>
       <div><span>제사</span><b>${esc(e.jesa)}</b><i>${e.attend?e.attend+'명':'-'}</i></div>
@@ -3648,7 +3713,7 @@ function renderEnding(e){ const hlist=S.hlist.slice(-10);
   <section class="sheet score"><div class="sc-h"><span>사회가 보는 내 인생</span><b class="num">${ss.total}<small>/100</small></b></div><div class="sc-g">${esc(ss.grade)}</div>
     ${ss.parts.map(p=>`<div class="sc-r"><span>${p[0]}</span><div class="bar"><i style="width:${Math.round(p[1]/p[2]*100)}%"></i></div><span class="num">${Math.round(p[1])}/${p[2]}</span></div>`).join('')}
     <div class="tal-k">배점은 한국인이 꼽은 삶의 의미 순서(물질적 풍요 · 건강 · 가족 / Pew Research 2021)와 직업 위신·학벌을 반영했습니다.</div></section>
-  <section class="sheet"><h3 class="dh">자산 · 제사</h3><ul class="hl"><li><span class="num">자산</span><span>${won(e.asset)} · 대한민국 가구 순자산 상위 ${ss.top}% · ${S.house?`집 포함 (대출 ${won(S.house.loan)})`:'무주택'}</span></li><li><span class="num">제사</span><span>${esc(e.jesaT)}</span></li></ul></section>
+  <section class="sheet"><h3 class="dh">자산 · 제사</h3><ul class="hl"><li><span class="num">자산</span><span>${won(e.asset)} · 대한민국 가구 순자산 상위 ${ss.top}% · ${S.house?`집 포함 (대출 ${won(S.house.loan)})`:'무주택'}</span></li><li><span class="num">제사</span><span>${esc(e.jesaT)}</span></li></ul>${as.list.length?`<div class="tal-k" style="margin-top:6px">자산이 생긴 곳</div><ul class="hl">${as.list.map(x=>`<li><span class="num">${x[1]>=0?'+':''}${won(x[1])}</span><span>${esc(x[0])}</span></li>`).join('')}</ul>`:''}</section>
   <section class="sheet"><h3 class="dh">학력 · 경력</h3><ul class="hl">${S.uni?`<li><span class="num">학교</span><span>${esc(S.uni)}${S.major&&S.major!=='전문대'?' '+esc(S.major):''}${S.f.has('졸업')?' 졸업':''}</span></li>`:`<li><span class="num">학교</span><span>${S.f.has('자퇴')?(S.f.has('검정고시')?'고등학교 자퇴 · 검정고시':'고등학교 자퇴'):'고등학교 졸업'}</span></li>`}${(S.jobHist||[]).map(j=>`<li><span class="num">${j.age}세</span><span>${esc(j.co||j.name)}${j.co?` · ${esc(j.name)}`:''}</span></li>`).join('')||'<li><span class="num">-</span><span>직장 경력 없음</span></li>'}</ul></section>
   ${(S.wreaths||[]).length?`<section class="sheet"><h3 class="dh">빈소에 온 화환 ${S.wreaths.length}개</h3><div class="titles">${S.wreaths.map(w=>`<span>근조 · ${esc(w)}</span>`).join('')}</div><div class="tal-k">화환 수는 다닌 회사·학교·가족·인맥·명예·조문객 수로 정해집니다.</div></section>`:''}
   ${(S.worldLog||[]).length?`<section class="sheet"><h3 class="dh">내가 겪은 세상 (가상 미래)</h3><ul class="hl">${S.worldLog.map(w=>`<li><span class="num">${w.y}</span><span>${esc(w.h)} (${w.a}세)</span></li>`).join('')}</ul></section>`:''}
