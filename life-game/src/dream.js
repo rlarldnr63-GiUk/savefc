@@ -76,7 +76,7 @@ trackOptions = function(S){
 const _tbD = MS.track.build;
 MS.track.build = function(S,d){ const r=_tbD(S,d); r.choices.forEach(c=>{ const t=(c.l.split(' · ')[0]||'').trim(); if(isDreamJob(S,t)) c.l='★ 꿈 · '+c.l; }); return r; };
 // 합격 확률: 꿈 직업이면 +12%p, 같은 꿈을 품은 횟수마다 +10%p
-const dreamBonus = S=> isDreamJob(S,S.track)? .04 + .12*dreamPower(S) : 0;
+const dreamBonus = S=> isDreamJob(S,S.track)? (.04 + .12*dreamPower(S))*(['아이돌'].includes(S.track)? .35 : 1) : 0;   // 아이돌 데뷔는 꿈만으로는 어렵다
 const _shD = snowHunt;
 snowHunt = function(S){ return _shD(S) + dreamBonus(S); };
 const _epD = estP;

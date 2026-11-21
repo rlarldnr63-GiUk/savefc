@@ -262,9 +262,9 @@ const MS = {
      d.ok = R()<clamp(p,.02,.92);
      if(d.ok){
        if(t==='아이돌'){ S.job={name:'크리에이터', sal:15000, hon:3, kind:'자영'}; S.titles.add('아이돌 데뷔'); d.txt='데뷔 성공! 음악방송 1위 앵콜 무대에서 울었다.'; }
-       else if(t==='배우·모델'){ if(R()<.15){ S.job={name:'배우·모델', sal:18000, hon:3, kind:'자영'}; S.titles.add('스타 탄생'); d.txt='오디션 합격! 첫 드라마가 대박 났다. 길에서 사람들이 알아본다.'; } else { S.job={name:'배우·모델', sal:2600, hon:1, kind:'자영'}; d.txt='단역과 광고 모델로 데뷔했다. 이름은 몰라도 얼굴은 TV에 나온다.'; } }
+       else if(t==='배우·모델'){ if(R()<.02+ability(S,'외모')/5000){ S.job={name:'배우·모델', sal:18000, hon:3, kind:'자영'}; S.titles.add('스타 탄생'); d.txt='오디션 합격! 첫 드라마가 대박 났다. 길에서 사람들이 알아본다.'; } else { S.job={name:'배우·모델', sal:2600, hon:1, kind:'자영'}; d.txt='단역과 광고 모델로 데뷔했다. 이름은 몰라도 얼굴은 TV에 나온다.'; } }
        else if(t==='운동선수'){ S.job={name:'운동선수', ...JOBS['운동선수'], sal:Math.round(3000+ability(S,'운동신경')*50)}; S.titles.add('프로 데뷔'); d.txt=`프로 입단! 연봉 ${won(S.job.sal)}. 유니폼에 내 이름이 박혔다.`; }
-       else if(t==='크리에이터'){ if(R()<.12){ S.job={name:'크리에이터', sal:20000, hon:2, kind:'자영'}; S.titles.add('유튜브 100만'); d.txt='영상 하나가 터졌다. 구독자 100만! 골드버튼이 집으로 왔다.'; } else { S.job={name:'크리에이터', sal:2600, hon:0, kind:'자영'}; d.txt='구독자 3만. 밥은 먹고 산다.'; } }
+       else if(t==='크리에이터'){ if(R()<.015+ability(S,'말솜씨')/5000){ S.job={name:'크리에이터', sal:20000, hon:2, kind:'자영'}; S.titles.add('유튜브 100만'); d.txt='영상 하나가 터졌다. 구독자 100만! 골드버튼이 집으로 왔다.'; } else { S.job={name:'크리에이터', sal:2600, hon:0, kind:'자영'}; d.txt='구독자 3만. 밥은 먹고 산다.'; } }
        else if(typeof JOBCAT!=='undefined' && JOBCAT[t] && JOBCAT[t].hire){ d.txt=JOBCAT[t].hire(S); }
        else { const base=JOBS[t]||JOBS['중소기업']; S.job={name:t, ...base, sal:Math.round(base.sal*(.9+R()*.2))}; d.txt=`합격! ${t}에 들어갔다. 연봉 ${won(S.job.sal)}.`; }
        hl(S,`${S.age}세, ${S.job.name} 취업`); add(S,{행:8, 멘:6, risk:-10});
@@ -321,7 +321,7 @@ function resolveCard(S, d, i){
 /* ---------- 엔딩 ---------- */
 function ending(S){
   const house = S.house ? S.house.val - S.house.loan : 0;
-  const asset = S.money + house + (S.inv||0);
+  const asset = S.money + house + (S.inv||0) + (S.bldg||0);
   const avgH = S.happyN? S.happySum/S.happyN : S.s.행;
   // 자녀 · 제사
   let kidsAlive = S.kids, rel=S.h.kid, attend=0, jesa, jesaT;

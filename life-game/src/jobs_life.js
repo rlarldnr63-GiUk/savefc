@@ -22,21 +22,22 @@ const _ytJL = yearTick;
 yearTick = function(S,ms){
   const j=S.job, v=j && JOB_VOL[j.name];
   if(!v){ _ytJL(S,ms); return; }
+  const wasStar=(typeof isCeleb==='function' && isCeleb(S));
   const [luck, walk]=v, base=j.sal, f=Math.exp(gauss()*luck - luck*luck/2);
   j.sal=base*f; _ytJL(S,ms);
-  if(S.job===j){ const grown=j.sal/(base*f); const typ=(JOBS[j.name]&&JOBS[j.name].sal)||3000; let nb=base*grown*Math.exp(gauss()*walk - walk*walk/2); nb*=Math.pow(typ/nb,.12); j.sal=clamp(nb, 600, JOB_CAP[j.name]||30000); S.lastYearInc=Math.round(base*f);
+  if(S.job===j){ const grown=j.sal/(base*f); const typ=wasStar? 60000 : ((JOBS[j.name]&&JOBS[j.name].sal)||3000); let nb=base*grown*Math.exp(gauss()*walk - walk*walk/2); nb*=Math.pow(typ/nb,.12); j.sal=clamp(nb, 600, (!wasStar && (j.name==='배우·모델'||j.name==='크리에이터'))? 14000 : (JOB_CAP[j.name]||30000)); S.lastYearInc=Math.round(base*f);
     if(f>1.7) ms.push({kind:'info', title:'대박 난 한 해', text:`올해 수입 ${won(base*f)}. 평소의 ${f.toFixed(1)}배를 벌었다.`});
     else if(f<.55) ms.push({kind:'info', title:'보릿고개', text:`올해 수입 ${won(base*f)}. 평소의 절반도 안 된다. 통장 잔고만 본다.`}); }
 };
 
 // 3) 직업별 이벤트
 const JOB_CAP = {'크리에이터':60000,'배우·모델':80000,'웹툰 작가':40000,'운동선수':60000,'프로게이머':30000,'자영업':50000,'의사':40000,'디자이너·예술가':20000,'개발자':25000};
-const salX=(S,m)=>{ if(S.job) S.job.sal=Math.round(clamp(S.job.sal*m,600,JOB_CAP[S.job.name]||30000)); };
+const salX=(S,m)=>{ if(!S.job) return; const n=S.job.name, star=(typeof isCeleb==='function'&&isCeleb(S)); const cap=(!star && m<5 && (n==='배우·모델'||n==='크리에이터'))? 14000 : (JOB_CAP[n]||30000); S.job.sal=Math.round(clamp(S.job.sal*m,600,Math.max(cap, Math.min(S.job.sal, JOB_CAP[n]||30000)))); };
 const jobIs=(...n)=>S=>!!S.job && n.includes(S.job.name);
 const JOB_EVENTS = [
  // 크리에이터
  {id:'cr_viral', a:[19,60], if:jobIs('크리에이터'), w:2, t:'아무 생각 없이 올린 영상이 알고리즘을 탔다. 하룻밤 새 조회수 300만.', c:[
-  {l:'후속 영상을 몰아서 찍는다', run:S=>{ salX(S,1.7); add(S,{멘:-5, 체:-3, 행:6}); hl(S,`${S.age}세, 영상 하나가 터졌다`); return '일주일에 영상 다섯 개. 구독자가 두 배가 됐다. 대신 잠은 4시간.'; }},
+  {l:'후속 영상을 몰아서 찍는다', run:S=>{ salX(S,R()<.08?6:1.5); add(S,{멘:-5, 체:-3, 행:6}); hl(S,`${S.age}세, 영상 하나가 터졌다`); return '일주일에 영상 다섯 개. 구독자가 두 배가 됐다. 대신 잠은 4시간.'; }},
   {l:'평소 속도를 지킨다', run:S=>{ salX(S,1.2); add(S,{멘:3}); return '반짝 인기는 금방 식었다. 그래도 남은 구독자가 꽤 된다.'; }}]},
  {id:'cr_algo', a:[19,60], if:jobIs('크리에이터'), w:2, t:'플랫폼 알고리즘이 바뀌었다. 같은 영상인데 조회수가 반 토막이다.', c:[
   {l:'숏폼으로 갈아탄다', run:S=>{ if(R()<.5){ salX(S,1.5); add(S,{행:5}); return '15초짜리 영상이 터졌다. 새 판에서 다시 올라섰다.'; } salX(S,.75); add(S,{멘:-5}); return '숏폼은 내 스타일이 아니었다. 기존 구독자마저 떠났다.'; }},
@@ -52,13 +53,13 @@ const JOB_EVENTS = [
   {l:'그냥 계속 찍는다', run:S=>{ add(S,{멘:-10, 체:-5}); salX(S,1.05); return '조회수는 지켰다. 대신 웃는 얼굴이 점점 어색해졌다.'; }}]},
  // 배우·모델
  {id:'ac_audition', a:[20,55], if:S=>jobIs('배우·모델')(S) && !S.titles.has('주연 배우'), w:3, t:'드라마 주연 오디션 최종 3인에 올랐다. 감독이 즉흥 연기를 시킨다.', c:[
-  {l:'대본을 버리고 내 식대로', run:S=>{ const p=.25+ability(S,'말솜씨')/300+ability(S,'외모')/400; if(R()<p){ salX(S,3); add(S,{행:12, hon:5}); S.titles.add('주연 배우'); hl(S,`${S.age}세, 드라마 주연을 따냈다`); return '합격! 첫 촬영 날 대기실 문에 내 이름이 붙어 있었다.'; } add(S,{멘:-6}); return '“신선했어요. 이번엔 아니지만.” 또 떨어졌다.'; }},
-  {l:'연습한 대로 정확하게', run:S=>{ if(R()<.25){ salX(S,2); add(S,{행:8}); return '조연이지만 비중 있는 역할을 받았다.'; } add(S,{멘:-4}); return '무난했다. 무난해서 떨어졌다.'; }}]},
+  {l:'대본을 버리고 내 식대로', run:S=>{ const p=.03+Math.max(0,ability(S,'외모')-70)/700+Math.max(0,ability(S,'말솜씨')-50)/1200; if(R()<p){ salX(S,6); add(S,{행:12, hon:5}); S.titles.add('주연 배우'); hl(S,`${S.age}세, 드라마 주연을 따냈다`); return '합격! 첫 촬영 날 대기실 문에 내 이름이 붙어 있었다.'; } add(S,{멘:-6}); return '“신선했어요. 이번엔 아니지만.” 또 떨어졌다.'; }},
+  {l:'연습한 대로 정확하게', run:S=>{ if(R()<.15){ salX(S,1.6); add(S,{행:8}); return '조연이지만 비중 있는 역할을 받았다.'; } add(S,{멘:-4}); return '무난했다. 무난해서 떨어졌다.'; }}]},
  {id:'ac_dry', a:[22,60], if:S=>jobIs('배우·모델')(S) && S.job.sal<6000, w:2, t:'1년째 캐스팅 연락이 없다. 통장이 바닥을 보인다.', c:[
   {l:'카페 알바를 병행한다', run:S=>{ add(S,{돈:1200, 행:-4, 체:-3}); return '앞치마를 두르고 손님을 맞았다. “혹시… 그 광고에 나온 분?”'; }},
   {l:'연기 학원 강사를 한다', run:S=>{ add(S,{돈:1800, 인:3}); salX(S,1.1); return '가르치다 보니 내 연기도 늘었다.'; }}]},
- {id:'ac_hit', a:[22,60], if:jobIs('배우·모델'), w:1.5, t:'단역으로 나온 드라마가 해외에서 대박이 났다. 내 장면이 밈이 됐다.', c:[
-  {l:'예능에 나간다', run:S=>{ salX(S,2.2); add(S,{인:6, 행:6}); return '“그 짤의 주인공” 타이틀로 섭외가 쏟아졌다.'; }},
+ {id:'ac_hit', a:[22,60], if:S=>jobIs('배우·모델')(S) && !(S.evLast&&S.evLast.ac_hit!=null), w:1.5, t:'단역으로 나온 드라마가 해외에서 대박이 났다. 내 장면이 밈이 됐다.', c:[
+  {l:'예능에 나간다', run:S=>{ salX(S,R()<.12?5:1.6); add(S,{인:6, 행:6}); return '“그 짤의 주인공” 타이틀로 섭외가 쏟아졌다.'; }},
   {l:'연기로만 승부한다', run:S=>{ salX(S,1.4); add(S,{hon:3}); return '다음 작품 오디션에서 감독이 나를 알아봤다.'; }}]},
  // 웹툰 작가
  {id:'wt_rank', a:[20,60], if:jobIs('웹툰 작가'), w:3, t:'연재 중인 웹툰이 요일 1위를 찍었다. 플랫폼에서 계약 연장을 제안한다.', c:[
