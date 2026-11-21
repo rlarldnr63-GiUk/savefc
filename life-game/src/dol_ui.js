@@ -44,6 +44,7 @@ function dolBaby(g,x,y,s,ph,mode,hold,squash){
     g.fillStyle='#fbf3e6'; g.beginPath(); g.moveTo(-s*.2,-s*.02); g.lineTo(s*.2,-s*.02); g.lineTo(s*.15,-s*.2); g.lineTo(-s*.15,-s*.2); g.closePath(); g.fill(); g.stroke();
     const up=hold; sleeve(-s*.15,-s*.15,-s*.28,s*.05,s*.1); sleeve(s*.15,-s*.15, s*(.18+.1*up), -s*(.2+.32*up), s*.1);
     g.fillStyle=P.skin; g.beginPath(); g.arc(-s*.28,s*.06,s*.055,0,6.28); g.fill(); g.beginPath(); g.arc(s*(.18+.1*up),-s*(.22+.32*up),s*.06,0,6.28); g.fill();
+    g.strokeStyle=P.ink; g.lineWidth=Math.max(1,s*.02);
     g.fillStyle=P.skin; g.beginPath(); g.arc(0,-s*.36,s*.2,0,6.28); g.fill(); g.stroke();
     g.fillStyle=P.hair; g.beginPath(); g.arc(0,-s*.5,s*.05,0,6.28); g.fill();
     g.fillStyle='#2f3a8f'; g.beginPath(); g.arc(0,-s*.43,s*.2,Math.PI*1.12,Math.PI*1.88); g.closePath(); g.fill(); g.fillStyle=P.gold; g.fillRect(-s*.16,-s*.5,s*.32,s*.03);
