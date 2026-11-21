@@ -113,15 +113,22 @@ function playFuneral(S,e,done){
     for(let y=0;y<H;y+=M2*.08){ g.fillStyle=(Math.floor(y/(M2*.08))%2)?'#d3c4a9':'#dccfb7'; g.fillRect(0,y,W,M2*.08); }
     g.fillStyle='#3b342b'; g.fillRect(0,0,W,H*.13); g.fillStyle='#f3ead8'; g.font=`700 ${M2*.042}px "Noto Sans KR",sans-serif`; g.textAlign='center'; g.textBaseline='middle';
     g.fillText('장례식장 식당', W/2, H*.05); g.font=`500 ${M2*.03}px "Noto Sans KR",sans-serif`; g.fillText(`故 ${S.name} · 조문객 ${mourn}명`, W/2, H*.095);
+    // 조문객은 얼굴 없이 뒷모습만, 흐릿하게
+    const fs=Math.min(cw/5, rh*.3);
+    const sil=(x,y,sz,a)=>{ g.save(); g.globalAlpha=a; if('filter' in g) g.filter='blur(1.4px)';
+      g.fillStyle='#2b2622'; g.beginPath(); g.ellipse(x,y+sz*.42,sz*.42,sz*.3,0,Math.PI,0); g.fill(); g.fillRect(x-sz*.42,y+sz*.42,sz*.84,sz*.2);
+      g.fillStyle='#1b1714'; g.beginPath(); g.arc(x,y,sz*.24,0,6.28); g.fill(); g.restore(); };
+    const shown=p=>clamp((u-p.at)/.6,0,1);
+    const far=ppl.filter(p=>p.s.y<p.s.ty), near=ppl.filter(p=>p.s.y>=p.s.ty);
+    far.forEach(p=>{ const k=shown(p); if(k>0) sil(p.s.x,p.s.y-fs*.1,fs,.45*k); });
     for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const tx0=hx0+c*cw+cw*.1, tw0=cw*.8, ty0=hy0+r*rh+rh*.38, th0=rh*.24;
-      g.fillStyle='rgba(0,0,0,.12)'; g.fillRect(tx0+3,ty0+4,tw0,th0); g.fillStyle='#fbfaf6'; g.fillRect(tx0,ty0,tw0,th0); g.strokeStyle='#bfb39c'; g.lineWidth=1; g.strokeRect(tx0,ty0,tw0,th0); }
-    seats.forEach(s0=>{ g.fillStyle='#8c6f4f'; g.beginPath(); g.arc(s0.x,s0.y,M2*.018,0,6.28); g.fill(); });
-    const fs=Math.min(cw/4.2, rh*.36);
-    ppl.forEach(p=>{ const k=clamp((u-p.at)/.35,0,1); if(k<=0) return; const pop=k<1? 1+.25*Math.sin(k*Math.PI) : 1;
-      g.save(); g.globalAlpha=k; g.font=`${fs*.7}px ${EMJ}`; g.textAlign='center'; g.textBaseline='middle'; g.fillStyle='#000'; g.fillText(p.food,p.s.tx,p.s.ty);
-      g.font=`${fs*pop}px ${EMJ}`; g.fillText(p.f,p.s.x,p.s.y); g.restore(); });
+      g.fillStyle='rgba(0,0,0,.12)'; g.fillRect(tx0+3,ty0+4,tw0,th0); g.fillStyle='#fbfaf6'; g.fillRect(tx0,ty0,tw0,th0); g.strokeStyle='#bfb39c'; g.lineWidth=1; g.strokeRect(tx0,ty0,tw0,th0);
+      for(let k=0;k<5;k++){ g.fillStyle='rgba(120,100,80,.25)'; g.beginPath(); g.arc(tx0+tw0*(k+.5)/5,ty0+th0*.5,th0*.16,0,6.28); g.fill(); } }
+    near.forEach(p=>{ const k=shown(p); if(k>0) sil(p.s.x,p.s.y-fs*.25,fs*1.05,.6*k); });
+    // 어렴풋하게: 따뜻한 안개
+    const fog=g.createLinearGradient(0,H*.13,0,H); fog.addColorStop(0,'rgba(60,50,40,.35)'); fog.addColorStop(1,'rgba(60,50,40,.12)'); g.fillStyle=fog; g.fillRect(0,H*.13,W,H);
     // 자리가 모자라면 입구에 줄이 선다
-    if(queue>0){ const qk=clamp((u-2.6)/1.2,0,1); const nq=Math.round(queue*qk); for(let i=0;i<nq;i++){ g.font=`${fs*.8}px ${EMJ}`; g.textAlign='center'; g.fillStyle='#000'; g.fillText(faces[i%faces.length], W*.06+(i%Math.floor(W/(fs*.9)))*fs*.9, H*.93+Math.floor(i/Math.floor(W/(fs*.9)))*fs*.5); }
+    if(queue>0){ const qk=clamp((u-2.6)/1.2,0,1); const nq=Math.round(queue*qk); for(let i=0;i<nq;i++){ const per=Math.floor(W/(fs*.9)); sil(W*.06+(i%per)*fs*.9, H*.93+Math.floor(i/per)*fs*.5, fs*.8, .5); }
       if(nq>0){ g.font=`600 ${M2*.028}px "Noto Sans KR",sans-serif`; g.fillStyle='#3b342b'; g.textAlign='right'; g.fillText(`자리가 없어 기다리는 조문객 ${queue*4}명`, W*.96, H*.89); } }
     const word = mourn>=250?'빈자리가 하나도 없다. 밤늦게까지 사람들이 오갔다.' : mourn>=150?'식당이 북적인다. 여기저기서 옛이야기가 들린다.' : mourn>=80?'테이블 몇 개가 채워졌다. 조용히 술잔이 돈다.' : '빈 테이블이 많다. 가까운 사람들만 오래 남았다.';
     if(u>3.2){ const a=clamp((u-3.2)/.6,0,1); g.save(); g.globalAlpha=a; g.font=`600 ${M2*.034}px "Noto Sans KR",sans-serif`; const w0=g.measureText(word).width+M2*.06; g.fillStyle='rgba(40,34,27,.85)'; g.fillRect(W/2-w0/2,H*.15,w0,M2*.06); g.fillStyle='#f6efe0'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(word,W/2,H*.15+M2*.03); g.restore(); }

@@ -11,14 +11,23 @@ function playDol(S, itemK, lucky, done){
   const g=cv.getContext('2d'); g.scale(dpr,dpr);
   const M=Math.min(W,H), EM='"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",serif';
   // 돌상과 물건 배치
-  const tw=Math.min(W*.92, M*1.15), tx=W/2-tw/2, ty=H*.44, th=H*.1;
+  const tw=Math.min(W*.92, M*1.15), tx=W/2-tw/2, ty=H*(W<H?.52:.44), th=H*(W<H?.08:.1);
   const order=[...DOL].sort(()=>R()-.5);
   const items=order.map((x,i)=>({...x, x:tx+tw*(i+.5)/order.length, y:ty+th*.35+(i%2)*th*.25}));
   const target=items.find(x=>x.k===itemK);
-  const decoys=items.filter(x=>x.k!==itemK).sort(()=>R()-.5).slice(0,2);
-  const reachY=ty+th+M*.09;
-  const path=[{x:W/2,y:H*.95,t:0},{x:decoys[0].x,y:reachY,t:1.6},{x:decoys[0].x,y:reachY,t:2.2},{x:decoys[1].x,y:reachY,t:3.3},{x:decoys[1].x,y:reachY,t:3.9},{x:target.x,y:reachY,t:5.0}];
-  const T0=.6, tGrab=T0+5.0, tEnd=tGrab+(lucky?4.2:3.4);
+  // 사다리타기 경로: 위로 기다가 옆 칸으로 꺾고, 다시 위로… 마지막 칸이 잡을 물건
+  const reachY=ty+th+M*.09, y0=H*.96, K=6, ti=items.indexOf(target);
+  const colsI=[ti]; for(let k=0;k<K;k++){ const c=colsI[0]; let nc; do{ nc=c+(R()<.5?-1:1)*(R()<.7?1:2); }while(nc<0||nc>=items.length||nc===c); colsI.unshift(nc); }
+  const lv=k=>y0+(reachY-y0)*k/(K+1);
+  const pts=[{x:items[colsI[0]].x, y:y0}];
+  for(let k=0;k<K;k++){ pts.push({x:items[colsI[k]].x, y:lv(k+1)}); pts.push({x:items[colsI[k+1]].x, y:lv(k+1)}); }
+  pts.push({x:target.x, y:reachY});
+  // 시간은 거리 비례 + 꺾는 곳마다 잠깐 두리번
+  const seg=[]; let len=0; for(let i=1;i<pts.length;i++){ const d=Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y); seg.push(d); len+=d; }
+  const MOVE=5.0, PAUSE=.12, sp=len/(MOVE-PAUSE*seg.length);
+  const path=[{...pts[0], t:0}]; let tt=0; for(let i=1;i<pts.length;i++){ tt+=PAUSE; path.push({...pts[i-1], t:tt}); tt+=seg[i-1]/sp; path.push({...pts[i], t:tt}); }
+  const trail=[];
+  const T0=.6, tGrab=T0+tt, tEnd=tGrab+(lucky?4.2:3.4);
   const fam=['👵','👴','👩','👨','🧑','👧'];
   const shouts=['이쪽이야!','연필 잡아!','돈 잡아라!','까꿍!','공 잡자~','마이크!'];
   const conf=[]; if(lucky) for(let i=0;i<140;i++) conf.push({x:R()*W, y:-R()*H, vy:60+R()*120, vx:(R()-.5)*60, r:R()*6.28, c:['#e8b44a','#d94f4f','#4f8bd9','#5bb86b','#ffffff'][i%5]});
@@ -26,7 +35,7 @@ function playDol(S, itemK, lucky, done){
   const finish=()=>{ if(finished) return; finished=true; cancelAnimationFrame(raf); ov.classList.add('out'); setTimeout(()=>{ ov.remove(); done(); },450); };
   ov.querySelector('#dskip').addEventListener('click',finish);
   const lerp=(a,b,k)=>a+(b-a)*k, ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
-  const babyAt=t=>{ const u=t-T0; if(u<=0) return {...path[0], moving:false}; for(let i=1;i<path.length;i++){ if(u<=path[i].t){ const a=path[i-1], b=path[i], k=ease((u-a.t)/(b.t-a.t)); return {x:lerp(a.x,b.x,k), y:lerp(a.y,b.y,k), moving:a.x!==b.x||a.y!==b.y}; } } return {...path[path.length-1], moving:false}; };
+  const babyAt=t=>{ const u=t-T0; if(u<=0) return {...path[0], moving:false}; for(let i=1;i<path.length;i++){ if(u<=path[i].t){ const a=path[i-1], b=path[i], k=b.t>a.t? (a.x===b.x&&a.y===b.y?1:(u-a.t)/(b.t-a.t)) : 1; return {x:lerp(a.x,b.x,k), y:lerp(a.y,b.y,k), moving:a.x!==b.x||a.y!==b.y}; } } return {...path[path.length-1], moving:false}; };
   const emoji=(ch,x,y,size,rot=0,alpha=1)=>{ g.save(); g.globalAlpha=alpha; g.translate(x,y); g.rotate(rot); g.font=`${size}px ${EM}`; g.textAlign='center'; g.textBaseline='middle'; g.fillStyle='#000'; g.fillText(ch,0,0); g.restore(); };
   const tick=ts=>{
     if(start==null) start=ts; const t=(ts-start)/1000;
@@ -46,6 +55,8 @@ function playDol(S, itemK, lucky, done){
     // 물건
     items.forEach(x=>{ if(x===target && t>=tGrab) return; const near=Math.abs(babyAt(t).x-x.x)<M*.05 && t>T0; emoji(x.e, x.x, x.y + (near?-Math.abs(Math.sin(t*8))*4:0), M*.07*(near?1.15:1)); g.font=`600 ${M*.026}px "Noto Sans KR",sans-serif`; g.fillStyle='#fff3d6'; g.fillText(x.k, x.x, ty+th*.86); });
     // 아기 (색동 저고리)
+    { const bb=babyAt(t); if(t>T0 && t<tGrab && (!trail.length || Math.hypot(trail[trail.length-1].x-bb.x, trail[trail.length-1].y-bb.y)>M*.025)) trail.push({x:bb.x,y:bb.y}); }
+    g.fillStyle='rgba(120,80,40,.22)'; trail.forEach(p=>{ g.beginPath(); g.arc(p.x,p.y+M*.05,M*.008,0,6.28); g.fill(); });
     const b=babyAt(t), bob=b.moving? Math.sin(t*14)*M*.012 : 0, bs=M*.13;
     g.save(); g.translate(b.x,b.y+bob); const cols=['#e74c3c','#f1c40f','#2ecc71','#3498db','#9b59b6']; cols.forEach((c,i)=>{ g.fillStyle=c; g.fillRect(-bs*.36+i*bs*.144, bs*.12, bs*.144, bs*.34); }); g.restore();
     emoji('👶', b.x, b.y+bob, bs);
