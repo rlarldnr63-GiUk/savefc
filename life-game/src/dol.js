@@ -44,7 +44,7 @@ function applyDol(S,k){
 }
 // 평생 효과 ①: 재능 보너스
 const _abDol = ability;
-ability = function(S,t){ const v=_abDol(S,t); if(!S||!S.dol) return v; const b=DOLM[S.dol].tr[t]; return b? v+b*dolMult(S) : v; };
+ability = function(S,t){ const v=_abDol(S,t); if(!S||!S.dol) return v; const b=DOLM[S.dol].tr[t]; return b? Math.min(100, v+b*dolMult(S)) : v; };
 // 평생 효과 ②: 능력치가 자라는 목표치가 높아진다
 const _stDol = statTargets;
 statTargets = function(S,A){ const T=_stDol(S,A); if(!S.dol||S.age<2) return T; const st=DOLM[S.dol].st;
