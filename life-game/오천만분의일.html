@@ -3413,7 +3413,7 @@ function wreathSenders(S,e){
   if(fam) L.push(fam);
   if(wed && S.kids) L.push('배우자');
   const cos=[...new Set((S.jobHist||[]).map(j=>j.co).filter(Boolean))];
-  cos.filter(c=>!/개인 채널|귀농/.test(c)).forEach(c=>{ const nm=c.replace(/\s*\(.*?\)/g,''); L.push(/(청|본부|학교|부사관|복지관|요양원|사무소)$/.test(nm)? `${nm} 동료 일동` : `${nm} 임직원 일동`); });
+  cos.filter(c=>!/개인 채널|귀농/.test(c)).forEach(c=>{ const nm=c.replace(/\s*\(.*?\)/g,''); const team=/ 코치$/.test(nm)||(CO['운동선수']||[]).includes(nm)||(CO['프로게이머']||[]).includes(nm)||nm==='유소년 아카데미'; const lab=team? `${nm.replace(/ 코치$/,'')} ${nm==='유소년 아카데미'?'코치진':'선수단'} 일동` : /(청|본부|학교|부사관|복지관|요양원|사무소)$/.test(nm)? `${nm} 동료 일동` : `${nm} 임직원 일동`; if(!L.includes(lab)) L.push(lab); });
   if(S.uni) L.push(`${S.uni} 동문회`);
   L.push(`${S.region.name.split(' ').slice(-1)[0]} ${pick(['휘람','겸솔','벼리','온담'])}고 동창회`);
   if(S.f.has('전우')) L.push('훈련소 동기 전우회');
@@ -3534,7 +3534,7 @@ function playFuneral(S,e,done){
     const tags=[];
     wr.filter(r=>r.z>near).sort((a,b)=>b.z-a.z).forEach(r=>{ const q=P(r.side*(XC-.36),1.0,r.z); const sz=.62*q[2]; drawWreath(g,q[0],q[1],sz,r.lab,t); tags.push([q[0],q[1],sz,r.lab]); });
     // 리본 글씨는 작아서 안 보이므로, 가까운 화환마다 가로 이름표를 띄운다
-    tags.forEach(([x,y,sz,lab])=>{ const a=clamp((sz-38)/40,0,1)*clamp((Math.min(W,H)*1.1-sz)/(Math.min(W,H)*.4),0,1); if(a<=0) return;
+    tags.forEach(([x,y,sz,lab])=>{ const a=clamp((sz-60)/40,0,1)*clamp((Math.min(W,H)*1.1-sz)/(Math.min(W,H)*.4),0,1); if(a<=0) return;
       const fs=clamp(sz*.15,11,17); g.save(); g.globalAlpha=a; g.font=`600 ${fs}px "Noto Sans KR",sans-serif`; g.textAlign='center'; g.textBaseline='middle';
       const txt='근조 · '+lab, tw=g.measureText(txt).width, ty=y+sz*.66, bw=tw+fs*1.1, bh=fs*1.7;
       const tx=clamp(x, bw/2+4, W-bw/2-4);
