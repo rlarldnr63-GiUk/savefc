@@ -52,3 +52,22 @@ salGrowth = function(S){
   }
   return _sgT(S);
 };
+
+// 4) 상속: 출생 분위별 부모 순자산(통계청 가계금융복지조사 2024 순자산 10분위 평균 근사)
+//    → 노후에 쓰고 남은 만큼 → 상속세(일괄공제 5억, 10~50% 누진) → 형제 수로 나눈다
+//    재벌가(0.1%)는 상속재산 100억 초과 피상속인 비율(국세청 상속세 결정 현황, 사망자의 약 0.1%)에 맞춘다
+const PARENT_NET = [0, 800, 4000, 9000, 15000, 22000, 30000, 40000, 55000, 80000, 170000]; // 만원, 1~10분위
+function inheritTax(v){ const t=v-50000; if(t<=0) return 0;
+  return t<=10000? t*.1 : t<=50000? t*.2-1000 : t<=100000? t*.3-6000 : t<=300000? t*.4-16000 : t*.5-46000; }
+function inheritAmount(S){
+  let estate;
+  if(S.rich) estate = Math.round(150000*Math.exp(gauss()*.8));       // 재벌가: 중간값 150억, 수십억~수천억
+  else {
+    const w=clamp(Math.round(S.wealth0||S.wealth),1,10);
+    estate = PARENT_NET[w]*Math.exp(gauss()*.45)*(.55+R()*.35);      // 노후 생활비·간병비로 일부를 쓰고 남은 재산
+    if(w<=2 && R()<.5) estate=0;                                     // 남길 재산이 없는 경우
+  }
+  estate=Math.max(0,Math.round(estate));
+  const tax=Math.round(inheritTax(estate)); S._inhTax = tax>0? Math.round(tax/(S.siblings+1)) : 0;
+  return Math.round((estate-tax)/(S.siblings+1));
+}

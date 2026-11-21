@@ -78,7 +78,7 @@ function newGame(name, mode){
   const gender = R()<.512?'M':'F';
   const region = wpick(REGIONS, r=>r.w);
   let wealth = clamp(Math.round(5.5 + region.wealth + gauss()*2.1),1,10);
-  const rich = R()<.003; if(rich) wealth=11;
+  const rich = R()<.001; if(rich) wealth=11;
   const fr=R(); const family = fr<.4?'화목':fr<.85?'보통':'갈등';
   const sr=R(); const siblings = sr<.3?0:sr<.82?1:2;
   const impulsive = R(), talent = clamp(.85+R()*.3+(wealth>=8?.04:0),.8,1.25), luck=R();
@@ -284,7 +284,7 @@ const MS = {
  }},
  retire:{build:(S)=>{ const j=S.job; if(!j) return {title:'은퇴 생활', text:'출근하지 않는 아침에 익숙해졌다.', choices:[]};
    if(j.kind==='선수'){ S.job={name:'코치·지도자', ...JOBS['코치·지도자']}; S.h.hon+=6; hl(S,`${S.age}세, 선수 은퇴 후 코치로`); return {title:'선수 은퇴', text:`${S.year}년, 선수 생활을 마쳤다. 은퇴식에서 팬들이 이름을 불러줬다. 이제 후배들을 가르친다.`, choices:[]}; } S.pension = j.kind==='공공'?2600 : j.sal>6000?1800 : 1200; S.h.hon+=j.hon*2; S.retired=true; S.job=null; hl(S,`${S.age}세, ${j.name} 정년퇴직`); return {title:'퇴직', text:`${S.year}년, ${j.name} 생활을 마쳤다. 송별회에서 받은 꽃다발이 무거웠다.`, choices:[]}; }},
- parents:{build:(S)=>{ const memo=(typeof parentsMemory==='function')?parentsMemory(S):''; const inh = S.rich?2000000 : Math.round(S.wealth*S.wealth*220/(S.siblings+1)); add(S,{돈:inh, 멘:-12, 행:-6}); hl(S,`${S.age}세, 부모님을 떠나보냈다`); return {title:'부모님 별세', text:`${S.year}년, 부모님이 세상을 떠나셨다. 장례식장에서 처음으로 부모님 친구분들 얼굴을 봤다.${memo?'\n\n'+memo:''}\n\n상속: ${won(inh)}`, choices:[]}; }},
+ parents:{build:(S)=>{ const memo=(typeof parentsMemory==='function')?parentsMemory(S):''; const inh = (typeof inheritAmount==='function')? inheritAmount(S) : Math.round(S.wealth*S.wealth*220/(S.siblings+1)); add(S,{돈:inh, 멘:-12, 행:-6}); hl(S,`${S.age}세, 부모님을 떠나보냈다`); return {title:'부모님 별세', text:`${S.year}년, 부모님이 세상을 떠나셨다. 장례식장에서 처음으로 부모님 친구분들 얼굴을 봤다.${memo?'\n\n'+memo:''}\n\n상속: ${inh>0?won(inh):'없음'}${S._inhTax?` (상속세 ${won(S._inhTax)} 납부 후)`:''}`, choices:[]}; }},
 };
 
 /* ---------- 카드 만들기 · 고르기 ---------- */

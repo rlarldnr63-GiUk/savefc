@@ -29,10 +29,18 @@ function drawWreath(g,x,y,s,label,t){
   // 국화 고리
   for(let i=0;i<22;i++){ const a=i/22*6.283, r=s*.42; g.fillStyle=i%5===0?'#f6e7a6':'#fbfbf7'; g.beginPath(); g.arc(x+Math.cos(a)*r, y+Math.sin(a)*r, s*.11, 0, 6.28); g.fill(); g.strokeStyle='rgba(0,0,0,.08)'; g.lineWidth=1; g.stroke(); }
   g.fillStyle='#2f6b3a'; g.beginPath(); g.arc(x,y,s*.27,0,6.28); g.fill();
-  // 리본
-  g.fillStyle='#f4f1e8'; g.fillRect(x-s*.07,y+s*.1,s*.14,s*.95); g.fillStyle='#222';
-  g.save(); g.translate(x,y+s*.18); g.font=`${Math.max(7,s*.1)}px "Noto Sans KR",sans-serif`; g.textAlign='center';
-  const txt=('근조 '+label).slice(0,14); for(let i=0;i<txt.length;i++) g.fillText(txt[i],0,i*Math.max(7,s*.1)*1.05); g.restore();
+  // 리본: 실제 화환처럼 두 줄이 고리 앞으로 늘어진다 (왼쪽=보낸 곳, 오른쪽=추모 문구)
+  const rw=s*.2, top=y-s*.08, len=s*1.45;
+  const L1=[...label.replace(/\s+/g,'')], L2=[...'삼가고인의명복을빕니다'];
+  const fs=Math.min(rw*.78, len*.9/Math.max(L1.length,L2.length)/1.04);
+  const rib=(cx,chars,tilt)=>{ g.save(); g.translate(cx,top); g.rotate(tilt);
+    g.fillStyle='rgba(0,0,0,.18)'; g.fillRect(-rw/2+1.5,1.5,rw,len);
+    g.fillStyle='#f8f5ec'; g.beginPath(); g.moveTo(-rw/2,0); g.lineTo(rw/2,0); g.lineTo(rw/2,len); g.lineTo(0,len-rw*.45); g.lineTo(-rw/2,len); g.closePath(); g.fill();
+    g.strokeStyle='rgba(120,100,70,.35)'; g.lineWidth=Math.max(.6,s*.006); g.stroke();
+    if(fs>=4){ g.fillStyle='#161412'; g.font=`700 ${fs}px "Noto Serif KR","Nanum Myeongjo","Noto Sans KR",serif`; g.textAlign='center'; g.textBaseline='middle';
+      const step=Math.min(fs*1.12, (len-rw*.6)/chars.length); chars.forEach((c,i)=>g.fillText(c,0,rw*.35+step*(i+.5))); }
+    g.restore(); };
+  rib(x-rw*.6, L1, .035); rib(x+rw*.6, L2, -.035);
 }
 function drawPortrait(g,cx,cy,w,S,smile){
   // 단정한 영정 사진: 정장/한복 차림, 나이에 맞는 머리색, 미소가 서서히 번진다
@@ -81,7 +89,7 @@ function playFuneral(S,e,done){
   const XC=W<H?1.45:1.9, EYE=1.6, CEIL=3.0, DZ=1.25, Z0=3;
   const pairs=Math.ceil(n/2), ZW=Z0+(pairs-1)*DZ+1.0, lastZ=ZW-1.0;
   const F=Math.min(W,H)*.95;
-  const camStart=-1.2, camEnd=ZW-(W<H?4.2:3.9);
+  const camStart=-1.2, camEnd=ZW-(W<H?3.7:3.7);
   // 가족·가까운 사람 화환이 영정 가까이에 선다
   const wr=senders.map((lab,i)=>({lab, side:i%2===0?-1:1, z:lastZ-Math.floor(i/2)*DZ}));
   let start=null, raf=null, finished=false;
@@ -123,15 +131,7 @@ function playFuneral(S,e,done){
     const rb=fw*.08, rl=fw*.38, o=fw*.05; g.strokeStyle='#0b0b0b'; g.lineWidth=rb; g.lineCap='butt';
     g.beginPath(); g.moveTo(fx-o,fy-o+rl); g.lineTo(fx-o+rl,fy-o); g.moveTo(fx+fw+o,fy-o+rl); g.lineTo(fx+fw+o-rl,fy-o); g.stroke();
     // 화환: 먼 것부터 그린다
-    const tags=[];
-    wr.filter(r=>r.z>near).sort((a,b)=>b.z-a.z).forEach(r=>{ const q=P(r.side*(XC-.36),1.0,r.z); const sz=.62*q[2]; drawWreath(g,q[0],q[1],sz,r.lab,t); tags.push([q[0],q[1],sz,r.lab]); });
-    // 리본 글씨는 작아서 안 보이므로, 가까운 화환마다 가로 이름표를 띄운다
-    tags.forEach(([x,y,sz,lab])=>{ const a=clamp((sz-60)/40,0,1)*clamp((Math.min(W,H)*1.1-sz)/(Math.min(W,H)*.4),0,1); if(a<=0) return;
-      const fs=clamp(sz*.15,11,17); g.save(); g.globalAlpha=a; g.font=`600 ${fs}px "Noto Sans KR",sans-serif`; g.textAlign='center'; g.textBaseline='middle';
-      const txt='근조 · '+lab, tw=g.measureText(txt).width, ty=y+sz*.66, bw=tw+fs*1.1, bh=fs*1.7;
-      const tx=clamp(x, bw/2+4, W-bw/2-4);
-      g.fillStyle='rgba(20,18,15,.82)'; g.beginPath(); if(g.roundRect) g.roundRect(tx-bw/2,ty-bh/2,bw,bh,6); else g.rect(tx-bw/2,ty-bh/2,bw,bh); g.fill();
-      g.strokeStyle='rgba(255,240,210,.35)'; g.lineWidth=1; g.stroke(); g.fillStyle='#f5efe2'; g.fillText(txt,tx,ty+1); g.restore(); });
+    wr.filter(r=>r.z>near).sort((a,b)=>b.z-a.z).forEach(r=>{ const q=P(r.side*(XC-.42),1.12,r.z); const sz=.8*q[2]; drawWreath(g,q[0],q[1],sz,r.lab,t); });
     // 비네트 + 입장 페이드
     const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.75); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.55)'); g.fillStyle=vg; g.fillRect(0,0,W,H);
     const fin=clamp(1-t/1.1,0,1); if(fin>0){ g.fillStyle=`rgba(0,0,0,${fin})`; g.fillRect(0,0,W,H); }
