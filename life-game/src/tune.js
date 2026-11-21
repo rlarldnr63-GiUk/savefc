@@ -50,6 +50,7 @@ salGrowth = function(S){
     if(j.name==='웹툰 작가'||j.name==='크리에이터'||j.name==='배우·모델') return j.sal<9000? 1.035 : 1.0;
     return 1.015;
   }
+  if(j.name==='사회복지사' || j.name==='요양보호사') return S.age<55? 1.012 : 1;   // 처우가 크게 오르지 않는 직군
   return _sgT(S);
 };
 
