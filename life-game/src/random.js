@@ -72,4 +72,10 @@ const WILD = [
   {l:'도예', run:S=>{ if(R()<.25){ add(S,{행:8}); S.titles.add('늦게 핀 재능'); return '강사가 “재능 있으시네요”라고 했다. 작은 전시회까지 열었다.'; } add(S,{행:3}); return '찌그러진 컵을 세 개 만들었다. 매일 쓴다.'; }},
   {l:'댄스', run:S=>{ if(R()<.2){ add(S,{체:5, 인:6, 매:4}); return '구청 대회에서 상을 받았다.'; } add(S,{체:3, 행:3}); return '박자를 못 맞췄지만 땀은 흘렸다.'; }}]},
 ];
-WILD.forEach(e=>{ e.rep=true; EVENTS.push(e); EVMAP[e.id]=e; MAJOR.add(e.id); const f=e.if; e.if=S=>(!f||f(S)) && !(S.evLast && S.evLast[e.id]!=null) && R()<.15; e.w0=e.w; });   // 평생 한 번, 해마다 낮은 확률
+WILD.forEach(e=>{ e.rep=true; EVENTS.push(e); EVMAP[e.id]=e; MAJOR.add(e.id); const f=e.if; e.if=S=>(!f||f(S)) && !(S.evLast && S.evLast[e.id]!=null) && R()<.07; e.w0=e.w; });   // 평생 한 번, 해마다 낮은 확률
+
+// 5) 한 인생에서 같은 사건은 최대 3번 (결혼·연애처럼 이어지는 사건은 제외)
+const EV_MULTI_OK = new Set(['meet_someone','breakup','marry','divorce']);
+const _rcCap = resolveCard;
+resolveCard = function(S,d,i){ if(d.kind==='ev'){ S.evCnt=S.evCnt||{}; S.evCnt[d.id]=(S.evCnt[d.id]||0)+1; } return _rcCap(S,d,i); };
+EVENTS.forEach(e=>{ if(!e.rep || EV_MULTI_OK.has(e.id)) return; const f=e.if; e.if=S=>(!S.evCnt || (S.evCnt[e.id]||0)<3) && (!f||f(S)); });

@@ -146,7 +146,7 @@ Object.assign(EV_COOLDOWN, {exercise:9, health_check:8, overwork:6, friday6:6, h
 const _ngJL = newGame;
 newGame = function(name, mode){
   const r=_ngJL(name, mode);
-  S.evOff={}; EVENTS.forEach(e=>{ if(!e.manual && !EV_CORE.has(e.id) && !JOB_EVENTS.includes(e) && R()<.4) S.evOff[e.id]=1; });
+  S.evOff={}; EVENTS.forEach(e=>{ if(!e.manual && !EV_CORE.has(e.id) && !JOB_EVENTS.includes(e) && R()<.5) S.evOff[e.id]=1; });
   return r;
 };
 EVENTS.forEach(e=>{ if(e.manual || EV_CORE.has(e.id) || JOB_EVENTS.includes(e)) return; const f=e.if; e.if=S=>!(S.evOff && S.evOff[e.id]) && (!f||f(S)); });
