@@ -38,7 +38,7 @@ resolveCard = function(S,d,i){
   const m=clamp(Math.exp(gauss()*.45-.1),.4,2);
   STAT_KEYS.forEach((k,j)=>{ const dv=S.s[k]-before[j]; if(Math.abs(dv)>.01) S.s[k]=clamp(before[j]+dv*m,0,100); });
   // 반전
-  if(R()<.18){ const tw=pick(TWISTS); add(S,tw.e); txt=(txt?txt+'\n':'')+'그런데… '+tw.t; }
+  if(R()<.18){ const good=TWISTS.filter(x=>Object.values(x.e).reduce((a,b)=>a+b,0)>0), bad=TWISTS.filter(x=>!good.includes(x)); const tw=pick(R()<.6?good:bad); add(S,tw.e); txt=(txt?txt+'\n':'')+'그런데… '+tw.t; }
   return txt;
 };
 

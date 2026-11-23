@@ -52,6 +52,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible{outline:2px so
 .deathov{background:#000}
 .death-cap{position:absolute; left:50%; top:8%; transform:translateX(-50%); text-align:center; display:grid; gap:4px; color:#f2ece0; text-shadow:0 1px 4px #000; animation:fcap 1s .4s both; white-space:nowrap}
 .death-cap b{font-family:var(--display); font-size:20px; letter-spacing:.06em} .death-cap span{font-size:14px; opacity:.85}
+.shop{display:grid; gap:6px}
+.shop-h{display:flex; justify-content:space-between; align-items:baseline} .shop-h small{color:var(--muted); font-size:12px}
+.shop-row{display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; padding:5px 0; border-bottom:1px dashed var(--line)}
+.shop-row .e{font-size:20px} .shop-row b{font-size:13.5px; display:block} .shop-row small{font-size:11.5px; color:var(--muted); line-height:1.35}
+.shop-row.off{opacity:.55} .shop-row.own{background:var(--soft); border-radius:8px; padding:6px 8px; border:none} .shop-row i{font-style:normal; font-size:12px; color:var(--muted)}
+.btn.sm{padding:4px 10px; font-size:12.5px; min-height:0}
 .funeral{position:fixed; inset:0; z-index:200; background:#1d1b18; opacity:1; transition:opacity .5s}
 .funeral.out{opacity:0}
 .funeral canvas{display:block}
@@ -278,7 +284,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible{outline:2px so
 <div class="wrap" id="app"></div>
 
 <script>
-const DEATH_MULT = 2;   // 사망 확률 배율 (재미를 위해 현실의 2배)
+const DEATH_MULT = 1.5;   // 사망 확률 배율 (현실의 1.5배)
 /* ===== 데이터: 이벤트 · 뉴스 · 직업 ===== */
 /* 효과 키: 학 체 멘 행 인 매(0~100) 돈(만원) / 숨은값 risk par hon spec kid / f:기록추가 uf:기록제거 title:칭호 hl:명장면 */
 
@@ -3361,7 +3367,7 @@ resolveCard = function(S,d,i){
   const m=clamp(Math.exp(gauss()*.45-.1),.4,2);
   STAT_KEYS.forEach((k,j)=>{ const dv=S.s[k]-before[j]; if(Math.abs(dv)>.01) S.s[k]=clamp(before[j]+dv*m,0,100); });
   // 반전
-  if(R()<.18){ const tw=pick(TWISTS); add(S,tw.e); txt=(txt?txt+'\n':'')+'그런데… '+tw.t; }
+  if(R()<.18){ const good=TWISTS.filter(x=>Object.values(x.e).reduce((a,b)=>a+b,0)>0), bad=TWISTS.filter(x=>!good.includes(x)); const tw=pick(R()<.6?good:bad); add(S,tw.e); txt=(txt?txt+'\n':'')+'그런데… '+tw.t; }
   return txt;
 };
 
@@ -3460,6 +3466,71 @@ const FUN = [
   {l:'DM을 보낸다', run:S=>{ if(R()<.4){ add(S,{인:5, 행:6}); return '영상통화를 했다. 둘 다 웃음이 터졌다. 매년 서로 생일 선물을 보낸다.'; } add(S,{행:1}); return '읽씹. 그래도 신기했다.'; }}]},
 ];
 FUN.forEach(e=>{ e.rep=true; EVENTS.push(e); EVMAP[e.id]=e; MAJOR.add(e.id); const f=e.if, g=e.g; e.if=S=>(!f||f(S)) && !(S.evLast && S.evLast[e.id]!=null) && R()<g; });
+
+/* ===== 돈이 있으면 할 수 있는 것: 사치품·부동산 =====
+   - 현금이 충분하면 '내 재산' 칸에서 바로 살 수 있다 (아파트는 40%만 있으면 대출)
+   - 가진 물건은 평생 효과가 있다 (능력치 목표치↑), 대신 유지비가 들고 값이 오르내린다
+   - 팔면 그때 값으로 현금이 된다
+   + 멈춤 예산: 사건이 늘어도 '멈춰서 고르는' 횟수는 예전처럼 1년 평균 0.42번 */
+const SHOP = [
+  {k:'watch',  n:'명품 시계',      e:'⌚', price:3000,   up:0,    dep:-.02, fx:{매:4, 인:2},       d:'매력·인맥이 조금 오른다. 값은 잘 안 떨어진다.'},
+  {k:'art',    n:'미술품',         e:'🖼️', price:8000,   up:50,   dep:'art', fx:{멘:3, 행:2},       d:'마음이 편해진다. 값은 운에 따라 크게 오르내린다.'},
+  {k:'golf',   n:'골프 회원권',    e:'⛳', price:15000,  up:600,  dep:.01, fx:{인:6, 체:2},       d:'접대와 모임이 생긴다. 인맥이 크게 오른다.'},
+  {k:'car',    n:'스포츠카',       e:'🏎️', price:20000,  up:1200, dep:.15, fx:{행:5, 매:5},       d:'행복·매력이 오른다. 해마다 값이 15% 떨어진다.'},
+  {k:'villa',  n:'바닷가 별장',    e:'🏡', price:40000,  up:900,  dep:-.02, fx:{멘:5, 행:4, 체:2}, d:'주말마다 쉰다. 멘탈·행복이 오른다.'},
+  {k:'yacht',  n:'요트',           e:'⛵', price:50000,  up:3500, dep:.08, fx:{인:7, 행:6, 매:3}, d:'요트 파티로 인맥이 넓어진다. 유지비가 무겁다.'},
+  {k:'seoul',  n:'서울 아파트',    e:'🏢', price:120000, up:0,    house:true, fx:{행:3},          d:'40%만 있으면 대출로 산다. 집값이 오르면 자산도 오른다.'},
+  {k:'gangnam',n:'강남 아파트',    e:'🏙️', price:300000, up:0,    house:true, fx:{행:4, 인:3},    d:'40%만 있으면 대출로 산다. 상위 1%의 주소.'},
+];
+const SHOPM={}; SHOP.forEach(x=>SHOPM[x.k]=x);
+function shopNeed(it){ return it.house? Math.round(it.price*.4) : it.price; }
+function canBuy(S,it){ if(!S||S.dead||S.age<20) return false; if(it.house) return !(S.house && S.house.tag===it.k) && S.money + (S.house? S.house.val-S.house.loan : 0) >= shopNeed(it); return !(S.items&&S.items[it.k]) && S.money>=shopNeed(it); }
+function buyItem(S,k){
+  const it=SHOPM[k]; if(!canBuy(S,it)) return false;
+  if(it.house){ if(S.house){ S.money += S.house.val - S.house.loan; } const cash=Math.min(S.money, it.price); S.money-=cash; S.house={val:it.price, loan:it.price-cash, bought:it.price, by:S.year, tag:it.k}; S.f.add('내집');
+    hl(S,`${S.age}세, ${it.n} 입성 (${won(it.price)})`); }
+  else { S.money-=it.price; S.items=S.items||{}; S.items[k]={v:it.price, by:S.year}; hl(S,`${S.age}세, ${it.n}을(를) 샀다`); }
+  add(S,{행:3}); return true;
+}
+function sellItem(S,k){ const o=S.items&&S.items[k]; if(!o) return false; S.money+=Math.round(o.v*.95); delete S.items[k]; add(S,{행:-2}); return true; }
+function itemsValue(S){ let v=0; for(const k in (S.items||{})) v+=S.items[k].v; return v; }
+// 평생 효과 · 유지비 · 값 변동
+const _stShop = statTargets;
+statTargets = function(S,A){ const T=_stShop(S,A); const owned=Object.keys(S.items||{}).concat(S.house&&S.house.tag?[S.house.tag]:[]);
+  owned.forEach(k=>{ const fx=SHOPM[k]&&SHOPM[k].fx; if(fx) for(const s in fx) if(T[s]!=null) T[s]=clamp(T[s]+fx[s],5,98); }); return T; };
+const _ytShop = yearTick;
+yearTick = function(S,ms){
+  _ytShop(S,ms);
+  for(const k in (S.items||{})){ const it=SHOPM[k], o=S.items[k]; S.money-=it.up;
+    o.v = it.dep==='art'? o.v*Math.exp(gauss()*.3) : o.v*(1-it.dep);
+    if(S.money<-3000 && R()<.5){ sellItem(S,k); ms.push({kind:'info', title:'급매', text:`돈이 모자라 ${it.n}을(를) 팔았다.`}); } }
+  if(S.house && S.house.tag==='gangnam') S.house.val*=1.015;   // 강남은 조금 더 오른다
+};
+// 엔딩 자산에 포함
+const _endShop = ending;
+ending = function(S){ const e=_endShop(S); e.asset += itemsValue(S); return e; };
+// 캐릭터가 알아서 살 때: 넉넉하면 가끔 지른다 (돈의 1/3 이하일 때만)
+const _ytShop2 = yearTick;
+yearTick = function(S,ms){ _ytShop2(S,ms);
+  if(S.dead || S.age<25 || S.customShop) return;
+  const opts=SHOP.filter(it=>canBuy(S,it) && shopNeed(it)*3 <= S.money + (it.house&&S.house? S.house.val-S.house.loan:0) && (!it.house || !S.house || SHOPM[it.k].price > S.house.val*1.3));
+  if(opts.length && R()<.25){ const it=pick(opts); if(buyItem(S,it.k)) ms.push({kind:'info', title:`${it.e} ${it.n}`, text:`통장을 보다가 질렀다. ${it.d}`}); }
+};
+
+// ===== 멈춤 예산 =====
+const DEC_RATE = .29;
+const DEC_KEEP = new Set(['dream','dol','track','college','suneung','hunt','army','highschool','retire','birth']);
+const _isdBud = isDecision;
+isDecision = function(d,card){
+  const r=_isdBud(d,card); if(!r || !S) return r;
+  if(d.kind==='ms' && DEC_KEEP.has(d.name)) return r;
+  if(d.kind==='think') return r;
+  if(d._budget!=null) return d._budget;
+  S.decTok = S.decTok==null? 1 : S.decTok;
+  d._budget = S.decTok>=1; if(d._budget) S.decTok-=1; return d._budget;
+};
+const _ytBud = yearTick;
+yearTick = function(S,ms){ _ytBud(S,ms); S.decTok=Math.min(4,(S.decTok==null?2:S.decTok)+DEC_RATE); };
 
 /* ===== 실시간 뉴스: 매주 자동 업데이트되는 파일 =====
    - 이 파일만 고친다. NEWS 끝에 push 하므로 기존 뉴스 번호(저장 데이터)가 바뀌지 않는다.
@@ -3622,6 +3693,7 @@ function renderAll(){
   <div class="cols">
     <div class="lcol">
       <div class="sheet plan" id="plan"></div>
+      <div class="sheet shop" id="shop"></div>
     </div>
     <section class="sheet feedbox rcol"><h3 class="fh">지금 내 인생 <button class="btn ghost" id="more">전체</button></h3><ul class="feed" id="feed"></ul></section>
   </div>`;
@@ -3669,9 +3741,22 @@ function talPanel(){
     return `<div class="trow ${k===S.focus&&S.f.has('재능발견')?'focus':''}"><span>${k}</span><div class="bar"><i style="width:${base}%"></i><b style="width:${ab}%"></b></div><span class="tw">${tierWord(k)}</span></div>`; }).join(''); }).join('')
    +'<div class="tal-k">해보면서 알게 된 나</div>';
 }
+function renderShop(){
+  const el=document.getElementById('shop'); if(!el||!S) return;
+  const owned=SHOP.filter(it=>(S.items&&S.items[it.k]) || (S.house&&S.house.tag===it.k));
+  const all=SHOP.filter(it=>!owned.includes(it)); const avail=[...all.filter(it=>canBuy(S,it)), ...all.filter(it=>!canBuy(S,it)).slice(0,2)];
+  const fxT=it=>Object.entries(it.fx).map(([k,v])=>`${SK[k]||k}+${v}`).join(' ');
+  const key=JSON.stringify([Math.floor(S.money/500), owned.map(x=>x.k), S.age>=20, S.dead]); if(el.dataset.k===key) return; el.dataset.k=key;
+  el.innerHTML=`<div class="shop-h"><b>돈으로 할 수 있는 것</b><small>현금 ${won(S.money)}</small></div>`+
+    (owned.length?`<div class="shop-own">${owned.map(it=>`<div class="shop-row own"><span class="e">${it.e}</span><span><b>${it.n}</b><small>지금 ${won(it.house?S.house.val:S.items[it.k].v)} · ${fxT(it)}</small></span>${it.house?'<i>보유</i>':`<button class="btn ghost sm" data-sell="${it.k}">팔기</button>`}</div>`).join('')}</div>`:'')+
+    avail.map(it=>{ const ok=canBuy(S,it); return `<div class="shop-row ${ok?'':'off'}" title="${esc(it.d)}"><span class="e">${it.e}</span><span><b>${it.n}</b><small>${won(it.price)}${it.house?' · 40%면 대출':''} · ${fxT(it)}${it.up?` · 유지비 ${won(it.up)}`:''}</small></span><button class="btn sm" data-buy="${it.k}" ${ok?'':'disabled'}>${ok?'사기':S.age<20?'20세~':'부족'}</button></div>`; }).join('');
+  el.querySelectorAll('[data-buy]').forEach(b=>b.addEventListener('click',()=>{ if(buyItem(S,b.dataset.buy)){ S.customShop=true; pushFeed('dec', `${SHOPM[b.dataset.buy].e} ${SHOPM[b.dataset.buy].n}을(를) 샀다<small>${esc(SHOPM[b.dataset.buy].d)}</small>`); el.dataset.k=''; updateStats(); save(); } }));
+  el.querySelectorAll('[data-sell]').forEach(b=>b.addEventListener('click',()=>{ if(sellItem(S,b.dataset.sell)){ el.dataset.k=''; updateStats(); save(); } }));
+}
 function updateStats(){
+  renderShop();
   const el=document.getElementById('stats'); if(!el) return;
-  const net=S.money+(S.inv||0)+(S.house?S.house.val-S.house.loan:0);
+  const net=S.money+(S.inv||0)+(S.house?S.house.val-S.house.loan:0)+itemsValue(S);
   const chips=[];
   if(S.uni) chips.push(`${S.uni}${S.major?' '+S.major:''}`); else if(S.tier) chips.push(`${TIERNAME[S.tier]}${S.major?' '+S.major:''}`);
   if(S.armyLeft>0) chips.push('군 복무 중');

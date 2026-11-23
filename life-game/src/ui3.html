@@ -52,6 +52,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible{outline:2px so
 .deathov{background:#000}
 .death-cap{position:absolute; left:50%; top:8%; transform:translateX(-50%); text-align:center; display:grid; gap:4px; color:#f2ece0; text-shadow:0 1px 4px #000; animation:fcap 1s .4s both; white-space:nowrap}
 .death-cap b{font-family:var(--display); font-size:20px; letter-spacing:.06em} .death-cap span{font-size:14px; opacity:.85}
+.shop{display:grid; gap:6px}
+.shop-h{display:flex; justify-content:space-between; align-items:baseline} .shop-h small{color:var(--muted); font-size:12px}
+.shop-row{display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; padding:5px 0; border-bottom:1px dashed var(--line)}
+.shop-row .e{font-size:20px} .shop-row b{font-size:13.5px; display:block} .shop-row small{font-size:11.5px; color:var(--muted); line-height:1.35}
+.shop-row.off{opacity:.55} .shop-row.own{background:var(--soft); border-radius:8px; padding:6px 8px; border:none} .shop-row i{font-style:normal; font-size:12px; color:var(--muted)}
+.btn.sm{padding:4px 10px; font-size:12.5px; min-height:0}
 .funeral{position:fixed; inset:0; z-index:200; background:#1d1b18; opacity:1; transition:opacity .5s}
 .funeral.out{opacity:0}
 .funeral canvas{display:block}
@@ -418,6 +424,7 @@ function renderAll(){
   <div class="cols">
     <div class="lcol">
       <div class="sheet plan" id="plan"></div>
+      <div class="sheet shop" id="shop"></div>
     </div>
     <section class="sheet feedbox rcol"><h3 class="fh">지금 내 인생 <button class="btn ghost" id="more">전체</button></h3><ul class="feed" id="feed"></ul></section>
   </div>`;
@@ -465,9 +472,22 @@ function talPanel(){
     return `<div class="trow ${k===S.focus&&S.f.has('재능발견')?'focus':''}"><span>${k}</span><div class="bar"><i style="width:${base}%"></i><b style="width:${ab}%"></b></div><span class="tw">${tierWord(k)}</span></div>`; }).join(''); }).join('')
    +'<div class="tal-k">해보면서 알게 된 나</div>';
 }
+function renderShop(){
+  const el=document.getElementById('shop'); if(!el||!S) return;
+  const owned=SHOP.filter(it=>(S.items&&S.items[it.k]) || (S.house&&S.house.tag===it.k));
+  const all=SHOP.filter(it=>!owned.includes(it)); const avail=[...all.filter(it=>canBuy(S,it)), ...all.filter(it=>!canBuy(S,it)).slice(0,2)];
+  const fxT=it=>Object.entries(it.fx).map(([k,v])=>`${SK[k]||k}+${v}`).join(' ');
+  const key=JSON.stringify([Math.floor(S.money/500), owned.map(x=>x.k), S.age>=20, S.dead]); if(el.dataset.k===key) return; el.dataset.k=key;
+  el.innerHTML=`<div class="shop-h"><b>돈으로 할 수 있는 것</b><small>현금 ${won(S.money)}</small></div>`+
+    (owned.length?`<div class="shop-own">${owned.map(it=>`<div class="shop-row own"><span class="e">${it.e}</span><span><b>${it.n}</b><small>지금 ${won(it.house?S.house.val:S.items[it.k].v)} · ${fxT(it)}</small></span>${it.house?'<i>보유</i>':`<button class="btn ghost sm" data-sell="${it.k}">팔기</button>`}</div>`).join('')}</div>`:'')+
+    avail.map(it=>{ const ok=canBuy(S,it); return `<div class="shop-row ${ok?'':'off'}" title="${esc(it.d)}"><span class="e">${it.e}</span><span><b>${it.n}</b><small>${won(it.price)}${it.house?' · 40%면 대출':''} · ${fxT(it)}${it.up?` · 유지비 ${won(it.up)}`:''}</small></span><button class="btn sm" data-buy="${it.k}" ${ok?'':'disabled'}>${ok?'사기':S.age<20?'20세~':'부족'}</button></div>`; }).join('');
+  el.querySelectorAll('[data-buy]').forEach(b=>b.addEventListener('click',()=>{ if(buyItem(S,b.dataset.buy)){ S.customShop=true; pushFeed('dec', `${SHOPM[b.dataset.buy].e} ${SHOPM[b.dataset.buy].n}을(를) 샀다<small>${esc(SHOPM[b.dataset.buy].d)}</small>`); el.dataset.k=''; updateStats(); save(); } }));
+  el.querySelectorAll('[data-sell]').forEach(b=>b.addEventListener('click',()=>{ if(sellItem(S,b.dataset.sell)){ el.dataset.k=''; updateStats(); save(); } }));
+}
 function updateStats(){
+  renderShop();
   const el=document.getElementById('stats'); if(!el) return;
-  const net=S.money+(S.inv||0)+(S.house?S.house.val-S.house.loan:0);
+  const net=S.money+(S.inv||0)+(S.house?S.house.val-S.house.loan:0)+itemsValue(S);
   const chips=[];
   if(S.uni) chips.push(`${S.uni}${S.major?' '+S.major:''}`); else if(S.tier) chips.push(`${TIERNAME[S.tier]}${S.major?' '+S.major:''}`);
   if(S.armyLeft>0) chips.push('군 복무 중');
